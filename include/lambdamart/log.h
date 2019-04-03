@@ -9,7 +9,7 @@
 #include <exception>
 #include <stdexcept>
 
-namespace lambdamart {
+namespace LambdaMART {
 
 #if defined(_MSC_VER)
 #define THREAD_LOCAL __declspec(thread)

@@ -1,7 +1,7 @@
 #ifndef LAMBDAMART_TREELEARNER_H
 #define LAMBDAMART_TREELEARNER_H
 
-namespace lambdamart {
+namespace LambdaMART {
 
 class TreeNode {
 

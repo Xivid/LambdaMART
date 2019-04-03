@@ -1,6 +1,6 @@
 #include "lambdamart/bin.h"
 
-namespace lambdamart {
+namespace LambdaMART {
 
     Dataset* PercentileBinner::load(const char* path) {
         // TODO

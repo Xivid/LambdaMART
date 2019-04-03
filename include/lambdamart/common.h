@@ -20,7 +20,7 @@
 #include "intrin.h"
 #endif
 
-namespace lambdamart::Common {
+namespace LambdaMART::Common {
 
     class NotImplementedException : public std::logic_error{
     public:

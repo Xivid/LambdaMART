@@ -13,7 +13,7 @@
 
 using namespace std;
 
-namespace LightGBM {
+namespace LambdaMART {
 
     enum TaskType {
         Train, Predict, KRefitTree

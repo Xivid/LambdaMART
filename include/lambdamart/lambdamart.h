@@ -6,11 +6,12 @@
 #define LAMBDAMART_LAMBDAMART_H
 
 #include "dataset.h"
+#include "model.h"
 
-namespace lambdamart {
+namespace LambdaMART {
     const char* version()
     {
-        return "lambdamart 0.1";
+        return "LambdaMART 0.1";
     }
 
 }

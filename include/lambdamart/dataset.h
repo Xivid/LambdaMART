@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace lambdamart {
+namespace LambdaMART {
 
     class Dataset {
         Binner* binner;
