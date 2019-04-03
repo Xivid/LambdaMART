@@ -1,11 +1,8 @@
 #ifndef LAMBDAMART_CONFIG_H
 #define LAMBDAMART_CONFIG_H
 
-//#include <LightGBM/utils/common.h>
-//#include <LightGBM/utils/log.h>
-
-//#include <LightGBM/meta.h>
-//#include <LightGBM/export.h>
+#include <lambdamart/common.h>
+#include <lambdamart/log.h>
 
 #include <vector>
 #include <string>

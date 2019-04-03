@@ -5,7 +5,7 @@
 #ifndef LAMBDAMART_LAMBDAMART_H
 #define LAMBDAMART_LAMBDAMART_H
 
-#include "dataset/dataset.h"
+#include "dataset.h"
 
 namespace lambdamart {
     const char* version()

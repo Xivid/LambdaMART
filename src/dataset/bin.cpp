@@ -1,4 +1,4 @@
-#include "bin.h"
+#include "lambdamart/bin.h"
 
 namespace lambdamart {
 
