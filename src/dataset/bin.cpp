@@ -2,7 +2,7 @@
 // Created by Zhifei Yang on 25.03.19.
 //
 
-#include "bin.h"
+#include "../../include/lambdamart/bin.h"
 
 namespace lambdamart {
 

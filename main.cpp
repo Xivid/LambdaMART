@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "lambdamart.h"
+#include <lambdamart/lambdamart.h>
 
 using namespace std;
 
