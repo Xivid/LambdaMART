@@ -8,7 +8,7 @@
 #include <vector>
 #include "bin.h"
 
-namespace lambdamart {
+namespace LambdaMART {
 
     class Dataset {
         Binner* binner;

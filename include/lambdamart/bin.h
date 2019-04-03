@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace lambdamart {
+namespace LambdaMART {
 
     class Dataset;
 

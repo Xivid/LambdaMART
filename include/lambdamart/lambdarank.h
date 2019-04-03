@@ -1,7 +1,7 @@
 #ifndef LAMBDAMART_LAMBDARANK_H
 #define LAMBDAMART_LAMBDARANK_H
 
-namespace lambdamart {
+namespace LambdaMART {
 class LambdaRank {
 
 };

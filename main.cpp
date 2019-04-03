@@ -7,17 +7,18 @@
 using namespace std;
 
 void demo() {
-    lambdamart::Dataset* X_train = lambdamart::Dataset::load_dataset("data/demo.train");
-    lambdamart::Binner* binner = X_train->get_binner();
-    lambdamart::Dataset* X_test = lambdamart::Dataset::load_dataset("data/demo.test", binner);
+    LambdaMART::Dataset* X_train = LambdaMART::Dataset::load_dataset("data/demo.train");
+    LambdaMART::Binner* binner = X_train->get_binner();
+    LambdaMART::Dataset* X_test = LambdaMART::Dataset::load_dataset("data/demo.test", binner);
 
-    // lambdamart::Model* model = lambdamart::train(X_train, params);
-    // std::vector<double>* predictions = model->predict(X_test);
+    LambdaMART::Model* model = new Model();
+    model->train(X_train, params);
+    std::vector<double>* predictions = model->predict(X_test);
 
 }
 
 int main() {
-    std::cout << lambdamart::version() << std::endl;
+    std::cout << LambdaMART::version() << std::endl;
 
     demo();
 

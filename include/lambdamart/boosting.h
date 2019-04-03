@@ -1,14 +1,11 @@
 #ifndef LAMBDAMART_BOOSTING_H_
 #define LAMBDAMART_BOOSTING_H_
 
-#include <LambdaMART/meta.h>
-#include <LambdaMART/config.h>
-
 #include <vector>
 #include <string>
 #include <map>
 
-namespace LambdaMART {
+namespace LambdaMART{
 
 class Boosting {
  public:
