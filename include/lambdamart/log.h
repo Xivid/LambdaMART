@@ -78,7 +78,7 @@ namespace LambdaMART {
             vsprintf(str_buf, format, val);
 #endif
             va_end(val);
-            fprintf(stderr, "[LightGBM] [Fatal] %s\n", str_buf);
+            fprintf(stderr, "[LambdaMART] [Fatal] %s\n", str_buf);
             fflush(stderr);
             throw std::runtime_error(std::string(str_buf));
         }
@@ -87,7 +87,7 @@ namespace LambdaMART {
         static void Write(LogLevel level, const char* level_str, const char *format, va_list val) {
             if (level <= GetLevel()) {  // omit the message with low level
                 // write to STDOUT
-                printf("[LightGBM] [%s] ", level_str);
+                printf("[LambdaMART] [%s] ", level_str);
                 vprintf(format, val);
                 printf("\n");
                 fflush(stdout);

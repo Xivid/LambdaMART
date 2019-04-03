@@ -6,35 +6,21 @@
 #include <string>
 #include <fstream>
 #include <cstring>
-#include "bin.h"
 
 using namespace std;
 
 namespace LambdaMART {
 
-    class Dataset {
-        Binner* binner;
-        vector<vector<uint8_t>> samples;
-        int d = 1024;
+class Dataset {
+    vector<vector<uint8_t>> samples;
+    vector<uint64_t> boundaries;
 
-    public:
-        Dataset(Binner* binner, vector<vector<uint8_t>>& samples){
-            this->binner = binner;
-            this->samples = samples;
-        }
+public:
+    uint64_t                get_num_samples() const { return samples.size(); }
+    const vector<uint64_t>& get_boundaries()  const { return boundaries; };
+};
 
-        void load_dataset(const char* path, Binner* _binner = nullptr) {
-            if (_binner) {
-                this->samples =  _binner->load(path, this->d);
-            } else {
-                return (new PercentileBinner())->load(path, d);
-            }
-        }
-
-        Binner* get_binner() {
-            return binner;
-        }
-    };
+Dataset* load_dataset(const char* data_path, const char* query_path, Dataset* use_binning_from = nullptr);
 
 }
 #endif //LAMBDAMART_DATASET_H

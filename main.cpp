@@ -7,12 +7,15 @@
 using namespace std;
 
 void demo() {
-    LambdaMART::Dataset* X_train = LambdaMART::Dataset::load_dataset("data/demo.train");
-    LambdaMART::Binner* binner = X_train->get_binner();
-    LambdaMART::Dataset* X_test = LambdaMART::Dataset::load_dataset("data/demo.test", binner);
+    LambdaMART::Config* config = new LambdaMART::Config();
 
-    LambdaMART::Model* model = new Model();
-    model->train(X_train, params);
+    LambdaMART::Dataset* X_train = LambdaMART::load_dataset("data/demo.train", "data/demo.train.query");
+
+    // TODO: testing data should be stored in sample-major format! Still using `Dataset` is inconvenient!
+    LambdaMART::Dataset* X_test = LambdaMART::load_dataset("data/demo.test", "data/demo.test.query", X_train);
+
+    LambdaMART::Model* model = new LambdaMART::Model();
+    model->train(*X_train, *config);
     std::vector<double>* predictions = model->predict(X_test);
 
 }
