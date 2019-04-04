@@ -7,9 +7,11 @@
 using namespace std;
 
 void demo() {
-    LambdaMART::Dataset* X_train = LambdaMART::Dataset::load_dataset("data/demo.train");
+    LambdaMART::Dataset* X_train = new LambdaMART::Dataset();
+    X_train->load_dataset("data/demo.train");
     LambdaMART::Binner* binner = X_train->get_binner();
-    LambdaMART::Dataset* X_test = LambdaMART::Dataset::load_dataset("data/demo.test", binner);
+    LambdaMART::Dataset* X_test = new LambdaMART::Dataset();
+    X_test->load_dataset("data/demo.test", nullptr, -1, binner);
 
     LambdaMART::Model* model = new Model();
     model->train(X_train, params);
