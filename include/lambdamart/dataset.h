@@ -181,7 +181,10 @@ namespace LambdaMART {
         vector<int>* get_query(){
             return &(this->query);
         }
-    };
 
+        vector<vector<double>>* get_boundaries(){
+            return &(this->binner.thresholds);
+        }
+    };
 }
 #endif //LAMBDAMART_DATASET_H
