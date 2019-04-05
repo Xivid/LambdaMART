@@ -1,10 +1,10 @@
 #ifndef LAMBDAMART_MODEL_H
 #define LAMBDAMART_MODEL_H
 
-#include "dataset.h"
-#include "config.h"
-#include "treelearner.h"
-#include "lambdarank.h"
+#include <lambdamart/dataset.h>
+#include <lambdamart/config.h>
+#include <lambdamart/treelearner.h>
+#include <lambdamart/lambdarank.h>
 
 namespace LambdaMART {
     class Model {
@@ -12,16 +12,8 @@ namespace LambdaMART {
         std::vector<double>       tree_weights;
         uint64_t                  num_samples;
 
-        Tree* train_one_iteration(
-                const LambdaRank& calculator,
-                const std::vector<double>& currentScores,
-                const LambdaMART::Dataset& dataset,
-                std::vector<double>& gradients,
-                std::vector<double>& hessians,
-                const LambdaMART::Config& param);
-
     public:
-        void                 train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& param);
+        void                 train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& config);
         std::vector<double>* predict(Dataset* data);
 
     };

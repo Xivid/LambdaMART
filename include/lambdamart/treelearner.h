@@ -1,32 +1,49 @@
 #ifndef LAMBDAMART_TREELEARNER_H
 #define LAMBDAMART_TREELEARNER_H
 
-#include <lambdamart/dataset.h>
+#include <lambdamart/types.h>
 #include <lambdamart/config.h>
+#include <lambdamart/dataset.h>
+#include <lambdamart/histogram.h>
 
 namespace LambdaMART {
+
+class SplitInfo {
+    feature_t feature_id;
+    bin_t     bin_id;
+};
+
 
 class TreeNode {
     friend class TreeLearner;
 private:
     double threshold;
     TreeNode *left, *right;
+    SplitInfo splitInfo;
 };
 typedef TreeNode Tree;
 
-/**
- * This class contains necessary information used in building a new decision tree.
- */
-class TreeLearner {
-
-    // TODO
-};
 
 Tree* build_new_tree(const LambdaMART::Dataset& dataset,
                      const std::vector<double>& gradients,
                      const std::vector<double>& hessians,
-                     const LambdaMART::Config& param);
+                     std::vector<double>&       node_to_score,
+                     std::vector<unsigned int>& sample_to_node,
+                     const LambdaMART::Config&  config);
+
+void find_best_splits(std::vector<SplitInfo>& best_splits,
+                      const LambdaMART::Dataset& dataset,
+                      const std::vector<double>& gradients,
+                      const std::vector<double>& hessians,
+                      std::vector<unsigned int>& sample_to_node);
+
+
+node_t perform_split(const std::vector<SplitInfo>& best_splits,
+                     std::vector<double>&          node_to_score,
+                     std::vector<unsigned int>&    sample_to_node);
 
 }
+
+
 
 #endif //LAMBDAMART_TREELEARNER_H

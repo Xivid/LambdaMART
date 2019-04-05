@@ -5,14 +5,17 @@
 #ifndef LAMBDAMART_LAMBDAMART_H
 #define LAMBDAMART_LAMBDAMART_H
 
-#include "dataset.h"
-#include "model.h"
+#include <lambdamart/config.h>
+#include <lambdamart/common.h>
+#include <lambdamart/dataset.h>
+#include <lambdamart/model.h>
 
 namespace LambdaMART {
-    const char* version()
-    {
-        return "LambdaMART 0.1";
-    }
+
+const char* version()
+{
+    return "LambdaMART 0.1";
+}
 
 }
 

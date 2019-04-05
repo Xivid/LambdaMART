@@ -180,7 +180,7 @@ namespace LambdaMART {
         }
 
         // query boundaries (the first sample_id of each query)
-        const vector<int>& get_boundaries() const {
+        const vector<int>& get_queries() const {
             return this->query;
         }
 
