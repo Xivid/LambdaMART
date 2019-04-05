@@ -21,13 +21,15 @@ namespace LambdaMART {
         vector<vector<double>> thresholds;
     };
 
-    class feature{
+    class feature {
     public:
         vector<uint8_t> bin_index;
         vector<pair<double, int>> samples;
         vector<int> sample_index;
         vector<double> sample_data;
-        array<double, BIN_CNT> threshold;
+        vector<double> threshold;
+
+        feature() : threshold(BIN_CNT) {}
 
         void sort(){
             std::sort(samples.begin(), samples.end());
@@ -61,7 +63,7 @@ namespace LambdaMART {
 
          void bin(int bin_size, int n, Binner* binner, int f){
              this->bin_index.resize(n, -1);
-             vector<double> thresholds = binner->thresholds[f];
+             vector<double>& thresholds = binner->thresholds[f];
              int curr_count = 0, bin_count = 0;
              for (int i = 0; i < n; i++) {
                 if(sample_data[i] <= thresholds[bin_count])
@@ -117,7 +119,7 @@ namespace LambdaMART {
         }
 
     public:
-        void load_dataset(const char* data_path, const char* query_path = nullptr, int num_features = -1, Binner* binner = nullptr){
+        void load_dataset(const char* data_path, const char* query_path = nullptr, int num_features = -1, Binner* binner = nullptr) {
             if(num_features == -1){
                 // TODO: calculate num_features;
                 this->d = num_features;
@@ -177,13 +179,13 @@ namespace LambdaMART {
             return &(this->binner);
         }
 
-        // returns meta?
-        vector<int>* get_query(){
-            return &(this->query);
+        // query boundaries (the first sample_id of each query)
+        const vector<int>& get_boundaries() const {
+            return this->query;
         }
 
-        vector<vector<double>>* get_boundaries(){
-            return &(this->binner.thresholds);
+        int get_num_samples() const {
+            return this->n;
         }
     };
 }

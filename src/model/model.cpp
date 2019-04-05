@@ -15,7 +15,7 @@ Tree* Model::train_one_iteration(
 }
 
 void Model::train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& param) {
-    uint64_t                  num_samples = dataset.get_num_samples();
+    /* uint64_t */ int        num_samples = dataset.get_num_samples();
     std::vector<double>       currentScores(num_samples);
     std::vector<double>       node_to_score;
     std::vector<unsigned int> sample_to_node(num_samples);
