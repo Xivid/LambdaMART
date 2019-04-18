@@ -4,25 +4,37 @@ namespace LambdaMART {
 
 
 void Model::train(const Dataset& dataset, const Config& config) {
-    /* uint64_t */ int        num_samples = dataset.get_num_samples();
-    std::vector<double>       currentScores(num_samples, 0.0);
+    uint64_t                  num_samples = dataset.get_num_samples();
+    std::vector<double>       currentscores(num_samples, 0.0);
     std::vector<double>       node_to_score;
     std::vector<unsigned int> sample_to_node(num_samples);
     std::vector<double>       gradients(num_samples);
     std::vector<double>       hessians(num_samples);
-    LambdaRank                calculator(dataset.get_queries());
+    LambdaRank                ranker(dataset.query_boundaries(), dataset.num_queries(), dataset.label(), config);
 
-    for (int iter = 0; iter < config.num_iterations; ++iter) {
-        calculator.get_derivatives(currentScores, gradients, hessians);
+    bool is_finished = false;
+    for (int iter = 0; iter < config.num_iterations && !is_finished; ++iter) {
+        ranker.get_derivatives(currentscores.data(), gradients.data(), hessians.data());
         trees.push_back(build_new_tree(dataset, gradients, hessians, node_to_score, sample_to_node, config));
         for (size_t sid = 0; sid < num_samples; ++sid) {
-            currentScores[sid] += config.learning_rate * node_to_score[sample_to_node[sid]];
+            currentscores[sid] += config.learning_rate * node_to_score[sample_to_node[sid]];
         }
+        is_finished = check_early_stopping();
     }
 }
 
 std::vector<double>* Model::predict(Dataset *data) {
     return nullptr;
+}
+
+// TODO
+// Checks for early stopping:
+// - if there are no more leaves meet the split requirement (should this check be done in build_new_tree?)
+// - others?
+bool Model::check_early_stopping() {
+    bool early_stopping = false;
+    // TODO
+    return early_stopping;
 }
 
 }

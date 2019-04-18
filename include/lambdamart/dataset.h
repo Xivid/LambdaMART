@@ -12,6 +12,8 @@
 #include <iterator>
 #include <sstream>
 
+#include <lambdamart/types.h>
+
 using namespace std;
 
 namespace LambdaMART {
@@ -81,7 +83,9 @@ namespace LambdaMART {
         vector<feature> data; // d rows, n columns
         int n, d, bin_size;
         Binner binner;
-        vector<int> query, rank;
+        vector<int> rank;
+        vector<datasize_t> query;
+        vector<datasize_t> query_boundaries_;
 
         static void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<int> &rank){
             ifstream infile(path);
@@ -107,7 +111,7 @@ namespace LambdaMART {
             infile.close();
         }
 
-        static void load_query_from_file(const char* path, vector<int>& q){
+        static void load_query_from_file(const char* path, vector<datasize_t>& q){
             ifstream infile(path);
             string line;
             if(infile.is_open()){
@@ -180,12 +184,28 @@ namespace LambdaMART {
         }
 
         // query boundaries (the first sample_id of each query)
-        const vector<int>& get_queries() const {
+        inline const datasize_t* query_boundaries() const {
+            if (!query_boundaries_.empty()) return query_boundaries_.data();
+            else return nullptr;   
+        }
+
+        const vector<datasize_t>& get_queries() const {
             return this->query;
         }
 
-        int get_num_samples() const {
+        datasize_t num_queries() const {
+            // TODO
+            return 0;
+        }
+
+        datasize_t get_num_samples() const {
             return this->n;
+        }
+
+        // returns pointer to labels
+        label_t* label() const {
+            //TODO
+            return nullptr; 
         }
     };
 }

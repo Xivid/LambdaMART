@@ -5,6 +5,7 @@
 #include <lambdamart/config.h>
 #include <lambdamart/treelearner.h>
 #include <lambdamart/lambdarank.h>
+#include <lambdamart/types.h>
 
 namespace LambdaMART {
     class Model {
@@ -14,7 +15,10 @@ namespace LambdaMART {
 
     public:
         void                 train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& config);
+        //bool                 train_one_iter()   
         std::vector<double>* predict(Dataset* data);
+
+        bool                 check_early_stopping();
 
     };
 }

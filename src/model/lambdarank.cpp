@@ -7,11 +7,88 @@
 namespace LambdaMART {
 
 
-void LambdaRank::get_derivatives(const std::vector<double>& currentScores, std::vector<double>& gradients, std::vector<double>& hessians) const {
+void LambdaRank::get_derivatives(double* currentScores, double* gradients, double* hessians) {
+    for (datasize_t i = 0; i < num_queries_; ++i) {
+        get_derivatives_one_query(currentScores, gradients, hessians, i);
+    }
+}
+
+inline void LambdaRank::get_derivatives_one_query(const double* scores, double* gradients, 
+                                        double* hessians, datasize_t query_id) {
+    
+    const double kminscore = -std::numeric_limits<double>::infinity();
+
+    const datasize_t start = boundaries_[query_id];
+    const datasize_t count = boundaries_[query_id+1] - start;
+    const double inverse_max_dcg = inverse_max_dcg_[query_id];
+    const label_t* label = label_ + start;
+    scores += start;
+    gradients += start;
+    hessians += start;
+
+    for (datasize_t i = 0; i < count; ++i) {
+        gradients[i] = 0.0f;
+        hessians[i] = 0.0f;
+    }
+
+    // get sorted indices for scores;
+    std::vector<datasize_t> sindex;
+    for (datasize_t i = 0; i < count; ++i) {
+        sindex.emplace_back(i);
+    }
+    std::stable_sort(sindex.begin(), sindex.end(), [scores](datasize_t a, datasize_t b) {return scores[a] > scores[b]; });
+    const double best_score = scores[sindex[0]];
+    datasize_t worst_idx = count - 1;
+    if (worst_idx > 0 && scores[sindex[worst_idx]] == kminscore) worst_idx -= 1;
+    const double worst_score = scores[sindex[worst_idx]];
+
+    for (datasize_t i = 0; i < count; ++i) {
+        const datasize_t high = sindex[i];
+        const int high_label = static_cast<int>(label_[high]);
+        const double high_score = scores[high];
+        if (high_score == kminscore) {continue; }
+        const double hl_gain = label_gain_[high_label];
+        const double h_discount = get_discount(i);
+        double high_sum_gradient = 0.0;
+        double high_sum_hessian = 0.0;
+        for (datasize_t j = 0; j < count; ++j) {
+            if (i == j) continue;
+
+            const datasize_t low = sindex[j];
+            const int low_label = static_cast<int>(label_[low]);
+            const double low_score = scores[low];
+            // only consider pairs with different labels
+            if (high_label <= low_label || low_score == kminscore) continue;
+
+            const double delta = high_score - low_score;
+            const double ll_gain = label_gain_[low_label];
+            const double l_discount = get_discount(j);
+            const double dcg_gap = hl_gain - ll_gain;
+            const double pair_discount = fabs(h_discount - l_discount);
+            double delta_pair_ndcg = dcg_gap * pair_discount * inverse_max_dcg;
+            // regularize the pair ndcg by score distance
+            if (high_label != low_label && best_score != worst_score) {
+                delta_pair_ndcg /= (0.01f + fabs(delta));
+            }
+            // calculate gradient and hessian for this pair
+            double p_gradient = get_sigmoid(delta);
+            double p_hessian = p_gradient * (2.0f - p_gradient);
+
+            p_gradient *= -delta_pair_ndcg;
+            p_hessian *= 2 * delta_pair_ndcg;
+            high_sum_gradient += p_gradient;
+            high_sum_hessian += p_hessian;
+            gradients[low] -= p_gradient;
+            hessians[low] += p_hessian;
+        }
+        gradients[high] += high_sum_gradient;
+        hessians[high] += high_sum_hessian;
+
+    }
 
 }
 
-void NDCGCalculator::DefaultEvalRanks(std::vector<int>* eval_ranks) {
+void LambdaRank::set_eval_rank(std::vector<datasize_t>* eval_ranks) {
     if (eval_ranks->empty()) {
         for (int i = 1; i <= 5; ++i) {
             eval_ranks->push_back(i);
@@ -26,7 +103,7 @@ void NDCGCalculator::DefaultEvalRanks(std::vector<int>* eval_ranks) {
         }
     }
 }
-void NDCGCalculator::SetLabelGain(std::vector<double>* label_gain) {
+void LambdaRank::set_label_gain(std::vector<double>* label_gain) {
     // TODO: where to set max label
     // relevant gain for labels
     // label_gain = 2^i - 1, may overflow, so we use 31 here
@@ -38,18 +115,14 @@ void NDCGCalculator::SetLabelGain(std::vector<double>* label_gain) {
     label_gain_.resize(label_gain->size());
 }
 
-void NDCGCalculator::Init(const std::vector<double>& input_label_gain) {
-    label_gain_.resize(input_label_gain.size());
-    for (int i = 0; i < input_label_gain.size(); ++i) {
-        label_gain_[i] = static_cast<double>(input_label_gain[i]);
-    }
+void LambdaRank::set_discount() {
     discount_.resize(kMaxPosition);
     for (int i = 0; i < kMaxPosition; ++i) {
         discount_[i] = 1.0 / std::log2(2.0 + i);
     }
 }
 
-double NDCGCalculator::CalDCGAtK(int k, const int* label, const double* score, int num_data) {
+double LambdaRank::cal_dcg_k(int k, const label_t* label, const double* score, datasize_t num_data) {
     std::vector<int> sorted_idx(num_data);
     for (int i = 0; i < num_data; ++i) sorted_idx[i] = i;
     std::stable_sort(sorted_idx.begin(), sorted_idx.end(), [score](int a, int b) 
@@ -64,8 +137,8 @@ double NDCGCalculator::CalDCGAtK(int k, const int* label, const double* score, i
     return dcg;
 }
 
-void NDCGCalculator::CalDCG(const std::vector<int>& ks, const int* label, 
-        const double* score, int num_data, std::vector<double>* out) {
+void LambdaRank::cal_dcg(const std::vector<int>& ks, const label_t* label, 
+        const double* score, datasize_t num_data, std::vector<double>* out) {
     std::vector<int> sorted_idx(num_data);
     for (int i = 0; i < num_data; ++i) sorted_idx[i] = i;
     std::stable_sort(sorted_idx.begin(), sorted_idx.end(),[score](int a, int b) 
@@ -85,7 +158,7 @@ void NDCGCalculator::CalDCG(const std::vector<int>& ks, const int* label,
     }
 }
 
-double NDCGCalculator::CalMaxDCGAtK(int k, const int* label, int num_data) {
+double LambdaRank::cal_maxdcg_k(int k, const label_t* label, datasize_t num_data) {
     double ret = 0.0f;
     std::vector<int> label_counts(label_gain_.size(), 0);
     for(int i = 0; i < num_data; ++i) {
@@ -107,8 +180,8 @@ double NDCGCalculator::CalMaxDCGAtK(int k, const int* label, int num_data) {
     return ret;
 }
 
-void NDCGCalculator::CalMaxDCG(const std::vector<int>& ks, const int* label, 
-                            int num_data, std::vector<double>* out) {
+void LambdaRank::cal_maxdcg(const std::vector<int>& ks, const label_t* label, 
+                            datasize_t num_data, std::vector<double>* out) {
     std::vector<int> label_counts(label_gain_.size(), 0);
     // get counts for all labels
     for (int i = 0; i < num_data; ++i) {
@@ -132,6 +205,24 @@ void NDCGCalculator::CalMaxDCG(const std::vector<int>& ks, const int* label,
         }
         (*out)[i] = cur_result;
         cur_left = cur_k;
+    }
+}
+
+double LambdaRank::get_sigmoid(double score) const {
+    if (score <= min_input_) return sigmoid_table_[0];
+    else if (score >= max_input_) return sigmoid_table_[sigmoid_bins_-1];
+    else return sigmoid_table_[static_cast<uint32_t>((score - min_input_) * sig_factor_)];
+}
+
+void LambdaRank::create_sigmoid_table() {
+    min_input_ = min_input_ / sigmoid_ / 2;
+    max_input_ = -min_input_;
+    sigmoid_table_.resize(sigmoid_bins_);
+    // score to bin factor
+    sig_factor_ = sigmoid_bins_ / (max_input_ - min_input_);
+    for (uint32_t i = 0; i < sigmoid_bins_; ++i) {
+        const double score = i / sig_factor_ + min_input_;
+        sigmoid_table_[i] = 2.0f / (1.0f + std::exp(2.0f * score * sigmoid_));
     }
 }
 

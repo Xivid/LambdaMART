@@ -1,65 +1,92 @@
 #ifndef LAMBDAMART_LAMBDARANK_H
 #define LAMBDAMART_LAMBDARANK_H
 #include <vector>
+#include <lambdamart/types.h>
+#include <lambdamart/config.h>
+
 
 namespace LambdaMART {
-
-class NDCGCalculator {
-public:
-
-    NDCGCalculator() {
-        // TODO
-    }
-    void DefaultEvalRanks(std::vector<int>* eval_ranks);
-    void SetLabelGain(std::vector<double>* label_gain); // uses the default of 2^i-1
-
-    void Init(const std::vector<double>& input_label_gain);
-
-    // Calculates the DCG score at position k, given the rank label and score
-    double CalDCGAtK(int k, const int* label,
-        const double* score, int num_data);
-
-    // Calculates the DCG score at multiple locations
-    // the result is stored in out. label and score are pointers to
-    // labels and scores respectively
-    void CalDCG(const std::vector<int>& ks,
-        const int* label, const double* score,
-        int num_data, std::vector<double>* out);
-
-    // calculates the max score (ideal DCG) at position k
-    // returns: max score
-    double CalMaxDCGAtK(int k,
-        const int* label, int num_data);
-
-    // calculates the max DCG (ideal DCG), result is stored in out
-    void CalMaxDCG(const std::vector<int>& ks,
-        const int* label, int num_data, std::vector<double>* out);
-
-    // checks the label range
-    void CheckLabel(const int* label, int num_data);
-
-    // gets discount score at position k
-    inline double GetDiscount(int k) { return discount_[k]; }
-
-private:
-    std::vector<double> label_gain_;
-    std::vector<double> discount_;
-    // max position of rank
-    const int kMaxPosition = 10;
-};
 
 class LambdaRank {
     friend class Model;
 
-    explicit LambdaRank(const std::vector</*uint64_t*/int>& query_boundaries) {
-        boundaries = query_boundaries.data();
+    public:
+    explicit LambdaRank(const datasize_t* query_boundaries, const datasize_t num_queries, label_t* label, const Config& config) {
+        boundaries_ = query_boundaries;
+        num_queries_ = num_queries;
+        label_ = label;
+        kMaxPosition = config.max_position;
+        set_eval_rank(&eval_ranks_);
+        set_label_gain(&label_gain_);
+        set_discount();
+
+        inverse_max_dcg_.resize(num_queries_);
+        for (datasize_t i = 0; i < num_queries_; ++i) {
+            inverse_max_dcg_[i] = cal_maxdcg_k(config.max_position, label_ + boundaries_[i], boundaries_[i+1] - boundaries_[i]);
+            if (inverse_max_dcg_[i] > 0.0) {
+                inverse_max_dcg_[i] = 1.0f / inverse_max_dcg_[i];
+            }
+        }
+        create_sigmoid_table();
     }
 
-private:
-    NDCGCalculator calculator;
-    const /*uint64_t*/ int* boundaries;
-    void get_derivatives(const std::vector<double>& currentScores, std::vector<double>& gradients, std::vector<double>& hessians) const;
-};
+    private:
+        const datasize_t* boundaries_;
+        datasize_t  num_queries_;
+        label_t* label_;
+        std::vector<double> inverse_max_dcg_;
+        void get_derivatives(double* currentScores, double* gradients, double* hessians);
+        void get_derivatives_one_query(const double* scores, double* gradients, 
+                                        double* hessians, datasize_t query_id);
+
+        // NDCG related fields
+        std::vector<double> label_gain_;
+        std::vector<datasize_t> eval_ranks_;
+        std::vector<double> discount_;
+        // max position of rank
+        int kMaxPosition;
+
+        std::vector<double> sigmoid_table_;
+        double min_input_ = -50;
+        double max_input_ = 50;
+        uint32_t sigmoid_bins_ = 1024*1024;
+        double sigmoid_ = 1.0;
+        double sig_factor_;
+            
+        void set_eval_rank(std::vector<datasize_t>* eval_ranks);
+        void set_label_gain(std::vector<double>* label_gain); // uses the default of 2^i-1
+        void set_discount();
+
+        //void Init(const std::vector<double>& input_label_gain);
+
+        // Calculates the DCG score at position k, given the rank label and score
+        double cal_dcg_k(int k, const label_t* label, const double* score, datasize_t num_data);
+
+        // Calculates the DCG score at multiple locations
+        // the result is stored in out. label and score are pointers to
+        // labels and scores respectively
+        void cal_dcg(const std::vector<int>& ks, const label_t* label, const double* score,
+                                            datasize_t num_data, std::vector<double>* out);
+
+        // calculates the max score (ideal DCG) at position k
+        // returns: max score
+        double cal_maxdcg_k(int k,
+            const label_t* label, datasize_t num_data);
+
+        // calculates the max DCG (ideal DCG), result is stored in out
+        void cal_maxdcg(const std::vector<int>& ks,
+            const label_t* label, datasize_t num_data, std::vector<double>* out);
+
+        // checks the label range
+        void check_label(const label_t* label, datasize_t num_data);
+
+        // gets discount score at position k
+        inline double get_discount(int k) { return discount_[k]; }
+
+        double get_sigmoid(double score) const;
+
+        void create_sigmoid_table();
+    };
 
 
 
