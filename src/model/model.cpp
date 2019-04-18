@@ -23,6 +23,10 @@ void Model::train(const Dataset& dataset, const Config& config) {
     }
 }
 
+bool Model::train_one_itr(const double* gradients, const double* hessians) {
+    return true;
+}
+
 std::vector<double>* Model::predict(Dataset *data) {
     return nullptr;
 }
