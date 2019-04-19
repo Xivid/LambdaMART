@@ -28,6 +28,8 @@ bool Model::train_one_itr(const double* gradients, const double* hessians) {
 }
 
 std::vector<double>* Model::predict(Dataset *data) {
+    if (trees.size() == 0) return nullptr;
+    std::vector<double> out(data->get_num_samples());
     return nullptr;
 }
 
