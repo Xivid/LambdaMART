@@ -49,4 +49,11 @@ node_t perform_split(const std::vector<SplitInfo>& best_splits,
     return 100;
 }
 
+// TODO
+// Given data, index of data, and treenode, returns the score for this data
+double predict_score(LambdaMART::Dataset* data, datasize_t idx, LambdaMART::Tree* model) {
+    return 0.0;    
+}
+
+
 }

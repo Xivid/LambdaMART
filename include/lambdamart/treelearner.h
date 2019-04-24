@@ -42,8 +42,8 @@ node_t perform_split(const std::vector<SplitInfo>& best_splits,
                      std::vector<double>&          node_to_score,
                      std::vector<unsigned int>&    sample_to_node);
 
-double predict_score(Dataset* data, datasize_t idx, Tree* model);
-
+double predict_score(LambdaMART::Dataset* data, datasize_t idx, LambdaMART::Tree* model);
+double predict_score(double x);
 
 }
 
