@@ -18,7 +18,7 @@ void demo() {
     
     LambdaMART::Model* model = new LambdaMART::Model();
     model->train(*X_train, *config);
-    std::vector<double>* predictions = model->predict(X_test);
+    double* predictions = model->predict(X_test);
 
 }
 

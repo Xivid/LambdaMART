@@ -16,7 +16,7 @@ namespace LambdaMART {
     public:
         void                 train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& config);
         bool                 train_one_itr(const double* gradients, const double* hessians);
-        std::vector<double>* predict(Dataset* data);
+        double* predict(Dataset* data);
 
         bool                 check_early_stopping();
 
