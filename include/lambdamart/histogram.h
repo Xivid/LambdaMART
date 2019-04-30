@@ -1,6 +1,8 @@
 #ifndef LAMBDAMART_HISTOGRAM_H
 #define LAMBDAMART_HISTOGRAM_H
 
+#include <lambdamart/dataset.h>
+
 namespace LambdaMART {
 
 	class FeatureColumn

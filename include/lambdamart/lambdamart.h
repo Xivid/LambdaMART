@@ -9,14 +9,18 @@
 #include <lambdamart/common.h>
 #include <lambdamart/dataset.h>
 #include <lambdamart/model.h>
+#include <lambdamart/log.h>
 
 namespace LambdaMART {
 
-const char* version()
-{
-    return "LambdaMART 0.1";
-}
+    const char* version()
+    {
+        return "LambdaMART 0.1";
+    }
 
+    const char* help() {
+        return "usage: lambdamart config_file";
+    }
 }
 
 #endif //LAMBDAMART_LAMBDAMART_H

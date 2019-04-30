@@ -1,9 +1,14 @@
+/*
+ * Logging instruments.
+ * Modified from LightGBM source code.
+ */
 #ifndef LAMBDAMART_LOG_H
 #define LAMBDAMART_LOG_H
 
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <cstdarg>
 #include <cstring>
 #include <exception>
@@ -25,7 +30,7 @@ namespace LambdaMART {
 
 #ifndef CHECK_NOTNULL
 #define CHECK_NOTNULL(pointer)                             \
-  if ((pointer) == nullptr) LightGBM::Log::Fatal(#pointer " Can't be NULL at %s, line %d .\n", __FILE__,  __LINE__);
+  if ((pointer) == nullptr) Log::Fatal(#pointer " Can't be NULL at %s, line %d .\n", __FILE__,  __LINE__);
 #endif
 
 
@@ -53,19 +58,19 @@ namespace LambdaMART {
         static void Debug(const char *format, ...) {
             va_list val;
             va_start(val, format);
-            Write(LogLevel::Debug, "Debug", format, val);
+            Write(LogLevel::Debug, GetCurrentTime(), "Debug", format, val);
             va_end(val);
         }
         static void Info(const char *format, ...) {
             va_list val;
             va_start(val, format);
-            Write(LogLevel::Info, "Info", format, val);
+            Write(LogLevel::Info, GetCurrentTime(), "Info", format, val);
             va_end(val);
         }
         static void Warning(const char *format, ...) {
             va_list val;
             va_start(val, format);
-            Write(LogLevel::Warning, "Warning", format, val);
+            Write(LogLevel::Warning, GetCurrentTime(), "Warning", format, val);
             va_end(val);
         }
         static void Fatal(const char *format, ...) {
@@ -78,16 +83,18 @@ namespace LambdaMART {
             vsprintf(str_buf, format, val);
 #endif
             va_end(val);
-            fprintf(stderr, "[LambdaMART] [Fatal] %s\n", str_buf);
+            fprintf(stderr, "[%ld] [Fatal] %s\n", GetCurrentTime(), str_buf);
             fflush(stderr);
             throw std::runtime_error(std::string(str_buf));
         }
 
     private:
-        static void Write(LogLevel level, const char* level_str, const char *format, va_list val) {
+        static long start_time;
+
+        static void Write(LogLevel level, long cur_time, const char* level_str, const char *format, va_list val) {
             if (level <= GetLevel()) {  // omit the message with low level
                 // write to STDOUT
-                printf("[LambdaMART] [%s] ", level_str);
+                printf("[%.3lfs] [%s] ", double(cur_time) / 1000, level_str);
                 vprintf(format, val);
                 printf("\n");
                 fflush(stdout);
@@ -97,6 +104,8 @@ namespace LambdaMART {
         // a trick to use static variable in header file.
         // May be not good, but avoid to use an additional cpp file
         static LogLevel& GetLevel() { static THREAD_LOCAL LogLevel level = LogLevel::Info; return level; }
+        static auto& GetStartTime() { static THREAD_LOCAL auto start_time = std::chrono::steady_clock::now(); return start_time; }
+        static long GetCurrentTime() { return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - GetStartTime()).count(); }
     };
 
 }
