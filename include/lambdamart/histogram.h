@@ -3,6 +3,11 @@
 
 namespace LambdaMART {
 
+
+    class SplitInfo {
+        feature_t feature_id;
+        bin_t     bin_id;
+    };
 	// aligned on 8-byte boundary
 	//typedef struct __declspec(align(8)) BinInfo
 	typedef struct BinInfo
@@ -68,7 +73,7 @@ namespace LambdaMART {
 		return lhs;
 	}
 
-	typedef std::tuple<SplitInfo, binidx_t, score_t, NodeInfoStats, NodeInfoStats> splitTup;
+	typedef std::tuple<SplitInfo, bin_t, score_t, NodeInfo, NodeInfo> splitTup;
 
     class Histogram
     {

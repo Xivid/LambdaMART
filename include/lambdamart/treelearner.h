@@ -8,12 +8,6 @@
 
 namespace LambdaMART {
 
-class SplitInfo {
-    feature_t feature_id;
-    bin_t     bin_id;
-};
-
-
 class TreeNode {
     friend class TreeLearner;
 private:
