@@ -14,11 +14,10 @@ namespace LambdaMART {
         uint64_t                  num_samples;
 
     public:
-        void                 train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& config);
-        bool                 train_one_itr(const double* gradients, const double* hessians);
+        void    train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& config);
         double* predict(Dataset* data);
 
-        bool                 check_early_stopping();
+        bool    check_early_stopping();
 
     };
 }

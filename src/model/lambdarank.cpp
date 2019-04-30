@@ -8,42 +8,42 @@ namespace LambdaMART {
 
 
 void LambdaRank::get_derivatives(double* currentScores, double* gradients, double* hessians) {
-    for (datasize_t i = 0; i < num_queries_; ++i) {
+    for (sample_t i = 0; i < num_queries_; ++i) {
         get_derivatives_one_query(currentScores, gradients, hessians, i);
     }
 }
 
 inline void LambdaRank::get_derivatives_one_query(const double* scores, double* gradients, 
-                                        double* hessians, datasize_t query_id) {
+                                        double* hessians, sample_t query_id) {
     
     const double kminscore = -std::numeric_limits<double>::infinity();
 
-    const datasize_t start = boundaries_[query_id];
-    const datasize_t count = boundaries_[query_id+1] - start;
+    const sample_t start = boundaries_[query_id];
+    const sample_t count = boundaries_[query_id+1] - start;
     const double inverse_max_dcg = inverse_max_dcg_[query_id];
     const label_t* label = label_ + start;
     scores += start;
     gradients += start;
     hessians += start;
 
-    for (datasize_t i = 0; i < count; ++i) {
+    for (sample_t i = 0; i < count; ++i) {
         gradients[i] = 0.0f;
         hessians[i] = 0.0f;
     }
 
     // get sorted indices for scores;
-    std::vector<datasize_t> sindex;
-    for (datasize_t i = 0; i < count; ++i) {
+    std::vector<sample_t> sindex;
+    for (sample_t i = 0; i < count; ++i) {
         sindex.emplace_back(i);
     }
-    std::stable_sort(sindex.begin(), sindex.end(), [scores](datasize_t a, datasize_t b) {return scores[a] > scores[b]; });
+    std::stable_sort(sindex.begin(), sindex.end(), [scores](sample_t a, sample_t b) {return scores[a] > scores[b]; });
     const double best_score = scores[sindex[0]];
-    datasize_t worst_idx = count - 1;
+    sample_t worst_idx = count - 1;
     if (worst_idx > 0 && scores[sindex[worst_idx]] == kminscore) worst_idx -= 1;
     const double worst_score = scores[sindex[worst_idx]];
 
-    for (datasize_t i = 0; i < count; ++i) {
-        const datasize_t high = sindex[i];
+    for (sample_t i = 0; i < count; ++i) {
+        const sample_t high = sindex[i];
         const int high_label = static_cast<int>(label_[high]);
         const double high_score = scores[high];
         if (high_score == kminscore) {continue; }
@@ -51,10 +51,10 @@ inline void LambdaRank::get_derivatives_one_query(const double* scores, double* 
         const double h_discount = get_discount(i);
         double high_sum_gradient = 0.0;
         double high_sum_hessian = 0.0;
-        for (datasize_t j = 0; j < count; ++j) {
+        for (sample_t j = 0; j < count; ++j) {
             if (i == j) continue;
 
-            const datasize_t low = sindex[j];
+            const sample_t low = sindex[j];
             const int low_label = static_cast<int>(label_[low]);
             const double low_score = scores[low];
             // only consider pairs with different labels
@@ -88,7 +88,7 @@ inline void LambdaRank::get_derivatives_one_query(const double* scores, double* 
 
 }
 
-void LambdaRank::set_eval_rank(std::vector<datasize_t>* eval_ranks) {
+void LambdaRank::set_eval_rank(std::vector<sample_t>* eval_ranks) {
     if (eval_ranks->empty()) {
         for (int i = 1; i <= 5; ++i) {
             eval_ranks->push_back(i);
@@ -122,7 +122,7 @@ void LambdaRank::set_discount() {
     }
 }
 
-double LambdaRank::cal_dcg_k(int k, const label_t* label, const double* score, datasize_t num_data) {
+double LambdaRank::cal_dcg_k(int k, const label_t* label, const double* score, sample_t num_data) {
     std::vector<int> sorted_idx(num_data);
     for (int i = 0; i < num_data; ++i) sorted_idx[i] = i;
     std::stable_sort(sorted_idx.begin(), sorted_idx.end(), [score](int a, int b) 
@@ -138,7 +138,7 @@ double LambdaRank::cal_dcg_k(int k, const label_t* label, const double* score, d
 }
 
 void LambdaRank::cal_dcg(const std::vector<int>& ks, const label_t* label, 
-        const double* score, datasize_t num_data, std::vector<double>* out) {
+        const double* score, sample_t num_data, std::vector<double>* out) {
     std::vector<int> sorted_idx(num_data);
     for (int i = 0; i < num_data; ++i) sorted_idx[i] = i;
     std::stable_sort(sorted_idx.begin(), sorted_idx.end(),[score](int a, int b) 
@@ -158,7 +158,7 @@ void LambdaRank::cal_dcg(const std::vector<int>& ks, const label_t* label,
     }
 }
 
-double LambdaRank::cal_maxdcg_k(int k, const label_t* label, datasize_t num_data) {
+double LambdaRank::cal_maxdcg_k(int k, const label_t* label, sample_t num_data) {
     double ret = 0.0f;
     std::vector<int> label_counts(label_gain_.size(), 0);
     for(int i = 0; i < num_data; ++i) {
@@ -181,7 +181,7 @@ double LambdaRank::cal_maxdcg_k(int k, const label_t* label, datasize_t num_data
 }
 
 void LambdaRank::cal_maxdcg(const std::vector<int>& ks, const label_t* label, 
-                            datasize_t num_data, std::vector<double>* out) {
+                            sample_t num_data, std::vector<double>* out) {
     std::vector<int> label_counts(label_gain_.size(), 0);
     // get counts for all labels
     for (int i = 0; i < num_data; ++i) {

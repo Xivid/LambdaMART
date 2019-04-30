@@ -27,6 +27,7 @@ typedef TreeNode Tree;
 Tree* build_new_tree(const LambdaMART::Dataset& dataset,
                      const std::vector<double>& gradients,
                      const std::vector<double>& hessians,
+                     std::vector<Histogram>     histograms,
                      std::vector<double>&       node_to_score,
                      std::vector<unsigned int>& sample_to_node,
                      const LambdaMART::Config&  config);
@@ -42,7 +43,7 @@ node_t perform_split(const std::vector<SplitInfo>& best_splits,
                      std::vector<double>&          node_to_score,
                      std::vector<unsigned int>&    sample_to_node);
 
-double predict_score(LambdaMART::Dataset* data, datasize_t idx, LambdaMART::Tree* model);
+double predict_score(LambdaMART::Dataset* data, sample_t idx, LambdaMART::Tree* model);
 double predict_score(double x);
 
 }

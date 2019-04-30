@@ -5,13 +5,13 @@ namespace LambdaMART {
 Tree* build_new_tree(const LambdaMART::Dataset& dataset,
                      const std::vector<double>& gradients,
                      const std::vector<double>& hessians,
+                     std::vector<Histogram>&    histograms,
                      std::vector<double>&       node_to_score,
                      std::vector<unsigned int>& sample_to_node,
                      const LambdaMART::Config&  config)
 {
     TreeNode* root = new TreeNode();
     std::vector<SplitInfo> best_splits;
-    std::vector<Histogram> histograms;
     node_t num_nodes_to_split = 1;
 
     for (int depth = 1; depth <= config.max_depth; ++depth) {
@@ -51,7 +51,7 @@ node_t perform_split(const std::vector<SplitInfo>& best_splits,
 
 // TODO
 // Given data, index of data, and treenode, returns the score for this data
-double predict_score(LambdaMART::Dataset* data, datasize_t idx, LambdaMART::Tree* model) {
+double predict_score(LambdaMART::Dataset* data, sample_t idx, LambdaMART::Tree* model) {
     return 0.0;    
 }
 
