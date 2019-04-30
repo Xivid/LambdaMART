@@ -30,6 +30,7 @@ void find_best_splits(std::vector<SplitInfo>& best_splits,
                       const std::vector<double>& hessians,
                       std::vector<unsigned int>& sample_to_node)
 {
+    //TODO: input histograms?
     /*
      * for each feature in dataset
      *   for each sample in [0, dataset->num_samples)

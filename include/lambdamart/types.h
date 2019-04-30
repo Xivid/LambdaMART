@@ -8,7 +8,8 @@ namespace LambdaMART {
     typedef uint32_t feature_t;
     typedef uint8_t  bin_t;
     typedef double   label_t;
-    typedef uint32_t node_t;
+    typedef uint32_t node_t; // value [1, max), 0 represents for no node
+    typedef double   score_t; // score of a node
     typedef double   gradient_t;
 }
 
