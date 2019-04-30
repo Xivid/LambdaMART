@@ -27,7 +27,7 @@ typedef TreeNode Tree;
 Tree* build_new_tree(const LambdaMART::Dataset& dataset,
                      const std::vector<double>& gradients,
                      const std::vector<double>& hessians,
-                     std::vector<Histogram>     histograms,
+                     std::vector<Histogram>&    histograms,
                      std::vector<double>&       node_to_score,
                      std::vector<unsigned int>& sample_to_node,
                      const LambdaMART::Config&  config);
