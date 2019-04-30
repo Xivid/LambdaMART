@@ -11,6 +11,7 @@ namespace LambdaMART {
     typedef uint32_t node_t; // value [1, max), 0 represents for no node
     typedef double   score_t; // score of a node
     typedef double   gradient_t;
+    typedef double   featval_t;
 }
 
 #endif //LAMBDAMART_TYPES_H
