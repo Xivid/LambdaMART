@@ -299,6 +299,7 @@ namespace LambdaMART {
         // desc = optimizes `NDCG <https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG>`__ at this position
         int max_position = 20;
 
+        int max_label = 5;
         // default = 0,1,3,7,15,31,63,...,2^30-1
         // desc = relevant gain for labels. For example, the gain of label ``2`` is ``3`` in case of default label gains
         // desc = separate by ``,``
