@@ -8,7 +8,7 @@
 namespace LambdaMART {
 
 class LambdaRank {
-    friend class Model;
+    friend class Booster;
 
     public:
     explicit LambdaRank(const sample_t* query_boundaries, const sample_t num_queries, label_t* label, const Config& config) {
@@ -17,7 +17,7 @@ class LambdaRank {
         label_ = label;
         kMaxPosition = config.max_position;
         set_eval_rank(&eval_ranks_);
-        set_label_gain(&label_gain_);
+        set_label_gain(config.max_label);
         set_discount();
 
         inverse_max_dcg_.resize(num_queries_);
@@ -30,7 +30,8 @@ class LambdaRank {
         create_sigmoid_table();
     }
 
-    private:
+    // TODO change back to private
+    //private:
         const sample_t* boundaries_;
         sample_t  num_queries_;
         label_t* label_;
@@ -54,7 +55,7 @@ class LambdaRank {
         double sig_factor_;
             
         void set_eval_rank(std::vector<sample_t>* eval_ranks);
-        void set_label_gain(std::vector<double>* label_gain); // uses the default of 2^i-1
+        void set_label_gain(int max_label); // uses the default of 2^i-1
         void set_discount();
 
         //void Init(const std::vector<double>& input_label_gain);

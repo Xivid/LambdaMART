@@ -8,6 +8,7 @@
 #include <cstring>
 #include <array>
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <sstream>
 #include <cstdlib>
@@ -137,14 +138,14 @@ namespace LambdaMART {
         vector<sample_t> query_boundaries_;
 
         explicit Dataset(Config* config = nullptr){
-            bin_cnt = config->max_bin;
+            bin_cnt = config ? config->max_bin : 16;
         }
 
         auto get_data(){
             return data;
         }
 
-        void load_dataset(const char* data_path, const char* query_path, int num_features = -1, Binner* binner = nullptr) {
+        void load_dataset(const char* data_path, const char* query_path, int num_features = -1) {
             if(num_features == -1){
                 // TODO: calculate num_features;
             }
@@ -167,18 +168,10 @@ namespace LambdaMART {
             // delete raw_data
             vector<vector<pair<int, double>>>().swap(raw_data);
 
-            if(!binner)
-                for(auto & feat: this->data) {
-                    feat.sort();
-                    feat.bin(this->bin_size, this->n);
-                    this->binner.thresholds.emplace_back(feat.threshold);
-                }
-            else {
-                int f = 0;
-                for (auto & feat: this->data) {
-                    feat.sort();
-                    feat.bin(this->n, binner, f++);
-                }
+            for(auto & feat: this->data) {
+                feat.sort();
+                feat.bin(this->bin_size, this->n);
+                this->binner.thresholds.emplace_back(feat.threshold);
             }
             cout<<"Loaded dataset of size: "<<this->d<<" x "<<this->n<<endl;
         }
@@ -205,7 +198,7 @@ namespace LambdaMART {
 
         // query boundaries (the first sample_id of each query)
         inline const sample_t* query_boundaries() const {
-            if (!query_boundaries_.empty()) return query_boundaries_.data();
+            if (!query.empty()) return query.data();
             else return nullptr;   
         }
 
@@ -250,7 +243,7 @@ namespace LambdaMART {
             int row_index = 0;
             for (auto &row: raw_data) {
                 for (auto &entry: row)
-                    data[row_index][entry.first] = entry.second;
+                    this->data[row_index][entry.first] = entry.second;
                 row_index++;
             }
         }

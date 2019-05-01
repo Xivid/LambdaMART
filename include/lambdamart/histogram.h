@@ -5,53 +5,53 @@
 
 namespace LambdaMART {
 
-	class FeatureColumn
-	{
-	public:
-		feature_t fid = 0;
+	//class FeatureColumn
+	//{
+	//public:
+	//	feature_t fid = 0;
 
-		std::vector<sample_t> indices;
-		std::vector<bin_t> values;
-		sample_t used = 0;  // number of non-default elements
-		sample_t size = 0;  // total number of elements
-		bin_t default_val = 0;  // most occurred value in this array
-		std::vector<featval_t> splits; // thresholds
+	//	std::vector<sample_t> indices;
+	//	std::vector<bin_t> values;
+	//	sample_t used = 0;  // number of non-default elements
+	//	sample_t size = 0;  // total number of elements
+	//	bin_t default_val = 0;  // most occurred value in this array
+	//	std::vector<featval_t> splits; // thresholds
 
-		void setDefault(bin_t def)
-		{
-			default_val = def;
-		}
+	//	void setDefault(bin_t def)
+	//	{
+	//		default_val = def;
+	//	}
 
-		void setSize(sample_t datasize)
-		{
-			size = datasize;
-		}
+	//	void setSize(sample_t datasize)
+	//	{
+	//		size = datasize;
+	//	}
 
-		void NonDefaultResize(size_t size)
-		{
-			indices.resize(0);
-			indices.reserve(size);
-			values.resize(0);
-			values.reserve(size);
-			used = 0;
-		}
+	//	void NonDefaultResize(size_t size)
+	//	{
+	//		indices.resize(0);
+	//		indices.reserve(size);
+	//		values.resize(0);
+	//		values.reserve(size);
+	//		used = 0;
+	//	}
 
-		void push_back(sample_t index, bin_t value)
-		{
-			indices.push_back(index);
-			values.push_back(value);
-			++used;
-		}
+	//	void push_back(sample_t index, bin_t value)
+	//	{
+	//		indices.push_back(index);
+	//		values.push_back(value);
+	//		++used;
+	//	}
 
-		void toArray(std::vector<bin_t> &vec)
-		{
-			std::fill(vec.begin(), vec.end(), default_val);
-			for (size_t i = 0; i < used; ++i)
-			{
-				vec[indices[i]] = values[i];
-			}
-		}
-	};
+	//	void toArray(std::vector<bin_t> &vec)
+	//	{
+	//		std::fill(vec.begin(), vec.end(), default_val);
+	//		for (size_t i = 0; i < used; ++i)
+	//		{
+	//			vec[indices[i]] = values[i];
+	//		}
+	//	}
+	//};
 
 	struct SplitInfo
 	{
@@ -61,7 +61,7 @@ namespace LambdaMART {
 		SplitInfo() {}
 		SplitInfo(feature_t feature, featval_t threshold) : feature(feature), threshold(threshold) {}
 
-		std::string toString(std::string prefix = "")
+		std::string toString(const std::string& prefix = "")
 		{
 			return prefix + "(feature = " + std::to_string(feature) + ", threshold = " + std::to_string(threshold) + ")";
 		}
@@ -233,20 +233,21 @@ namespace LambdaMART {
 		}
 
 		//TODO: FeatureColumn in dataset.h
-		splitTup BestSplit(FeatureColumn& fc,
+		splitTup BestSplit(const feature_t& fid,
+						   feature& feat,
 						   const NodeInfoStats& nodeInfo,
 						   node_t minInstancesPerNode = 1)
 		{
-			//DEBUG_ASSERT_EX(fc.splits.size() > 0, "empty splits!");
+			//DEBUG_ASSERT_EX(feat.splits.size() > 0, "empty splits!");
 			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
 
-			feature_t feature = fc.fid;
+			//feature_t feature = feat.fid;
 			score_t totalGain = nodeInfo.getLeafSplitGain();
 			NodeInfoStats bestRightInfo;
 			score_t bestShiftedGain = 0.0l;
 			featval_t bestThreshold = 0.0l;
 			bin_t bestThresholdBin = 0;
-			size_t temp_splits_size = fc.splits.size();
+			size_t temp_splits_size = feat.threshold.size();
 
 			for (bin_t i = 1; i < temp_splits_size; ++i)
 			{
@@ -262,13 +263,13 @@ namespace LambdaMART {
 					{
 						bestRightInfo = gt;
 						bestShiftedGain = currentShiftedGain;
-						bestThreshold = fc.splits[th];
+						bestThreshold = feat.threshold[th];
 						bestThresholdBin = th;
 					}
 				}
 			}
 
-			SplitInfo bestSplitInfo(feature, bestThreshold);
+			SplitInfo bestSplitInfo(fid, bestThreshold);
 			score_t splitGain = bestShiftedGain - totalGain;
 			NodeInfoStats bestLeftInfo(nodeInfo - bestRightInfo);
 
@@ -542,25 +543,25 @@ namespace LambdaMART {
 			//}
 		}
 
-		splitTup BestSplit(node_t node, FeatureColumn& fc,
+		splitTup BestSplit(node_t node, feature_t fid,
+						   feature& feat,
 						   const NodeInfoStats& nodeInfo,
 						   node_t minInstancesPerNode = 1)
 		{
-			//DEBUG_ASSERT_EX(fc.splits.size() > 0, "empty splits!");
+			//DEBUG_ASSERT_EX(feat.splits.size() > 0, "empty splits!");
 			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
 
 			const auto bins = _head[node];
-			const auto& temp_splits = fc.splits;
+			const auto& temp_threshold = feat.threshold;
 
-			feature_t feature = fc.fid;
 			score_t totalGain = nodeInfo.getLeafSplitGain();
 			NodeInfoStats bestRightInfo;
 			score_t bestShiftedGain = 0.0l;
 			featval_t bestThreshold = 0.0l;
 			bin_t bestThresholdBin = 0;
-			size_t temp_splits_size = temp_splits.size();
+			size_t temp_threshold_size = temp_threshold.size();
 
-			for (bin_t i = 1; i < temp_splits_size; ++i)
+			for (bin_t i = 1; i < temp_threshold_size; ++i)
 			{
 				bin_t threshLeft = i;
 				NodeInfoStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
@@ -574,13 +575,13 @@ namespace LambdaMART {
 					{
 						bestRightInfo = gt;
 						bestShiftedGain = currentShiftedGain;
-						bestThreshold = temp_splits[th];
+						bestThreshold = temp_threshold[th];
 						bestThresholdBin = th;
 					}
 				}
 			}
 
-			SplitInfo bestSplitInfo(feature, bestThreshold);
+			SplitInfo bestSplitInfo(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
 			NodeInfoStats bestLeftInfo(nodeInfo - bestRightInfo);
 
