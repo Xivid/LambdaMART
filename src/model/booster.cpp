@@ -2,27 +2,21 @@
 
 namespace LambdaMART {
 
-Model* Booster::train(const Dataset& dataset, const Config& config) {
+Model* Booster::train() {
     auto model = new Model();
-    auto treeLearner = new TreeLearner();
-
-    uint64_t                  num_samples = dataset.num_samples();
-    std::vector<double>       currentscores(num_samples, 0.0);
-    std::vector<double>       node_to_score;
-    std::vector<unsigned int> sample_to_node(num_samples);
-    std::vector<double>       gradients(num_samples);
-    std::vector<double>       hessians(num_samples);
-    std::vector<Histogram>    histograms;
-    LambdaRank                ranker(dataset.query_boundaries(), dataset.num_queries(), dataset.label(), config);
+    auto treeLearner = new TreeLearner(dataset, gradients.data(), hessians.data(), config);
 
     bool is_finished = false;
-    int num_iter = config.num_iterations;
+    const int num_iter = config->num_iterations;
+    const double learning_rate = config->learning_rate;
     for (int iter = 0; iter < num_iter && !is_finished; ++iter) {
-        ranker.get_derivatives(currentscores.data(), gradients.data(), hessians.data());
-        model->add_tree(treeLearner->build_new_tree(dataset, gradients, hessians, histograms, node_to_score, sample_to_node, config),
-                        0.0);
+        ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
+
+        Tree* tree = treeLearner->build_new_tree();
+        model->add_tree(tree, 1.0);
+
         for (size_t sid = 0; sid < num_samples; ++sid) {
-            currentscores[sid] += config.learning_rate * node_to_score[sample_to_node[sid]];
+            current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
         is_finished = check_early_stopping();
     }

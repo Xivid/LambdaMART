@@ -1,35 +1,52 @@
 #include <lambdamart/treelearner.h>
+#include <numeric>
 
 namespace LambdaMART {
 
 
-Tree* TreeLearner::build_new_tree(const LambdaMART::Dataset& dataset,
-                     const std::vector<double>& gradients,
-                     const std::vector<double>& hessians,
-                     std::vector<Histogram>&    histograms,
-                     std::vector<double>&       node_to_score,
-                     std::vector<unsigned int>& sample_to_node,
-                     const LambdaMART::Config&  config)
+Tree* TreeLearner::build_new_tree()
 {
-    Tree* root = new Tree();
-    std::vector<SplitInfo> best_splits;
-    node_t num_nodes_to_split = 1;
+    Tree* root = new TreeNode(1);
+    auto* topInfo = new NodeInfoStats(num_samples, std::accumulate(gradients, gradients + num_samples, 0.0));
+    node_queue.emplace(root, topInfo);
 
-    for (int depth = 1; depth <= config.max_depth; ++depth) {
-        histograms.resize(num_nodes_to_split);
-        find_best_splits(best_splits, dataset, gradients, hessians, sample_to_node);
-        num_nodes_to_split = perform_split(best_splits, node_to_score, sample_to_node);
+    this->cur_depth = 1;
+    while (cur_depth < config->max_depth) {
+        num_nodes_to_split = select_split_candidates();
+        if (num_nodes_to_split == 0) break;
+
+        update_candidate_tracker();
+
+        std::vector<SplitInfo>* best_splits = find_best_splits();
+        perform_split(*best_splits, node_to_score, sample_to_node);
     }
 
     return root;
 }
 
-void TreeLearner::find_best_splits(std::vector<SplitInfo>& best_splits,
-                      const LambdaMART::Dataset& dataset,
-                      const std::vector<double>& gradients,
-                      const std::vector<double>& hessians,
-                      std::vector<unsigned int>& sample_to_node)
+int TreeLearner::select_split_candidates() {
+    nodeidx_t num_candidates = 0;
+//    while (!node_queue.empty() && num_candidates < max_splits)
+//    {
+//        auto& candidate = node_queue.top();
+//        node_queue.pop();
+//        split_candidates.push_back(candidate);
+//        nodeId2NodeNo[candidate.node->id] = 0;
+//
+//        ++numNodes;
+//        ++curLeaves;  // TODO(99): Is this nodes and leaves counting method correct?
+//    }
+    return num_candidates;
+}
+
+void TreeLearner::update_candidate_tracker() {
+
+}
+
+std::vector<SplitInfo>* TreeLearner::find_best_splits()
 {
+    histograms.resize(num_nodes_to_split);
+
     //TODO: input histograms?
     /*
      * for each feature in dataset
@@ -41,18 +58,16 @@ void TreeLearner::find_best_splits(std::vector<SplitInfo>& best_splits,
      * for each histogram in histograms
      *   best_splits[histogram.node_id] = histogram.best_split_point()
      */
+    return nullptr;
 }
 
-node_t TreeLearner::perform_split(const std::vector<SplitInfo>& best_splits,
+nodeidx_t TreeLearner::perform_split(const std::vector<SplitInfo>& best_splits,
                      std::vector<double>&          node_to_score,
                      std::vector<unsigned int>&    sample_to_node)
 {
     //update node_to_score, sample_to_node
+    ++cur_depth;
     return 100;
-}
-
-double TreeNode::predict_score(Dataset* data, sample_t idx) {
-    return 0.;
 }
 
 }

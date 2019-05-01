@@ -12,7 +12,8 @@ double* Model::predict(Dataset* data) {
     for (sample_t i = 0; i < num_data; ++i) {
         double score = 0.0f;
         for (size_t m = 0; m < num_iter; ++m) {
-            score += trees[m]->predict_score(data, i);
+            score += 1.;
+            // score += trees[m]->predict_score(data, i);
         }
         out[i] = score;
     }

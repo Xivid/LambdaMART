@@ -235,7 +235,7 @@ namespace LambdaMART {
 		//TODO: FeatureColumn in dataset.h
 		splitTup BestSplit(FeatureColumn& fc,
 						   const NodeInfoStats& nodeInfo,
-						   node_t minInstancesPerNode = 1)
+						   nodeidx_t minInstancesPerNode = 1)
 		{
 			//DEBUG_ASSERT_EX(fc.splits.size() > 0, "empty splits!");
 			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
@@ -328,7 +328,7 @@ namespace LambdaMART {
 	//		pool.shrink_to_fit();
 	//	}
 
-	//	void put(node_t nodeID, const Histogram& hist)
+	//	void put(nodeidx_t nodeID, const Histogram& hist)
 	//	{
 	//		NodeIDToSlot[nodeID] = used_slots;
 	//		SlotToNodeID[used_slots] = nodeID;
@@ -336,7 +336,7 @@ namespace LambdaMART {
 	//		++used_slots;
 	//	}
 
-	//	void put(node_t nodeID, bin_t numBins, const BinInfo* hist)
+	//	void put(nodeidx_t nodeID, bin_t numBins, const BinInfo* hist)
 	//	{
 	//		NodeIDToSlot[nodeID] = used_slots;
 	//		SlotToNodeID[used_slots] = nodeID;
@@ -344,22 +344,22 @@ namespace LambdaMART {
 	//		++used_slots;
 	//	}
 
-	//	bool exist(node_t nodeID)
+	//	bool exist(nodeidx_t nodeID)
 	//	{
 	//		return (NodeIDToSlot[nodeID] >= 0);
 	//	}
 
-	//	const Histogram& get(node_t nodeID)
+	//	const Histogram& get(nodeidx_t nodeID)
 	//	{
 	//		//ERROR_HANDLING_ASSERT_EX(NodeIDToSlot[nodeID] >= 0, "Accessing non-existent histogram pool item (node %u)!", nodeID);
 	//		return pool[NodeIDToSlot[nodeID]];
 	//	}
 
-	//	void remove(node_t myID)
+	//	void remove(nodeidx_t myID)
 	//	{
 	//		// put the last node's histogram into this node's slot
 	//		int mySlot = NodeIDToSlot[myID];
-	//		node_t nodeAtEnd = SlotToNodeID[used_slots - 1];
+	//		nodeidx_t nodeAtEnd = SlotToNodeID[used_slots - 1];
 
 	//		NodeIDToSlot[nodeAtEnd] = mySlot;
 	//		SlotToNodeID[mySlot] = nodeAtEnd;
@@ -373,7 +373,7 @@ namespace LambdaMART {
 	class HistogramMatrix
 	{
 	private:
-		node_t _numNodes;
+		nodeidx_t _numNodes;
 		bin_t _numBins;  // unified max num of bins
 		BinInfo** _head;
 		BinInfo* _data;
@@ -381,7 +381,7 @@ namespace LambdaMART {
 	public:
 		HistogramMatrix() : _numNodes(0), _numBins(0), _head(nullptr), _data(nullptr) {}
 
-		HistogramMatrix(node_t nodes, bin_t bins)
+		HistogramMatrix(nodeidx_t nodes, bin_t bins)
 		{
 			init(nodes, bins);
 		}
@@ -389,7 +389,7 @@ namespace LambdaMART {
 		HistogramMatrix(HistogramMatrix const &) = delete;
 		HistogramMatrix& operator=(HistogramMatrix const &) = delete;
 
-		void init(node_t nodes, bin_t bins)
+		void init(nodeidx_t nodes, bin_t bins)
 		{
 			if (_data != nullptr)
 				free(_data);
@@ -404,7 +404,7 @@ namespace LambdaMART {
 			_data = (BinInfo*)malloc(sizeof(BinInfo) * nodes * bins);
 			//_head = (BinInfo**)_aligned_malloc(sizeof(BinInfo*) * nodes, sizeof(BinInfo*));
 			//_data = (BinInfo*)_aligned_malloc(sizeof(BinInfo) * nodes * bins, 8);
-			for (node_t i = 0; i < nodes; ++i)
+			for (nodeidx_t i = 0; i < nodes; ++i)
 			{
 				_head[i] = _data + i * bins;
 			}
@@ -426,7 +426,7 @@ namespace LambdaMART {
 			}
 		}
 
-		inline void clear(node_t nodes)
+		inline void clear(nodeidx_t nodes)
 		{
 			for (size_t i = 0; i < (size_t)nodes * _numBins; ++i)
 			{
@@ -434,7 +434,7 @@ namespace LambdaMART {
 			}
 		}
 
-		inline BinInfo* operator[](node_t node)
+		inline BinInfo* operator[](nodeidx_t node)
 		{
 			return _head[node];
 		}
@@ -449,7 +449,7 @@ namespace LambdaMART {
 			return _numBins;
 		}
 
-		inline void cumulate(node_t node, const NodeInfoStats* info, bin_t numBins, bin_t defaultBin)
+		inline void cumulate(nodeidx_t node, const NodeInfoStats* info, bin_t numBins, bin_t defaultBin)
 		{
 			// TODO: loop unrolling
 
@@ -489,7 +489,7 @@ namespace LambdaMART {
 			bins[0] = total;
 		}
 
-		inline void GetFromDifference(node_t node, bin_t numBins, const Histogram& parent_hist, BinInfo* sibling)
+		inline void GetFromDifference(nodeidx_t node, bin_t numBins, const Histogram& parent_hist, BinInfo* sibling)
 		{
 			BinInfo* bins = _head[node];
 			const std::vector<BinInfo>& pbins = parent_hist.bins;
@@ -515,7 +515,7 @@ namespace LambdaMART {
 			//}
 		}
 
-		inline void GetFromDifference(node_t node, bin_t numBins, const Histogram& parent_hist, const Histogram& sibling_hist)
+		inline void GetFromDifference(nodeidx_t node, bin_t numBins, const Histogram& parent_hist, const Histogram& sibling_hist)
 		{
 			auto bins = _head[node];
 			const std::vector<BinInfo>& pbins = parent_hist.bins;
@@ -542,9 +542,9 @@ namespace LambdaMART {
 			//}
 		}
 
-		splitTup BestSplit(node_t node, FeatureColumn& fc,
+		splitTup BestSplit(nodeidx_t node, FeatureColumn& fc,
 						   const NodeInfoStats& nodeInfo,
-						   node_t minInstancesPerNode = 1)
+						   nodeidx_t minInstancesPerNode = 1)
 		{
 			//DEBUG_ASSERT_EX(fc.splits.size() > 0, "empty splits!");
 			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
