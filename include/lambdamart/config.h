@@ -7,6 +7,9 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <map>
+#include <fstream>
+#include <cstring>
 #include <unordered_set>
 #include <algorithm>
 #include <memory>
@@ -39,24 +42,43 @@ namespace LambdaMART {
         static void KV2Map(unordered_map<string, string>& params, const char* kv);
         static unordered_map<string, string> Str2Map(const char* parameters);
 
-#pragma region Parameters
+        explicit Config(const char* filepath = nullptr) {
+            this->config_file = filepath;
+            ifstream infile(config_file);
+            string line;
+            if (infile.is_open()) {
+                while (getline(infile, line)) {
+                    istringstream row(line);
+                    string token = row.str();
+                    int delimiter = token.find(':');
+                    string key = token.substr(0, delimiter);
+                    string val = token.substr(delimiter + 1, token.length());
+                    this->properties[key] = val;
+                }
+            }
+            infile.close();
 
-#pragma region Core Parameters
+            this->train_data = this->properties.empty() ? "" : properties["train_data"];
+            this->valid_data = this->properties.empty() ? "" : properties["val_data"];
+            this->num_iterations = this->properties.empty() ? 100 : stoi(properties["num_iterations"]);
+            this->learning_rate = properties.empty() ? 0.01 : stof(properties["learning_rate"]);
+            this->num_leaves = properties.empty() ? kDefaultNumLeaves : stoi(properties["num_leaves"]);
+        }
+        #pragma region Parameters
 
-        string config_file= "";
+        #pragma region Core Parameters
+
+        string config_file;
+        map<string, string> properties;
         TaskType task = TaskType::Train;
 
         // desc = ``lambdarank``, `lambdarank <https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf>`__ application
         // descl2 = label should be ``int`` type in lambdarank tasks, and larger number represents the higher relevance (e.g. 0:bad, 1:fair, 2:good, 3:perfect)
         // descl2 = `label_gain <#objective-parameters>`__ can be used to set the gain (weight) of ``int`` label
         // descl2 = all values in ``label`` must be smaller than number of elements in ``label_gain``
-        string objective = "lambdarank";
-        string boosting = "gbdt";
-        string train_data = "";
-        string valid_data = "";
-        int num_iterations = 100;
-        double learning_rate = 0.1;
-        int num_leaves = kDefaultNumLeaves;
+        string train_data, valid_data;
+        int num_iterations, num_leaves;
+        double learning_rate;
 
         // options = serial, feature, data, voting
         // desc = ``serial``, single machine tree learner
@@ -65,9 +87,6 @@ namespace LambdaMART {
         // desc = ``voting``, voting parallel tree learner, aliases: ``voting_parallel``
         // desc = refer to `Parallel Learning Guide <./Parallel-Learning-Guide.rst>`__ to get more details
         string tree_learner = "serial";
-
-        const int num_threads = 0;
-        const string device_type = "cpu";
         int seed = 0;
 
 #pragma endregion
