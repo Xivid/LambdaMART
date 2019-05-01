@@ -160,7 +160,7 @@ double LambdaRank::cal_maxdcg_k(int k, const label_t* label, sample_t num_data) 
     double ret = 0.0f;
     std::vector<int> label_counts(label_gain_.size(), 0);
     for(int i = 0; i < num_data; ++i) {
-        label_counts[static_cast<int>(label[i])]++;
+        label_counts[static_cast<int>(label_[i])]++;
     }
     // top_label has the highest label_gain_
     int top_label = static_cast<int>(label_gain_.size()) - 1;
