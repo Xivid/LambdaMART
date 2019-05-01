@@ -96,7 +96,7 @@ namespace LambdaMART {
         Binner binner;
 
     protected:
-        static void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<label_t> &rank){
+        void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<label_t> &rank){
             ifstream infile(path);
             string line;
             if(infile.is_open()){
@@ -120,12 +120,15 @@ namespace LambdaMART {
             infile.close();
         }
 
-        static void load_query_from_file(const char* path, vector<sample_t>& q){
+        void load_query_from_file(const char* path){
+            sample_t sum = 0;
+            query_boundaries.emplace_back(0);
             ifstream infile(path);
             string line;
             if(infile.is_open()){
                 while(getline(infile, line)){
-                    q.emplace_back(stoi(line));
+                    sum += stoi(line);
+                    query_boundaries.emplace_back(sum);
                 }
             }
             infile.close();
@@ -134,7 +137,7 @@ namespace LambdaMART {
     public:
         int n, d;
         vector<label_t> rank;
-        vector<sample_t> query;
+        vector<sample_t> query_boundaries;
 
         explicit Dataset(Config* config = nullptr){
             bin_cnt = config ? config->max_bin : 16;
@@ -159,7 +162,7 @@ namespace LambdaMART {
             this->bin_size = (int)(n/bin_cnt);
             init_data();
 
-            load_query_from_file(query_path, this->query);
+            load_query_from_file(query_path);
 
             int row_index = 0;
             for(auto & row: raw_data){
@@ -200,21 +203,12 @@ namespace LambdaMART {
         }
 
         // query boundaries (the first sample_id of each query)
-        inline const sample_t* query_boundaries() const {
-            sample_t* query_boundaries = new sample_t[query.size()+1];
-            //vector<sample_t> query_boundaries(query.size()+1, 0);
-            query_boundaries[0] = 0;
-            for(int i=1; i<= query.size(); i++)
-                query_boundaries[i] = query_boundaries[i-1] + query[i-1];
-            return query_boundaries;
-        }
-
-        const vector<sample_t>& get_queries() const {
-            return this->query;
+        inline const sample_t* get_query_boundaries() const {
+            return query_boundaries.data();
         }
 
         sample_t num_queries() const {
-            return query.size();
+            return query_boundaries.size() - 1;
         }
 
         sample_t num_samples() const {
@@ -245,7 +239,7 @@ namespace LambdaMART {
             this->n = raw_data.size();
             init_data();
 
-            load_query_from_file(query_path, this->query);
+            load_query_from_file(query_path);
 
             for(int i=0; i<n; i++)
                 data.emplace_back(vector<double>(this->d, 0));

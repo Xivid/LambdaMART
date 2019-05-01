@@ -130,7 +130,7 @@ void test3() {
     sample_t num_samples = X_train->num_samples();
     sample_t num_queries = X_train->num_queries();
     label_t* label = X_train->get_labels();
-    const sample_t* bounds = X_train->query_boundaries();
+    const sample_t* bounds = X_train->get_query_boundaries();
     config->max_position = num_samples;
     config->max_label = 4;
 
