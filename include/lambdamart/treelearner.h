@@ -111,12 +111,12 @@ public:
     TreeLearner(const Dataset* _dataset, const double* _gradients, const double* _hessians, const Config* _config) :
         dataset(_dataset), gradients(_gradients), hessians(_hessians), config(_config)
     {
-        num_samples = dataset->num_samples();
+        tie(num_samples, num_features) = dataset->shape();
         max_splits = config->max_splits;
         node_to_score.resize(1<<(config->max_depth));
         sample_to_node.resize(num_samples, 0);
         node_to_candidate.resize(1<<(config->max_depth));
-        histograms.resize(config->max_splits);
+        histograms.init(config->max_splits, config->max_bin);
     }
 
 private:
@@ -151,17 +151,20 @@ private:
     const double*             hessians;
 
     // as working set
-    uint64_t                     num_samples;
-    size_t                       max_splits;
-    std::vector<Histogram>       histograms;
-    std::vector<double>          node_to_score;
-    std::vector<nodeidx_t>       sample_to_node;
-    std::vector<SplitCandidate*> split_candidates;
-    std::vector<nodeidx_t>       node_to_candidate;
-    std::vector<int>             sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
-    unsigned                     cur_depth = 0;
-    nodeidx_t                    num_candidates = 0;
-    std::vector<SplitInfo>       best_splits;
+    sample_t                            num_samples;
+    feature_t                           num_features;
+    bin_t                               num_bins;
+    HistogramMatrix                     histograms;
+    unsigned                            cur_depth = 0;
+    std::vector<splitTup>               best_splits;
+    size_t                              max_splits;
+    std::vector<double>                 node_to_score;
+    std::vector<unsigned int>           sample_to_node;
+    std::vector<SplitCandidate*>        split_candidates;
+    std::vector<NodeInfoStats*>         node_info;
+    std::vector<int>                    node_to_candidate;
+    std::vector<int>                    sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
+    nodeidx_t                           num_candidates = 0;
     std::priority_queue<SplitCandidate*, std::vector<SplitCandidate*>, CmpCandidates> node_queue;
 
     // tree building methods

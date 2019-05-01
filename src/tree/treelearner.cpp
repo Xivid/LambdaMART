@@ -55,15 +55,39 @@ bool TreeLearner::select_split_candidates() {
  */
 void TreeLearner::find_best_splits()
 {
-    histograms.resize(num_candidates);
-    best_splits.resize(num_candidates);
-
-    //TODO: input histograms?
     /*
      * for each feature in dataset
      *   for each sample in [0, dataset->num_samples)
      *     histograms[sample_to_node[sample]][feature[sample]].update(gradients[sample], hessians[sample]);
      */
+
+    best_splits.resize(num_candidates);
+    for (feature_t fid = 0; fid < num_features; ++fid)
+    {
+        histograms.clear(num_candidates);
+        const feature& feat = dataset->get_data()[fid];
+
+        //TODO: unrolling
+        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx)
+        {
+            const int node = sample_to_candidate[sample_idx];
+            if (node != -1)
+            {
+                const bin_t bin = feat.bin_index[sample_idx];
+                histograms[node][bin].update(1.0, gradients[sample_idx]);
+            }
+        }
+
+        for (nodeidx_t node = 0; node < num_candidates; ++node)
+        {
+            histograms.cumulate(node);
+            auto temptuple = histograms.BestSplit(node, fid, feat, node_info[node], config->min_data_in_leaf);
+            if (std::get<2>(temptuple) >= std::get<2>(best_splits[node]))
+            {
+                best_splits[node] = temptuple;
+            }
+        }
+    }
 
     /*
      * for each histogram in histograms

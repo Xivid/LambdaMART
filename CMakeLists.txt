@@ -9,4 +9,3 @@ file (GLOB SOURCES
         src/dataset/*.cpp
         src/tree/*.cpp)
 add_executable(lambdamart main.cpp ${SOURCES})
-add_executable(ndcg tests/ndcg.cpp ${SOURCES})

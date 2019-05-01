@@ -87,6 +87,7 @@ namespace LambdaMART {
             vector<int> nnz_bin_index;
             for(auto & i: this->sample_index)
                 nnz_bin_index.emplace_back(this->bin_index[i]);
+            return nnz_bin_index;
         }
     };
 
@@ -148,7 +149,7 @@ namespace LambdaMART {
             bin_cnt = config ? config->max_bin : 16;
         }
 
-        auto get_data(){
+        auto get_data() const{
             return data;
         }
 
@@ -218,6 +219,10 @@ namespace LambdaMART {
 
         label_t* get_labels() {
             return rank.data();
+        }
+
+        int num_bins() const {
+            return this->bin_cnt;
         }
     };
 
