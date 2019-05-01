@@ -456,10 +456,11 @@ namespace LambdaMART {
 			}
 
 			BinInfo* bins = _head[node];
-			for (bin_t bin = bin_cnt-2; bin >= 0; --bin)
+			for (bin_t bin = bin_cnt-2; bin > 0; --bin)
 			{
 				bins[bin] += bins[bin+1];
 			}
+			bins[0] += bins[1];
 		}
 		//TODO: defaultBin - part of optimization
 		//inline void cumulate(nodeidx_t node, const NodeInfoStats* info, bin_t defaultBin)

@@ -13,9 +13,13 @@ Model* Booster::train() {
 
     for (int iter = 0; iter < num_iter && !is_finished; ++iter) {
         ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
+//        double s = 0;
+//        for (auto x: gradients) {
+//            s += x;
+//        }
 
         Tree* tree = treeLearner->build_new_tree();
-        model->add_tree(tree, 1.0);  // TODO: tree weight?
+        model->add_tree(tree, learning_rate);
 
         for (size_t sid = 0; sid < num_samples; ++sid) {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
