@@ -1,10 +1,11 @@
 #include <lambdamart/model.h>
+#include <lambdamart/dataset.h>
 
 namespace LambdaMART {
 
 
 void Model::train(const Dataset& dataset, const Config& config) {
-    uint64_t                  num_samples = dataset.get_num_samples();
+    uint64_t                  num_samples = dataset.num_samples();
     std::vector<double>       currentscores(num_samples, 0.0);
     std::vector<double>       node_to_score;
     std::vector<unsigned int> sample_to_node(num_samples);
@@ -28,7 +29,7 @@ void Model::train(const Dataset& dataset, const Config& config) {
 double* Model::predict(Dataset* data) {
     size_t num_iter = trees.size();
     if (num_iter == 0) return nullptr;
-    sample_t num_data = data->get_num_samples();
+    sample_t num_data = data->num_samples();
     double *out = new double[num_data];
     for (sample_t i = 0; i < num_data; ++i) {
         double score = 0.0f;

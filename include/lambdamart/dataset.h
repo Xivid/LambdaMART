@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <iterator>
 #include <sstream>
+#include <cstdlib>
+#include <iostream>
 
 #include <lambdamart/types.h>
 
@@ -31,56 +33,59 @@ namespace LambdaMART {
         vector<double> sample_data;
         vector<double> threshold;
 
-        feature() : threshold(BIN_CNT) {}
+        feature(){
+            this->threshold.resize(BIN_CNT, -1);
+        }
 
-        void sort(){
-            std::sort(samples.begin(), samples.end());
+        //sorts and extracts samples and indexes from vector of pairs
+        void sort() {
+            std::sort(this->samples.begin(), this->samples.end());
 
-            for(auto & sample: samples) {
+            for(auto & sample: this->samples) {
                 this->sample_data.emplace_back(sample.first);
                 this->sample_index.emplace_back(sample.second);
             }
-
             // delete samples
-            vector<pair<double, int>>().swap(samples);
+            vector<pair<double, int>>().swap(this->samples);
         }
 
-         //updates threshold & bin_index
-        void bin(int bin_size, int n){
-            int curr_count = 0, bin_count = 0;
-            this->bin_index.resize(n, -1);
-
-            for(int i=0; i<n; i++){
-                if(curr_count++ <= bin_size | sample_data[i-1] == sample_data[i]){
-                    bin_index.emplace_back(bin_count);
-                }
-                else{
-                    curr_count = 0;
-                    i--;
-                    threshold[bin_count] = (sample_data[i] + sample_data[i+1]) / 2.0;
-                    bin_count++;
-                }
-            }
-        }
-
-         void bin(int bin_size, int n, Binner* binner, int f){
-             this->bin_index.resize(n, -1);
-             vector<double>& thresholds = binner->thresholds[f];
+         //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
+         void bin(int bin_size, int n) {
              int curr_count = 0, bin_count = 0;
-             for (int i = 0; i < n; i++) {
+             // for first value
+             bin_index.emplace_back(bin_count);
+
+             for (int i = 1; i < n; i++) {
+                 if (curr_count++ <= bin_size | abs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
+                     bin_index.emplace_back(bin_count);
+                 else {
+                     curr_count = 0;
+                     i--;
+                     threshold[bin_count] = i < n-1 ? (this->sample_data[i] + this->sample_data[i + 1]) / 2.0 : this->sample_data[i] + 0.1;
+                     bin_count++;
+                 }
+             }
+         }
+
+        //overloaded bin for using predefined threshold values, using binner class and index of feature being binned.
+        void bin(int n, Binner *binner, int f) {
+            this->bin_index.resize(n, -1);
+            vector<double> thresholds = binner->thresholds[f];
+            int bin_count = 0;
+            for (int i = 0; i < n; i++) {
                 if(sample_data[i] <= thresholds[bin_count])
                     bin_index[i] = bin_count;
                 else{
                     bin_count++;
                     i--;
                 }
-             }
+            }
         }
     };
 
 
     class Dataset {
-        vector<feature> data; // d rows, n columns
+        vector<feature> data; // feature major; d rows, n columns
         int n, d, bin_size;
         Binner binner;
         vector<int> rank;
@@ -91,8 +96,8 @@ namespace LambdaMART {
             ifstream infile(path);
             string line;
             if(infile.is_open()){
-                vector<pair<int, double>> record;
                 while(getline(infile, line)){
+                    vector<pair<int, double>> record;
                     istringstream row(line);
                     vector<string> tokens{istream_iterator<string>{row}, istream_iterator<string>{}};
                     for(auto & token: tokens){
@@ -101,11 +106,11 @@ namespace LambdaMART {
                             rank.emplace_back(stoi(token));
                             continue;
                         }
-                        int index = stoi(token.substr(0, delimiter));
+                        int index = stoi(token.substr(0, delimiter)) - 1;
                         double val = stof(token.substr(delimiter+1, token.length()));
                         record.emplace_back(make_pair(index, val));
                     }
-                    data.push_back(record);
+                    data.emplace_back(record);
                 }
             }
             infile.close();
@@ -126,9 +131,8 @@ namespace LambdaMART {
         void load_dataset(const char* data_path, const char* query_path = nullptr, int num_features = -1, Binner* binner = nullptr) {
             if(num_features == -1){
                 // TODO: calculate num_features;
-                this->d = num_features;
             }
-
+            this->d = num_features;
             vector<vector<pair<int, double>>> raw_data;
             load_data_from_file(data_path, raw_data, this->rank);
             this->n = raw_data.size();
@@ -156,25 +160,26 @@ namespace LambdaMART {
                 }
             else {
                 int f = 0;
-                for (auto &feat: this->data) {
+                for (auto & feat: this->data) {
                     feat.sort();
-                    feat.bin(this->bin_size, this->n, binner, f++);
+                    feat.bin(this->n, binner, f++);
                 }
             }
         }
 
-        // initialize `n x d` matrix
+        // initialize a sample-major `n x d` matrix
         void init_data(){
             this->data.reserve(this->d);
             for(int i=0; i<this->d; i++){
-                this->data[i].samples = vector<pair<double, int>>();
+                feature f = feature();
                 for(int k=0; k<this->n; k++)
-                    this->data[i].samples.emplace_back(make_pair(0.0, k));
+                    f.samples.emplace_back(make_pair(0.0, k));
+                this->data.emplace_back(f);
             }
         }
 
         // returns dimensions of raw data
-        pair<int, int> shape(){
+        pair<int, int> shape() const{
             return make_pair(this->n, this->d);
         }
 
@@ -194,18 +199,17 @@ namespace LambdaMART {
         }
 
         sample_t num_queries() const {
-            // TODO
-            return 0;
+            return this->query.size();
         }
 
-        sample_t get_num_samples() const {
+        sample_t num_samples() const {
             return this->n;
         }
 
         // returns pointer to labels
         label_t* label() const {
-            //TODO
-            return nullptr; 
+//            return this->rank;
+            return nullptr;
         }
     };
 }
