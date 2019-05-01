@@ -9,16 +9,14 @@
 
 namespace LambdaMART {
     class Model {
-        std::vector<Tree*>        trees;
-        std::vector<double>       tree_weights;
-        uint64_t                  num_samples;
+        friend class Booster;
 
+        std::vector<Tree*>  trees;
+        std::vector<double> tree_weights;
+        uint64_t            num_samples;
+        void add_tree(Tree* tree, double tree_weight) { trees.push_back(tree); tree_weights.push_back(tree_weight); }
     public:
-        void    train(const LambdaMART::Dataset& dataset, const LambdaMART::Config& config);
         double* predict(Dataset* data);
-
-        bool    check_early_stopping();
-
     };
 }
 #endif //LAMBDAMART_MODEL_H

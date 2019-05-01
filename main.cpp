@@ -15,9 +15,8 @@ void demo() {
     LambdaMART::Dataset* X_test = new LambdaMART::Dataset();
     X_test->load_dataset("data/demo.test", "data/demo.test.query", -1, binner);
     LambdaMART::Config* config = new LambdaMART::Config();
-    
-    LambdaMART::Model* model = new LambdaMART::Model();
-    model->train(*X_train, *config);
+
+    LambdaMART::Model* model = (new LambdaMART::Booster())->train(*X_train, *config);
     double* predictions = model->predict(X_test);
 
 }

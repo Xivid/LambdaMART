@@ -61,7 +61,7 @@ namespace LambdaMART {
 		SplitInfo() {}
 		SplitInfo(feature_t feature, featval_t threshold) : feature(feature), threshold(threshold) {}
 
-		std::string toString(std::string prefix = "")
+		std::string toString(const std::string& prefix = "")
 		{
 			return prefix + "(feature = " + std::to_string(feature) + ", threshold = " + std::to_string(threshold) + ")";
 		}

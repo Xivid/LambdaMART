@@ -8,6 +8,7 @@
 #include <lambdamart/config.h>
 #include <lambdamart/common.h>
 #include <lambdamart/dataset.h>
+#include <lambdamart/booster.h>
 #include <lambdamart/model.h>
 #include <lambdamart/log.h>
 

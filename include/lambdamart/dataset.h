@@ -9,6 +9,7 @@
 #include <cstring>
 #include <array>
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <sstream>
 #include <cstdlib>
@@ -56,7 +57,7 @@ namespace LambdaMART {
              bin_index.emplace_back(bin_count);
 
              for (int i = 1; i < n; i++) {
-                 if (curr_count++ <= bin_size | abs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
+                 if (curr_count++ <= bin_size | fabs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
                      bin_index.emplace_back(bin_count);
                  else {
                      curr_count = 0;
