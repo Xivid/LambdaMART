@@ -44,7 +44,7 @@ inline void LambdaRank::get_derivatives_one_query(const double* scores, double* 
 
     for (sample_t i = 0; i < count; ++i) {
         const sample_t high = sindex[i];
-        const int high_label = static_cast<int>(label_[high]);
+        const int high_label = static_cast<int>(label_[start + high]);
         const double high_score = scores[high];
         if (high_score == kminscore) {continue; }
         const double hl_gain = label_gain_[high_label];
@@ -55,7 +55,7 @@ inline void LambdaRank::get_derivatives_one_query(const double* scores, double* 
             if (i == j) continue;
 
             const sample_t low = sindex[j];
-            const int low_label = static_cast<int>(label_[low]);
+            const int low_label = static_cast<int>(label_[start + low]);
             const double low_score = scores[low];
             // only consider pairs with different labels
             if (high_label <= low_label || low_score == kminscore) continue;
@@ -103,16 +103,14 @@ void LambdaRank::set_eval_rank(std::vector<sample_t>* eval_ranks) {
         }
     }
 }
-void LambdaRank::set_label_gain(std::vector<double>* label_gain) {
-    // TODO: where to set max label
+void LambdaRank::set_label_gain(int max_label) {
     // relevant gain for labels
     // label_gain = 2^i - 1, may overflow, so we use 31 here
-    const int max_label = 31;
-    label_gain->push_back(0.0f);
-    for (int i = 1; i < max_label; ++i) {
-        label_gain->push_back(static_cast<double>((1 << i) - 1));
+    label_gain_.push_back(0.0f);
+    for (int i = 1; i <= max_label; ++i) {
+        label_gain_.push_back(static_cast<double>((1 << i) - 1));
     }
-    label_gain_.resize(label_gain->size());
+    label_gain_.resize(max_label+1);
 }
 
 void LambdaRank::set_discount() {
