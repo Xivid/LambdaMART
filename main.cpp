@@ -7,8 +7,10 @@
 using namespace std;
 
 void demo(LambdaMART::Config* config) {
-    const char* train = "data/mq2008/small.train";
-    const char* train_query = "data/mq2008/small.train.query";
+//    const char* train = "data/mq2008/small.train";
+//    const char* train_query = "data/mq2008/small.train.query";
+    const char* train = config->train_data.c_str();
+    const char* train_query = config->train_query.c_str();
     LambdaMART::Log::Info("Loading training dataset %s and query boundaries %s", train, train_query);
     auto* X_train = new LambdaMART::Dataset(config);
     X_train->load_dataset(train, train_query, 300);
@@ -17,8 +19,10 @@ void demo(LambdaMART::Config* config) {
     LambdaMART::Model* model = (new LambdaMART::Booster(X_train, config))->train();
     LambdaMART::Log::Info("Training finished.");
 
-    const char* vali = "data/mq2008/small.vali";
-    const char* vali_query = "data/mq2008/small.vali.query";
+//    const char* vali = "data/mq2008/small.vali";
+//    const char* vali_query = "data/mq2008/small.vali.query";
+    const char* vali = config->valid_data.c_str();
+    const char* vali_query = config->valid_query.c_str();
     LambdaMART::Log::Info("Loading test dataset %s and query boundaries %s", vali, vali_query);
     auto* X_test = new LambdaMART::RawDataset();
     X_test->load_dataset(vali, vali_query);
@@ -29,23 +33,17 @@ void demo(LambdaMART::Config* config) {
 }
 
 int main(int argc, char** argv) {
-    LambdaMART::Log::ResetLogLevel(LambdaMART::LogLevel::Debug);
-
     cout << LambdaMART::version() << endl;
-    LambdaMART::Config *config;
 
     if (argc <= 1) {
         cout << LambdaMART::help() << endl;
-        config = new LambdaMART::Config();
+        exit(0);
     }
-    else {
-        config = new LambdaMART::Config(argv[1]);
-        LambdaMART::Log::Info("Using configuration file %s", argv[1]);
-    }
+
+    LambdaMART::Log::Info("Using configuration file %s", argv[1]);
+    auto* config = new LambdaMART::Config(argv[1]);
 
     demo(config);
-
-    // TODO: support commandline arguments
 
     return 0;
 }

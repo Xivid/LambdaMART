@@ -116,6 +116,8 @@ namespace LambdaMART {
                     }
                     data.emplace_back(record);
                 }
+            } else {
+                Log::Fatal("Cannot open file %s", path);
             }
             infile.close();
         }
@@ -130,6 +132,8 @@ namespace LambdaMART {
                     sum += stoi(line);
                     query_boundaries.emplace_back(sum);
                 }
+            } else {
+                Log::Fatal("Cannot open file %s", path);
             }
             infile.close();
         }
