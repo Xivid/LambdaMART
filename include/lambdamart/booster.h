@@ -27,7 +27,7 @@ namespace LambdaMART {
             gradients.resize(num_samples);
             hessians.resize(num_samples);
             Log::Debug("Creating ranker");
-            ranker = new LambdaRank(dataset->get_query_boundaries(), dataset->num_queries(), dataset->label(), *config);
+            ranker = new LambdaRank(dataset->get_query_boundaries(), dataset->num_queries(), dataset->get_labels(), *config);
             Log::Debug("Done");
         }
 

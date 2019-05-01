@@ -222,10 +222,6 @@ namespace LambdaMART {
         label_t* get_labels() {
             return rank.data();
         }
-        // returns pointer to labels
-        label_t* label() const {
-            return nullptr; //rank.data();
-        }
     };
 
     class RawDataset: public Dataset{
