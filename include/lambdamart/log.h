@@ -13,6 +13,7 @@
 #include <cstring>
 #include <exception>
 #include <stdexcept>
+#include <chrono>
 
 namespace LambdaMART {
 

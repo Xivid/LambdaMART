@@ -29,17 +29,17 @@ class LambdaRank {
         }
         create_sigmoid_table();
     }
+    
+    void get_derivatives(double* currentScores, double* gradients, double* hessians);
+    void get_derivatives_one_query(const double* scores, double* gradients, 
+                                    double* hessians, sample_t query_id);
 
-    // TODO change back to private
-    //private:
+
+    private:
         const sample_t* boundaries_;
         sample_t  num_queries_;
         label_t* label_;
         std::vector<double> inverse_max_dcg_;
-        void get_derivatives(double* currentScores, double* gradients, double* hessians);
-        void get_derivatives_one_query(const double* scores, double* gradients, 
-                                        double* hessians, sample_t query_id);
-
         // NDCG related fields
         std::vector<double> label_gain_;
         std::vector<sample_t> eval_ranks_;
