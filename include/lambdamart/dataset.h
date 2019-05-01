@@ -201,11 +201,12 @@ namespace LambdaMART {
 
         // query boundaries (the first sample_id of each query)
         inline const sample_t* query_boundaries() const {
-            vector<sample_t> query_boundaries(query.size()+1, 0);
+            sample_t* query_boundaries = new sample_t[query.size()+1];
+            //vector<sample_t> query_boundaries(query.size()+1, 0);
             query_boundaries[0] = 0;
             for(int i=1; i<= query.size(); i++)
                 query_boundaries[i] = query_boundaries[i-1] + query[i-1];
-            return query_boundaries.data();
+            return query_boundaries;
         }
 
         const vector<sample_t>& get_queries() const {

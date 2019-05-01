@@ -32,11 +32,12 @@ void test1() {
 
     label[9] = (label_t)0;
     label[10] = (label_t)3;
+
     sample_t* bounds = new sample_t[4];
     bounds[0] = (sample_t) 0;
     bounds[1] = (sample_t) 6;
     bounds[2] = (sample_t) 9;
-    bounds[3] = (sample_t) 11;   
+    bounds[3] = (sample_t) 11;
 
     // int num_samples = 2;
     // label_t* label = new label_t[num_samples];
@@ -67,6 +68,15 @@ void test1() {
     std::vector<double> currentscores(num_samples, 0.0);
     std::vector<double> gradients(num_samples, 0.0);
     std::vector<double> hessians(num_samples, 0.0);
+
+//    currentscores[0] = 0;
+//    currentscores[1] = 3;
+//    currentscores[2] = 0;
+//    currentscores[3] = 10;
+//
+//    currentscores[8] = 100;
+//    currentscores[10] = 1000;
+
     config->max_position = 1000;
     config->max_label = 3;
     LambdaMART::LambdaRank* ranker = new LambdaMART::LambdaRank(bounds, (sample_t)3, label, *config);
@@ -127,21 +137,20 @@ void test3() {
     std::vector<double> currentscores(num_samples, 0.0);
     std::vector<double> gradients(num_samples, 0.0);
     std::vector<double> hessians(num_samples, 0.0);
-    std::cout << num_samples << std::endl;
+    std::cout << "num samples: " << num_samples << std::endl;
     std::cout << "queries: " << num_queries << std::endl;
 
-    for (int i = 0; i < 10; i++) {
-        std::cout << label[i] << std::endl;
-        std::cout << bounds[i] << std::endl;
-    }
+//    for (int i = 0; i < 10; i++) {
+//        std::cout << label[i] << std::endl;
+//        std::cout << bounds[i] << std::endl;
+//    }
     LambdaMART::LambdaRank* ranker = new LambdaMART::LambdaRank(bounds, num_queries, label, *config);
     ranker->get_derivatives(currentscores.data(), gradients.data(), hessians.data());
     for (int i = 0; i < num_samples; ++i) {
         assert (gradients[i] != 0.0);
         assert (hessians[i] != 0.0);
-        std::cout << currentscores[i] << " " << gradients[i] << " " << hessians[i] << std::endl;
+        //std::cout << currentscores[i] << " " << gradients[i] << " " << hessians[i] << std::endl;
     }
-    std::cout << "gradient " << gradients[400] << std::endl;
 }
 
 int main() {

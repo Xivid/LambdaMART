@@ -13,7 +13,7 @@ void LambdaRank::get_derivatives(double* currentScores, double* gradients, doubl
     }
 }
 
-inline void LambdaRank::get_derivatives_one_query(const double* scores, double* gradients, 
+inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradients,
                                         double* hessians, sample_t query_id) {
     
     const double kminscore = -std::numeric_limits<double>::infinity();
@@ -21,7 +21,7 @@ inline void LambdaRank::get_derivatives_one_query(const double* scores, double* 
     const sample_t start = boundaries_[query_id];
     const sample_t count = boundaries_[query_id+1] - start;
     const double inverse_max_dcg = inverse_max_dcg_[query_id];
-    const label_t* label = label_ + start;
+    //const label_t* label = label_ + start;
     scores += start;
     gradients += start;
     hessians += start;
@@ -37,7 +37,7 @@ inline void LambdaRank::get_derivatives_one_query(const double* scores, double* 
         sindex.emplace_back(i);
     }
     std::stable_sort(sindex.begin(), sindex.end(), [scores](sample_t a, sample_t b) {return scores[a] > scores[b]; });
-    const double best_score = scores[sindex[0]];
+    double best_score = scores[sindex[0]];
     sample_t worst_idx = count - 1;
     if (worst_idx > 0 && scores[sindex[worst_idx]] == kminscore) worst_idx -= 1;
     const double worst_score = scores[sindex[worst_idx]];
@@ -156,11 +156,11 @@ void LambdaRank::cal_dcg(const std::vector<int>& ks, const label_t* label,
     }
 }
 
-double LambdaRank::cal_maxdcg_k(int k, const label_t* label, sample_t num_data) {
+double LambdaRank::cal_maxdcg_k(int k, sample_t start, sample_t num_data) {
     double ret = 0.0f;
     std::vector<int> label_counts(label_gain_.size(), 0);
     for(int i = 0; i < num_data; ++i) {
-        label_counts[static_cast<int>(label_[i])]++;
+        label_counts[static_cast<int>(label_[start + i])]++;
     }
     // top_label has the highest label_gain_
     int top_label = static_cast<int>(label_gain_.size()) - 1;
