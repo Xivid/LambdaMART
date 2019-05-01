@@ -180,7 +180,7 @@ namespace LambdaMART {
                 feat.bin(this->bin_size, this->n);
                 this->binner.thresholds.emplace_back(feat.threshold);
             }
-            Log::Info("Loaded dataset of size: %d x %d", this->d, this->n);
+            Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
 
         // initialize a sample-major `n x d` matrix
@@ -242,6 +242,7 @@ namespace LambdaMART {
                     this->data[row_index][entry.first] = entry.second;
                 row_index++;
             }
+            Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
 
         const vector<double>& get_sample_row(sample_t id) {
