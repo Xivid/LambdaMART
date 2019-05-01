@@ -13,7 +13,7 @@ void demo(LambdaMART::Config* config) {
     const char* train_query = config->train_query.c_str();
     LambdaMART::Log::Info("Loading training dataset %s and query boundaries %s", train, train_query);
     auto* X_train = new LambdaMART::Dataset(config);
-    X_train->load_dataset(train, train_query, 300);
+    X_train->load_dataset(train, train_query);
 
     LambdaMART::Log::Info("Start training...");
     LambdaMART::Model* model = (new LambdaMART::Booster(X_train, config))->train();

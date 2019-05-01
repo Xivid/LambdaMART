@@ -96,7 +96,7 @@ namespace LambdaMART {
         Binner binner;
 
     protected:
-        void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<label_t> &rank){
+        void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<label_t> &rank, int& max_d){
             ifstream infile(path);
             string line;
             if(infile.is_open()){
@@ -113,6 +113,7 @@ namespace LambdaMART {
                         int index = stoi(token.substr(0, delimiter)) - 1;
                         double val = stof(token.substr(delimiter+1, token.length()));
                         record.emplace_back(make_pair(index, val));
+                        max_d = max(max_d, index+1);
                     }
                     data.emplace_back(record);
                 }
@@ -155,13 +156,9 @@ namespace LambdaMART {
             return *max_element(rank.begin(), rank.end());
         }
 
-        void load_dataset(const char* data_path, const char* query_path, int num_features = -1) {
-            if(num_features == -1){
-                // TODO: calculate num_features;
-            }
-            this->d = num_features;
+        void load_dataset(const char* data_path, const char* query_path) {
             vector<vector<pair<int, double>>> raw_data;
-            load_data_from_file(data_path, raw_data, this->rank);
+            load_data_from_file(data_path, raw_data, this->rank, this->d);
             this->n = raw_data.size();
             this->bin_size = (int)(n/bin_cnt);
             init_data();
@@ -233,13 +230,8 @@ namespace LambdaMART {
         vector<vector<pair<int, double>>> raw_data;
         vector<vector<double>> data;
     public:
-        void load_dataset(const char* data_path, const char* query_path, int num_features = -1) {
-            if (num_features == -1) {
-                // TODO: calculate num_features;
-            }
-            this->d = num_features;
-
-            load_data_from_file(data_path, raw_data, this->rank);
+        void load_dataset(const char* data_path, const char* query_path) {
+            load_data_from_file(data_path, raw_data, this->rank, this->d);
             this->n = raw_data.size();
             init_data();
 
