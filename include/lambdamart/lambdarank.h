@@ -21,8 +21,9 @@ class LambdaRank {
         set_discount();
 
         inverse_max_dcg_.resize(num_queries_);
-        for (sample_t i = 0; i < num_queries_; ++i) {
-            inverse_max_dcg_[i] = cal_maxdcg_k(config.max_position, label_ + boundaries_[i], boundaries_[i+1] - boundaries_[i]);
+        for (int i = 0; i < num_queries_; ++i) {
+            sample_t data_count = boundaries_[i+1] - boundaries_[i];
+            inverse_max_dcg_[i] = cal_maxdcg_k(config.max_position, boundaries_[i], data_count);
             if (inverse_max_dcg_[i] > 0.0) {
                 inverse_max_dcg_[i] = 1.0f / inverse_max_dcg_[i];
             }
@@ -31,7 +32,7 @@ class LambdaRank {
     }
     
     void get_derivatives(double* currentScores, double* gradients, double* hessians);
-    void get_derivatives_one_query(const double* scores, double* gradients, 
+    void get_derivatives_one_query(double* scores, double* gradients,
                                     double* hessians, sample_t query_id);
 
 
@@ -71,8 +72,7 @@ class LambdaRank {
 
         // calculates the max score (ideal DCG) at position k
         // returns: max score
-        double cal_maxdcg_k(int k,
-            const label_t* label, sample_t num_data);
+        double cal_maxdcg_k(int k, sample_t start, sample_t num_data);
 
         // calculates the max DCG (ideal DCG), result is stored in out
         void cal_maxdcg(const std::vector<int>& ks,
