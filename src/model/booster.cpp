@@ -4,11 +4,15 @@ namespace LambdaMART {
 
 Model* Booster::train() {
     auto model = new Model();
+    Log::Debug("New model created");
     auto treeLearner = new TreeLearner(dataset, gradients.data(), hessians.data(), config);
+    Log::Debug("New tree learner created");
 
     bool is_finished = false;
     const int num_iter = config->num_iterations;
     const double learning_rate = config->learning_rate;
+    Log::Debug("Train %d iterations with learning rate %lf", num_iter, learning_rate);
+
     for (int iter = 0; iter < num_iter && !is_finished; ++iter) {
         ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
 

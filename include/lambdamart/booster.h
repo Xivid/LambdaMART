@@ -21,11 +21,14 @@ namespace LambdaMART {
 
         Booster(Dataset* _dataset, Config* _config) : dataset(_dataset), config(_config)
         {
+            Log::Debug("Creating Booster");
             num_samples = dataset->num_samples();
             current_scores.resize(num_samples, 0.0);
             gradients.resize(num_samples);
             hessians.resize(num_samples);
+            Log::Debug("Creating ranker");
             ranker = new LambdaRank(dataset->query_boundaries(), dataset->num_queries(), dataset->label(), *config);
+            Log::Debug("Done");
         }
 
         Model* train();
