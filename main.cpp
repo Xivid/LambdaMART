@@ -22,8 +22,14 @@ void demo() {
 
 }
 
-int main() {
-    std::cout << LambdaMART::version() << std::endl;
+int main(int argc, char** argv) {
+    cout << LambdaMART::version() << endl;
+
+    if (argc <= 1)
+        cout << LambdaMART::help() << endl;
+    else {
+        LambdaMART::Log::Info("Using configuration file %s", argv[1]);
+    }
 
     demo();
 
