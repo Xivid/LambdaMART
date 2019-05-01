@@ -8,7 +8,7 @@
 namespace LambdaMART {
 
 class LambdaRank {
-    friend class Model;
+    friend class Booster;
 
     public:
     explicit LambdaRank(const sample_t* query_boundaries, const sample_t num_queries, label_t* label, const Config& config) {

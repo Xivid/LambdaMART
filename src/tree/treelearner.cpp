@@ -3,7 +3,7 @@
 namespace LambdaMART {
 
 
-Tree* build_new_tree(const LambdaMART::Dataset& dataset,
+Tree* TreeLearner::build_new_tree(const LambdaMART::Dataset& dataset,
                      const std::vector<double>& gradients,
                      const std::vector<double>& hessians,
                      std::vector<Histogram>&    histograms,
@@ -11,7 +11,7 @@ Tree* build_new_tree(const LambdaMART::Dataset& dataset,
                      std::vector<unsigned int>& sample_to_node,
                      const LambdaMART::Config&  config)
 {
-    TreeNode* root = new TreeNode();
+    Tree* root = new Tree();
     std::vector<SplitInfo> best_splits;
     node_t num_nodes_to_split = 1;
 
@@ -21,10 +21,10 @@ Tree* build_new_tree(const LambdaMART::Dataset& dataset,
         num_nodes_to_split = perform_split(best_splits, node_to_score, sample_to_node);
     }
 
-    return nullptr;
+    return root;
 }
 
-void find_best_splits(std::vector<SplitInfo>& best_splits,
+void TreeLearner::find_best_splits(std::vector<SplitInfo>& best_splits,
                       const LambdaMART::Dataset& dataset,
                       const std::vector<double>& gradients,
                       const std::vector<double>& hessians,
@@ -43,7 +43,7 @@ void find_best_splits(std::vector<SplitInfo>& best_splits,
      */
 }
 
-node_t perform_split(const std::vector<SplitInfo>& best_splits,
+node_t TreeLearner::perform_split(const std::vector<SplitInfo>& best_splits,
                      std::vector<double>&          node_to_score,
                      std::vector<unsigned int>&    sample_to_node)
 {
@@ -51,11 +51,8 @@ node_t perform_split(const std::vector<SplitInfo>& best_splits,
     return 100;
 }
 
-// TODO
-// Given data, index of data, and treenode, returns the score for this data
-double predict_score(LambdaMART::Dataset* data, sample_t idx, LambdaMART::Tree* model) {
-    return 0.0;    
+double TreeNode::predict_score(Dataset* data, sample_t idx) {
+    return 0.;
 }
-
 
 }
