@@ -128,16 +128,20 @@ void test3() {
     std::vector<double> gradients(num_samples, 0.0);
     std::vector<double> hessians(num_samples, 0.0);
     std::cout << num_samples << std::endl;
+    std::cout << "queries: " << num_queries << std::endl;
+
     for (int i = 0; i < 10; i++) {
         std::cout << label[i] << std::endl;
+        std::cout << bounds[i] << std::endl;
     }
     LambdaMART::LambdaRank* ranker = new LambdaMART::LambdaRank(bounds, num_queries, label, *config);
     ranker->get_derivatives(currentscores.data(), gradients.data(), hessians.data());
     for (int i = 0; i < num_samples; ++i) {
         assert (gradients[i] != 0.0);
         assert (hessians[i] != 0.0);
-        cout << currentscores[i] << " " << gradients[i] << " " << hessians[i] << endl;
+        std::cout << currentscores[i] << " " << gradients[i] << " " << hessians[i] << std::endl;
     }
+    std::cout << "gradient " << gradients[400] << std::endl;
 }
 
 int main() {
