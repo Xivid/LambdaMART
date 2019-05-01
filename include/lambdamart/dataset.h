@@ -135,7 +135,6 @@ namespace LambdaMART {
         int n, d;
         vector<label_t> rank;
         vector<sample_t> query;
-        vector<sample_t> query_boundaries_;
 
         explicit Dataset(Config* config = nullptr){
             bin_cnt = config ? config->max_bin : 16;
@@ -143,6 +142,10 @@ namespace LambdaMART {
 
         auto get_data(){
             return data;
+        }
+
+        int max_label(){
+            return *max_element(rank.begin(), rank.end());
         }
 
         void load_dataset(const char* data_path, const char* query_path, int num_features = -1) {
@@ -198,8 +201,10 @@ namespace LambdaMART {
 
         // query boundaries (the first sample_id of each query)
         inline const sample_t* query_boundaries() const {
-            if (!query.empty()) return query.data();
-            else return nullptr;   
+            sample_t* query_boundaries = new sample_t(0);
+            for(int i=1; i<= query.size(); i++)
+                query_boundaries[i] = query_boundaries[i-1] + query[i-1];
+            return query_boundaries;
         }
 
         const vector<sample_t>& get_queries() const {

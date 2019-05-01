@@ -75,6 +75,7 @@ namespace LambdaMART {
 #pragma region Learning Control Parameters
 
         int max_depth = -1;
+        int max_splits = 128;
         int min_data_in_leaf = 20;
         double min_sum_hessian_in_leaf = 1e-3;
         double bagging_fraction = 1.0;

@@ -13,7 +13,7 @@ namespace LambdaMART {
 
         std::vector<Tree*>  trees;
         std::vector<double> tree_weights;
-        uint64_t            num_samples;
+
         void add_tree(Tree* tree, double tree_weight) { trees.push_back(tree); tree_weights.push_back(tree_weight); }
     public:
         double* predict(Dataset* data);
