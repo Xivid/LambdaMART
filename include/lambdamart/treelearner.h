@@ -14,7 +14,7 @@ class TreeNode {
     friend class TreeLearner;
     friend class Model;
 
-    TreeNode(nodeidx_t id) :
+    explicit TreeNode(nodeidx_t id) :
         id(id), predict(0), impurity(0), isLeaf(false),
         split(nullptr), leftNode(nullptr), rightNode(nullptr) {}
 
@@ -113,8 +113,9 @@ public:
     {
         num_samples = dataset->num_samples();
         max_splits = config->max_splits;
-        node_to_score.clear();
+        node_to_score.resize(1<<(config->max_depth));
         sample_to_node.resize(num_samples, 0);
+        node_to_candidate.resize(1<<(config->max_depth));
         histograms.resize(config->max_splits);
     }
 
@@ -125,13 +126,21 @@ private:
         NodeInfoStats* info;
         nodeidx_t smallerSibling;  // id
 
-        SplitCandidate() {}
+        SplitCandidate() = delete;
         SplitCandidate(TreeNode* n, NodeInfoStats* i) : node(n), info(i), smallerSibling(0) {}
         SplitCandidate(TreeNode* n, NodeInfoStats* i, nodeidx_t s) : node(n), info(i), smallerSibling(s) {}
 
         bool operator<(const SplitCandidate& rhs) const
         { // TODO: make smallerSibling == 0 top priority
             return node->impurity < rhs.node->impurity;
+        }
+    };
+
+    struct CmpCandidates
+    {
+        bool operator()(const SplitCandidate* lhs, const SplitCandidate* rhs) const
+        {
+            return *lhs < *rhs;
         }
     };
 
@@ -142,25 +151,24 @@ private:
     const double*             hessians;
 
     // as working set
-    uint64_t                            num_samples;
-    int                                 max_splits;
-    std::vector<Histogram>              histograms;
-    std::vector<double>                 node_to_score;
-    std::vector<unsigned int>           sample_to_node;
-    std::vector<SplitCandidate*>        split_candidates;
-    std::vector<int>                    node_to_candidate;
-    std::vector<int>                    sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
-    int                                 cur_depth;
-    std::priority_queue<SplitCandidate> node_queue;
-    int                                 num_nodes_to_split;
+    uint64_t                     num_samples;
+    size_t                       max_splits;
+    std::vector<Histogram>       histograms;
+    std::vector<double>          node_to_score;
+    std::vector<nodeidx_t>       sample_to_node;
+    std::vector<SplitCandidate*> split_candidates;
+    std::vector<nodeidx_t>       node_to_candidate;
+    std::vector<int>             sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
+    unsigned                     cur_depth = 0;
+    nodeidx_t                    num_candidates = 0;
+    std::vector<SplitInfo>       best_splits;
+    std::priority_queue<SplitCandidate*, std::vector<SplitCandidate*>, CmpCandidates> node_queue;
 
-    Tree* build_new_tree();
-    int select_split_candidates();
-    void update_candidate_tracker();
-    std::vector<SplitInfo>* find_best_splits();
-    nodeidx_t perform_split(const std::vector<SplitInfo>& best_splits,
-                         std::vector<double>&          node_to_score,
-                         std::vector<unsigned int>&    sample_to_node);
+    // tree building methods
+    Tree*  build_new_tree();
+    bool   select_split_candidates();
+    void   find_best_splits();
+    void   perform_split();
     double get_sample_score(sample_t sid) { return node_to_score[sample_to_node[sid]]; };
 };
 
