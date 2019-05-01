@@ -7,18 +7,20 @@
 using namespace std;
 
 void demo() {
-    LambdaMART::Dataset* X_train = new LambdaMART::Dataset();
+    LambdaMART::Log::Info("Loading training dataset %s and query boundaries %s", "data/mq2008/small.train", "data/mq2008/small.train.query");
+    auto* X_train = new LambdaMART::Dataset();
     X_train->load_dataset("data/demo.train", "data/demo.train.query");
-    LambdaMART::Binner* binner = X_train->get_binner();
 
-    // TODO: testing data should be stored in sample-major format! Still using `Dataset` is inconvenient!
-    LambdaMART::Dataset* X_test = new LambdaMART::Dataset();
-    X_test->load_dataset("data/demo.test", "data/demo.test.query", -1, binner);
-    LambdaMART::Config* config = new LambdaMART::Config();
+    auto* config = new LambdaMART::Config();
 
     LambdaMART::Model* model = (new LambdaMART::Booster())->train(*X_train, *config);
-    double* predictions = model->predict(X_test);
 
+
+    LambdaMART::Log::Info("Loading test dataset %s and query boundaries %s", "data/mq2008/small.vali", "data/mq2008/small.vali.query");
+    // TODO: load raw dataset for testing data
+//    auto* X_test = new LambdaMART::RawDataset();
+//    X_test->load_raw_dataset("data/demo.test", "data/demo.test.query");
+//    double* predictions = model->predict(X_test);
 }
 
 int main(int argc, char** argv) {
