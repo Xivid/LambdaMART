@@ -26,7 +26,7 @@ namespace LambdaMART {
         inline bool GetDouble(const string& name, double* out);
         inline bool GetBool(const string& name, bool* out);
 
-        explicit Config(const char* filepath) {
+        explicit Config(const char* filepath = nullptr) {
             ifstream infile(filepath);
             string line;
             if (infile.is_open()) {
@@ -49,9 +49,20 @@ namespace LambdaMART {
             GetString("valid_query", &valid_query);
             GetInt("num_iterations", &num_iterations);
             GetDouble("learning_rate", &learning_rate);
+            GetInt("max_depth", &max_depth);
+            GetInt("max_splits", &max_splits);
+            GetInt("min_data_in_leaf", &min_data_in_leaf);
+            GetDouble("min_sum_hessian_in_leaf", &min_sum_hessian_in_leaf);
+            GetDouble("min_gain_to_split", &min_gain_to_split);
             GetInt("verbosity", &verbosity);
             Log::ResetLogLevel(LogLevel(verbosity));
-            // TODO: get other parameters
+            int t; GetInt("max_bin", &t); max_bin = t > 255 ? 255 : t;
+            GetInt("min_data_in_bin", &min_data_in_bin);
+            GetString("output_model", &output_model);
+            GetString("output_result", &output_result);
+            GetDouble("sigmoid", &sigmoid);
+            GetInt("max_position", &max_position);
+            GetInt("max_label", &max_label);
         }
 
 #pragma region Parameters
@@ -67,7 +78,7 @@ namespace LambdaMART {
 
 #pragma region Learning Control Parameters
 
-        int max_depth = -1;
+        int max_depth = 8;
         int max_splits = 128;
         int min_data_in_leaf = 20;
         double min_sum_hessian_in_leaf = 1e-3;

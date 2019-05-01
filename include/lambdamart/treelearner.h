@@ -15,7 +15,7 @@ class TreeNode {
     friend class Model;
 
     explicit TreeNode(nodeidx_t id) :
-        id(id), predict(0), impurity(0), isLeaf(false),
+        id(id), predict(0), impurity(0), isLeaf(true),
         split(nullptr), leftNode(nullptr), rightNode(nullptr) {}
 
     TreeNode(nodeidx_t id, score_t predict, score_t impurity, bool isLeaf) :

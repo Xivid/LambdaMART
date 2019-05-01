@@ -4,9 +4,7 @@ namespace LambdaMART {
 
 Model* Booster::train() {
     auto model = new Model();
-    Log::Debug("New model created");
     auto treeLearner = new TreeLearner(dataset, gradients.data(), hessians.data(), config);
-    Log::Debug("New tree learner created");
 
     bool is_finished = false;
     const int num_iter = config->num_iterations;
@@ -23,6 +21,7 @@ Model* Booster::train() {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
         is_finished = check_early_stopping();
+        Log::Info("Iteration %d: NDCG = (TODO)", iter);
     }
 
     return model;

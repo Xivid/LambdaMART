@@ -25,7 +25,7 @@ void demo(LambdaMART::Config* config) {
     const char* vali_query = config->valid_query.c_str();
     LambdaMART::Log::Info("Loading test dataset %s and query boundaries %s", vali, vali_query);
     auto* X_test = new LambdaMART::RawDataset();
-    X_test->load_dataset(vali, vali_query);
+    X_test->load_dataset(vali, vali_query, 300);
 
     LambdaMART::Log::Info("Predicting with validation dataset...");
     double* predictions = model->predict(X_test);

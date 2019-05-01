@@ -183,7 +183,7 @@ namespace LambdaMART {
                 feat.bin(this->bin_size, this->n);
                 this->binner.thresholds.emplace_back(feat.threshold);
             }
-            cout<<"Loaded dataset of size: "<<this->d<<" x "<<this->n<<endl;
+            Log::Info("Loaded dataset of size: %d x %d", this->d, this->n);
         }
 
         // initialize a sample-major `n x d` matrix

@@ -28,6 +28,8 @@ Tree* TreeLearner::build_new_tree()
 
 bool TreeLearner::select_split_candidates() {
     std::fill(node_to_candidate.begin(), node_to_candidate.end(), -1);
+    sample_to_candidate.clear();
+    sample_to_candidate.resize(num_samples);
 
     num_candidates = 0;
     split_candidates.clear();
