@@ -6,9 +6,7 @@
 
 using namespace std;
 
-void demo() {
-    auto* config = new LambdaMART::Config();
-
+void demo(LambdaMART::Config* config) {
     const char* train = "data/mq2008/small.train";
     const char* train_query = "data/mq2008/small.train.query";
     LambdaMART::Log::Info("Loading training dataset %s and query boundaries %s", train, train_query);
@@ -34,16 +32,20 @@ int main(int argc, char** argv) {
     LambdaMART::Log::ResetLogLevel(LambdaMART::LogLevel::Debug);
 
     cout << LambdaMART::version() << endl;
+    LambdaMART::Config *config;
 
-    if (argc <= 1)
+    if (argc <= 1) {
         cout << LambdaMART::help() << endl;
+        config = new LambdaMART::Config();
+    }
     else {
+        config = new LambdaMART::Config(argv[1]);
         LambdaMART::Log::Info("Using configuration file %s", argv[1]);
     }
 
-    demo();
+    demo(config);
 
-    // TODO: support reading from configuration file
+    // TODO: support commandline arguments
 
     return 0;
 }
