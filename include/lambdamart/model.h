@@ -16,7 +16,7 @@ namespace LambdaMART {
 
         void add_tree(Tree* tree, double tree_weight) { trees.push_back(tree); tree_weights.push_back(tree_weight); }
     public:
-        double* predict(Dataset* data);
+        double* predict(RawDataset* data);
     };
 }
 #endif //LAMBDAMART_MODEL_H

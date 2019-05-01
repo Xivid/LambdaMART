@@ -235,7 +235,7 @@ namespace LambdaMART {
         vector<vector<pair<int, double>>> raw_data;
         vector<vector<double>> data;
     public:
-        void load_dataset(const char* data_path, const char* query_path, int num_features = -1){
+        void load_dataset(const char* data_path, const char* query_path, int num_features = -1) {
             if (num_features == -1) {
                 // TODO: calculate num_features;
             }
@@ -256,6 +256,10 @@ namespace LambdaMART {
                     this->data[row_index][entry.first] = entry.second;
                 row_index++;
             }
+        }
+
+        const vector<double>& get_sample_row(sample_t id) {
+            return data[id];
         }
     };
 }
