@@ -8,44 +8,53 @@ Tree* TreeLearner::build_new_tree()
 {
     Tree* root = new TreeNode(1);
     auto* topInfo = new NodeInfoStats(num_samples, std::accumulate(gradients, gradients + num_samples, 0.0));
-    node_queue.emplace(root, topInfo);
+    node_queue.push(new SplitCandidate(root, topInfo));
+    std::fill(sample_to_node.begin(), sample_to_node.end(), 1);
 
-    this->cur_depth = 1;
+    cur_depth = 1;
     while (cur_depth < config->max_depth) {
-        num_nodes_to_split = select_split_candidates();
-        if (num_nodes_to_split == 0) break;
-
-        update_candidate_tracker();
-
-        std::vector<SplitInfo>* best_splits = find_best_splits();
-        perform_split(*best_splits, node_to_score, sample_to_node);
+        if(!select_split_candidates()) break;  // no more nodes to split -> break
+        find_best_splits();
+        perform_split();
     }
 
+    histograms.clear();
+    node_to_score.clear();
+    split_candidates.clear();
+    node_to_candidate.clear();
+    best_splits.clear();
     return root;
 }
 
-int TreeLearner::select_split_candidates() {
-    nodeidx_t num_candidates = 0;
-//    while (!node_queue.empty() && num_candidates < max_splits)
-//    {
-//        auto& candidate = node_queue.top();
-//        node_queue.pop();
-//        split_candidates.push_back(candidate);
-//        nodeId2NodeNo[candidate.node->id] = 0;
-//
-//        ++numNodes;
-//        ++curLeaves;  // TODO(99): Is this nodes and leaves counting method correct?
-//    }
-    return num_candidates;
+bool TreeLearner::select_split_candidates() {
+    std::fill(node_to_candidate.begin(), node_to_candidate.end(), -1);
+
+    num_candidates = 0;
+    split_candidates.clear();
+    while (!node_queue.empty() && num_candidates < max_splits)
+    {
+        auto candidate = node_queue.top();
+        node_queue.pop();
+        split_candidates.push_back(candidate);
+        node_to_candidate[candidate->node->id] = num_candidates++;
+    }
+
+    if (!num_candidates) return false;
+
+    for (sample_t sample = 0; sample < num_samples; ++sample) {
+        sample_to_candidate[sample] = node_to_candidate[sample_to_node[sample]];
+    }
+    return true;
 }
 
-void TreeLearner::update_candidate_tracker() {
 
-}
-
-std::vector<SplitInfo>* TreeLearner::find_best_splits()
+/**
+ * Find best splits and put them into `best_splits'
+ */
+void TreeLearner::find_best_splits()
 {
-    histograms.resize(num_nodes_to_split);
+    histograms.resize(num_candidates);
+    best_splits.resize(num_candidates);
 
     //TODO: input histograms?
     /*
@@ -58,16 +67,12 @@ std::vector<SplitInfo>* TreeLearner::find_best_splits()
      * for each histogram in histograms
      *   best_splits[histogram.node_id] = histogram.best_split_point()
      */
-    return nullptr;
 }
 
-nodeidx_t TreeLearner::perform_split(const std::vector<SplitInfo>& best_splits,
-                     std::vector<double>&          node_to_score,
-                     std::vector<unsigned int>&    sample_to_node)
+void TreeLearner::perform_split()
 {
     //update node_to_score, sample_to_node
     ++cur_depth;
-    return 100;
 }
 
 }

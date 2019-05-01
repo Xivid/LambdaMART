@@ -215,7 +215,7 @@ namespace LambdaMART {
         }
 
         // returns pointer to labels
-        label_t* label() const{
+        label_t* label() const {
             return nullptr; //rank.data();
         }
     };
