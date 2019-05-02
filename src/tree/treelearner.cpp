@@ -7,7 +7,7 @@ namespace LambdaMART {
 Tree* TreeLearner::build_new_tree()
 {
     Tree* root = new TreeNode(1);
-    auto* topInfo = new NodeInfoStats(num_samples, std::accumulate(gradients, gradients + num_samples, 0.0));
+    auto* topInfo = new NodeStats(num_samples, std::accumulate(gradients, gradients + num_samples, 0.0));
     node_queue.push(new SplitCandidate(root, topInfo));
     std::fill(sample_to_node.begin(), sample_to_node.end(), 1);
     Log::Debug("build_new_tree: initialized");
@@ -57,8 +57,7 @@ bool TreeLearner::select_split_candidates() {
 /**
  * Find best splits and put them into `best_splits'
  */
-void TreeLearner::find_best_splits()
-{
+void TreeLearner::find_best_splits() {
     Log::Debug("find_best_splits");
 
     /*
@@ -68,49 +67,35 @@ void TreeLearner::find_best_splits()
      */
 
     best_splits.resize(num_candidates);
-    for (feature_t fid = 0; fid < num_features; ++fid)
-    {
+    for (feature_t fid = 0; fid < num_features; ++fid) {
         Log::Trace("checking feature %lu", fid);
         histograms.clear(num_candidates);
-        const feature& feat = dataset->get_data()[fid];
+        const feature &feat = dataset->get_data()[fid];
 
         //TODO: unrolling
-        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx)
-        {
+        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             if (sample_idx % 10 == 0) {
                 Log::Trace("  sample %lu", sample_idx);
             }
             const int node = sample_to_candidate[sample_idx];
-            if (node != -1)
-            {
+            if (node != -1) {
                 const bin_t bin = feat.bin_index[sample_idx];
                 histograms[node][bin].update(1.0, gradients[sample_idx]);
             }
         }
 
-        for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate)
-        {
+        for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
             Log::Trace("Candidate %lu", candidate);
             histograms.cumulate(candidate);
-            auto temptuple = histograms.BestSplit(candidate, fid, feat, node_info[candidate], config->min_data_in_leaf);
-            Log::Trace("\t\tbestsplit: %s, bin %u, gain %lf, left %s, right %s",
-                    std::get<0>(temptuple).toString().c_str(),
-                    std::get<1>(temptuple),
-                    std::get<2>(temptuple),
-                    std::get<3>(temptuple).toString().c_str(),
-                    std::get<4>(temptuple).toString().c_str());
-            if (std::get<2>(temptuple) >= std::get<2>(best_splits[candidate]))
-            {
-                best_splits[candidate] = temptuple;
+            auto splitInfo = histograms.BestSplit(candidate, fid, feat, node_info[candidate],
+                                                  config->min_data_in_leaf);
+            Log::Trace("\t\t%s", splitInfo.toString().c_str());
+            if (splitInfo >= best_splits[candidate]) {
+                best_splits[candidate] = splitInfo;
                 Log::Trace("\t\t-> replaced");
             }
         }
     }
-
-    /*
-     * for each histogram in histograms
-     *   best_splits[histogram.node_id] = histogram.best_split_point()
-     */
 }
 
 void TreeLearner::perform_split()
