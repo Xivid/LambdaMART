@@ -442,7 +442,7 @@ namespace LambdaMART {
 		{
 			init(nodes, bins);
 		}
-		
+
 		HistogramMatrix(HistogramMatrix const &) = delete;
 		HistogramMatrix& operator=(HistogramMatrix const &) = delete;
 
@@ -454,7 +454,7 @@ namespace LambdaMART {
 			if (_head != nullptr)
 				free(_head);
 				//_aligned_free(_head);
-			
+
 			num_nodes = nodes;
 			bin_cnt = bins;
 			_head = (Bin**)malloc(sizeof(Bin*) * nodes);
@@ -514,11 +514,18 @@ namespace LambdaMART {
 			}
 
 			Bin* bins = _head[node];
+
 			for (bin_t bin = bin_cnt-2; bin > 0; --bin)
 			{
 				bins[bin] += bins[bin+1];
 			}
 			bins[0] += bins[1];
+
+            Log::Trace(" Bin # ");
+            for (bin_t bin = 0; bin < bin_cnt; bin++)
+            {
+                Log::Trace("\t%i\t%s", bin, bins[bin].toString().c_str());
+            }
 		}
 		//TODO: defaultBin - part of optimization
 		//inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)
@@ -618,9 +625,6 @@ namespace LambdaMART {
 						   const NodeStats* nodeInfo,
 						   const sample_t minInstancesPerNode = 1)
 		{
-			//DEBUG_ASSERT_EX(feat.splits.size() > 0, "empty splits!");
-			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
-
 			const Bin* bins = _head[node];
 			const vector<featval_t>& temp_threshold = feat.threshold;
 
@@ -631,16 +635,17 @@ namespace LambdaMART {
 			bin_t bestThresholdBin = 0;
 			size_t temp_threshold_size = temp_threshold.size();
 
+            Log::Trace(" Threshold #:");
 			for (bin_t i = 1; i < temp_threshold_size; ++i)
 			{
 				bin_t threshLeft = i;
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
+                Log::Trace("\t%d\tlte: %s\n\t\t\t\tgt: %s\tGain: %lf", i, lte.toString().c_str(), gt.toString().c_str(), lte.getLeafSplitGain() + gt.getLeafSplitGain());
 
 				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
 				{
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
-
 					if (currentShiftedGain > bestShiftedGain)
 					{
 						bestRightInfo = gt;
