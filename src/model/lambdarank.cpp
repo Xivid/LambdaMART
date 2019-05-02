@@ -66,6 +66,7 @@ inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradie
             const double dcg_gap = hl_gain - ll_gain;
             const double pair_discount = fabs(h_discount - l_discount);
             double delta_pair_ndcg = dcg_gap * pair_discount * inverse_max_dcg;
+            //std::cout << "delta pair " << dcg_gap << " " << h_discount << " " << l_discount << std::endl;
             // regularize the pair ndcg by score distance
             if (high_label != low_label && best_score != worst_score) {
                 delta_pair_ndcg /= (0.01f + fabs(delta));

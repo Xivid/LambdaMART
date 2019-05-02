@@ -25,7 +25,7 @@ namespace LambdaMART {
             current_scores.resize(num_samples, 0.0);
             gradients.resize(num_samples);
             hessians.resize(num_samples);
-            ranker = new LambdaRank(dataset->get_query_boundaries(), dataset->num_queries(), dataset->get_labels(), *config);
+            ranker = new LambdaRank(*dataset, *config);
         }
 
         Model* train();

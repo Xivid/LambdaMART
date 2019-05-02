@@ -3,6 +3,7 @@
 #include <vector>
 #include <lambdamart/types.h>
 #include <lambdamart/config.h>
+#include <lambdamart/dataset.h>
 
 
 namespace LambdaMART {
@@ -11,11 +12,10 @@ class LambdaRank {
     friend class Booster;
 
     public:
-    explicit LambdaRank(const sample_t* query_boundaries, const sample_t num_queries, label_t* label, const Config& config) {
-        boundaries_ = query_boundaries;
-        num_queries_ = num_queries;
-        label_ = label;
-        kMaxPosition = config.max_position;
+    explicit LambdaRank(Dataset& dataset, Config& config) {
+        boundaries_ = dataset.get_query_boundaries();
+        num_queries_ = dataset.num_queries();
+        label_ = dataset.get_labels();
         set_eval_rank(&eval_ranks_);
         set_label_gain(config.max_label);
         set_discount();
@@ -46,7 +46,7 @@ class LambdaRank {
         std::vector<sample_t> eval_ranks_;
         std::vector<double> discount_;
         // max position of rank
-        int kMaxPosition;
+        int kMaxPosition = 10000;
 
         std::vector<double> sigmoid_table_;
         double min_input_ = -50;
