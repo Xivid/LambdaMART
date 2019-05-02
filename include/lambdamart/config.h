@@ -111,6 +111,7 @@ namespace LambdaMART {
         double sigmoid = 1.0;
 
         // desc = optimizes `NDCG <https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG>`__ at this position
+        // We assume that the number of sample in each query is at most 10000
         int max_position = 20;
 
         int max_label = 5;

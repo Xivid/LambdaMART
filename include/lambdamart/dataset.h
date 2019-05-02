@@ -131,8 +131,10 @@ namespace LambdaMART {
             string line;
             if(infile.is_open()){
                 while(getline(infile, line)){
-                    sum += stoi(line);
+                    sample_t query_size = stoi(line);
+                    sum += query_size;
                     query_boundaries.emplace_back(sum);
+                    if (query_size > max_query_size) max_query_size = query_size;
                 }
             } else {
                 Log::Fatal("Cannot open file %s", path);
@@ -144,6 +146,7 @@ namespace LambdaMART {
         int n, d;
         vector<label_t> rank;
         vector<sample_t> query_boundaries;
+        sample_t max_query_size = 0;
 
         explicit Dataset(Config* config = nullptr){
             bin_cnt = config ? config->max_bin : 16;

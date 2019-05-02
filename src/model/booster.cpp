@@ -16,6 +16,9 @@ Model* Booster::train() {
 //        for (auto x: gradients) {
 //            s += x;
 //        }
+        double maxElement = *std::max_element(gradients.begin(), gradients.end());
+        int maxElementIndex = std::max_element(gradients.begin(),gradients.end()) - gradients.begin();
+        std::cout << "max: " << maxElement << " index: " << maxElementIndex << std::endl;
 
         Tree* tree = treeLearner->build_new_tree();
         model->add_tree(tree, learning_rate);
