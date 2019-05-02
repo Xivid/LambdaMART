@@ -52,7 +52,7 @@ namespace LambdaMART {
             GetInt("max_depth", &max_depth);
             GetInt("max_splits", &max_splits);
             GetInt("min_data_in_leaf", &min_data_in_leaf);
-            GetDouble("min_sum_hessian_in_leaf", &min_sum_hessian_in_leaf);
+            GetDouble("min_impurity_to_split", &min_impurity_to_split);
             GetDouble("min_gain_to_split", &min_gain_to_split);
             GetInt("verbosity", &verbosity);
             Log::ResetLogLevel(LogLevel(verbosity));
@@ -81,10 +81,8 @@ namespace LambdaMART {
         int max_depth = 8;
         int max_splits = 128;
         int min_data_in_leaf = 20;
-        double min_sum_hessian_in_leaf = 1e-3;
-
-        // desc = the minimal gain to perform split
         double min_gain_to_split = 0.0;
+        double min_impurity_to_split = 1e-2;
 
 #pragma endregion
 
@@ -119,9 +117,9 @@ namespace LambdaMART {
         // desc = separate by ``,``
         vector<double> label_gain = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767, 65535, 131071, 262143, 524287, 1048575, 2097151, 4194303, 8388607, 16777215, 33554431, 67108863, 134217727, 268435455, 536870911};
 
-        // default = 1,2,3,4,5
+        // default = 1,3,5
         // desc = used only with ``ndcg`` and ``map`` metrics
-        std::vector<int> eval_at = {1, 2, 3, 4, 5};
+        std::vector<int> eval_at = {1, 3, 5};
 
 #pragma endregion
 

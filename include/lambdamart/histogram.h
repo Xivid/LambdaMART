@@ -73,55 +73,55 @@ namespace LambdaMART {
 	//typedef struct __declspec(align(8)) Bin
 	struct Bin
 	{
-		gradient_t sumCount, sumScores;
+		gradient_t sum_count, sum_gradients;
 
-		Bin() { sumCount = sumScores = 0.0f; }
+		Bin() { sum_count = sum_gradients = 0.0f; }
 
-		Bin(gradient_t sumCounts, gradient_t sumTarget)
+		Bin(gradient_t _sum_counts, gradient_t _sum_gradients)
 		{
-			sumCount = sumCounts;
-			sumScores = sumTarget;
+			sum_count = _sum_counts;
+			sum_gradients = _sum_gradients;
 		}
 
-		inline void clear() { sumCount = sumScores = 0.0f; }
+		inline void clear() { sum_count = sum_gradients = 0.0f; }
 
-		inline void update(gradient_t count, gradient_t score)
+		inline void update(gradient_t count, gradient_t gradient)
 		{
-			//__m128 tmp = _mm_setzero_ps(), rhs = _mm_set_ps(0, 0, score, count);
+			//__m128 tmp = _mm_setzero_ps(), rhs = _mm_set_ps(0, 0, gradient, count);
 			//tmp = _mm_add_ps(_mm_loadl_pi(tmp, (__m64 const *) this), rhs);
 			//_mm_storel_pi((__m64 *) this, tmp);
-			sumCount += count;
-			sumScores += score;
+			sum_count += count;
+			sum_gradients += gradient;
 		}
 
 		inline gradient_t getLeafSplitGain() const
 		{
-			return sumScores * sumScores / sumCount;
+			return sum_gradients * sum_gradients / sum_count;
 		}
 
 		std::string toString()
 		{
-			return "(sumCount = " + std::to_string(sumCount) + ", sumScores = " + std::to_string(sumScores) + ")";
+			return "(sum_count = " + std::to_string(sum_count) + ", sum_gradients = " + std::to_string(sum_gradients) + ")";
 		}
 
 		inline Bin& operator+=(const Bin& rhs)
 		{
-			this->sumCount += rhs.sumCount;
-			this->sumScores += rhs.sumScores;
+			this->sum_count += rhs.sum_count;
+			this->sum_gradients += rhs.sum_gradients;
 			return *this;
 		}
 
 		inline void getComplement(const Bin& lhs, const Bin& rhs)
 		{
-			this->sumCount = lhs.sumCount - rhs.sumCount;
-			this->sumScores = lhs.sumScores - rhs.sumScores;
+			this->sum_count = lhs.sum_count - rhs.sum_count;
+			this->sum_gradients = lhs.sum_gradients - rhs.sum_gradients;
 		}
 
 		inline Bin& operator^=(const Bin& rhs)
 		{
 			// get complement from rhs, not really arithmetic ^=
-			this->sumCount = rhs.sumCount - this->sumCount;
-			this->sumScores = rhs.sumScores - this->sumScores;
+			this->sum_count = rhs.sum_count - this->sum_count;
+			this->sum_gradients = rhs.sum_gradients - this->sum_gradients;
 			return *this;
 		}
 	};
@@ -130,30 +130,65 @@ namespace LambdaMART {
 
 	inline Bin operator-(Bin lhs, const Bin& rhs)
 	{
-		lhs.sumCount -= rhs.sumCount;
-		lhs.sumScores -= rhs.sumScores;
+		lhs.sum_count -= rhs.sum_count;
+		lhs.sum_gradients -= rhs.sum_gradients;
 		return lhs;
 	}
 
 	struct SplitInfo {
-		Split split;
+		Split* split;
 		bin_t bin;
 		score_t gain;
-		NodeStats left_stats;
-		NodeStats right_stats;
+		NodeStats* left_stats;
+		NodeStats* right_stats;
+		gradient_t left_sum_squares = 0., left_sum_hessians = 0.,  // sum_squares is sum of **gradient squares**
+		           right_sum_squares = 0., right_sum_hessians = 0.;
 
 		SplitInfo() = default;
-		SplitInfo(Split& _s, bin_t _b, score_t _g, NodeStats& _l, NodeStats& _r)
-			: split(_s), bin(_b), gain(_g), left_stats(_l), right_stats(_r) {}
+
+		SplitInfo(Split* _s, bin_t _b, score_t _g, NodeStats* _l, NodeStats* _r)
+			: split(_s), bin(_b), gain(_g), left_stats(_l), right_stats(_r),
+			  left_sum_squares(0.), left_sum_hessians(0.), right_sum_squares(0.), right_sum_hessians(0.) {}
+
+        inline void update_children_stats(gradient_t ls, gradient_t lw, gradient_t rs, gradient_t rw) {
+		    left_sum_squares += ls;
+		    left_sum_hessians += lw;
+		    right_sum_squares += rs;
+		    right_sum_hessians += rw;
+		}
+
+		inline score_t get_left_impurity() {
+            return (left_sum_squares - left_stats->sum_gradients * left_stats->sum_gradients / left_stats->sum_count) / left_stats->sum_count;
+		}
+
+        inline score_t get_right_impurity() {
+            return (right_sum_squares - right_stats->sum_gradients * right_stats->sum_gradients / right_stats->sum_count) / right_stats->sum_count;
+        }
+
+        inline score_t get_left_output() {
+		    return calc_leaf_output(left_stats->sum_count, left_stats->sum_gradients, left_sum_hessians);
+		}
+
+        inline score_t get_right_output() {
+            return calc_leaf_output(right_stats->sum_count, right_stats->sum_gradients, right_sum_hessians);
+        }
 
 		string toString() {
-			return "(split: " + split.toString() + ", bin: " + to_string(bin) + ", gain: " + to_string(gain)
-					+ ", left_stats: " + left_stats.toString() + ", right_stats: " + right_stats.toString() + ")";
+			return "(split: " + (split == nullptr ? "null" : split->toString()) + ", bin: " + to_string(bin) + ", gain: " + to_string(gain)
+					+ ", left_stats: " + (left_stats == nullptr ? "null" : left_stats->toString())
+					+ ", right_stats: " + (right_stats == nullptr ? "null" : right_stats->toString()) + ")";
 		}
 
 		bool operator >=(const SplitInfo& other) {
 			return gain >= other.gain;
 		}
+
+        inline score_t calc_leaf_output(gradient_t totalCount, gradient_t sumGradients, gradient_t sumHessians)
+        {
+            const float epsilon = 1.1e-38, maxOutput = 100;
+            gradient_t leafValue = (sumGradients / totalCount + epsilon) / (2 * sumHessians / totalCount + epsilon);
+            return (leafValue > maxOutput) ? maxOutput : ((leafValue < -maxOutput) ? -maxOutput : leafValue);
+        }
 	};
 
 	struct Histogram
@@ -173,9 +208,9 @@ namespace LambdaMART {
 			bins.assign(hist, hist + numbins);
 		}
 
-		inline void update(bin_t bin, gradient_t sampleWeight, gradient_t score)
+		inline void update(bin_t bin, gradient_t count, gradient_t gradient)
 		{
-			bins[bin].update(sampleWeight, score);
+			bins[bin].update(count, gradient);
 		}
 
 		void cumulate()
@@ -276,7 +311,7 @@ namespace LambdaMART {
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
 
-				if (lte.sumCount >= minInstancesPerNode && gt.sumCount >= minInstancesPerNode)
+				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
 				{
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
 
@@ -290,11 +325,11 @@ namespace LambdaMART {
 				}
 			}
 
-			Split bestSplit(fid, bestThreshold);
+			Split* bestSplit = new Split(fid, bestThreshold);
 			score_t splitGain = bestShiftedGain - totalGain;
 			NodeStats bestLeftInfo(*nodeInfo - bestRightInfo);
 
-			return SplitInfo(bestSplit, bestThresholdBin, splitGain, bestLeftInfo, bestRightInfo);
+			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
 		}
 	};
 
@@ -602,7 +637,7 @@ namespace LambdaMART {
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
 
-				if (lte.sumCount >= minInstancesPerNode && gt.sumCount >= minInstancesPerNode)
+				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
 				{
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
 
@@ -616,11 +651,10 @@ namespace LambdaMART {
 				}
 			}
 
-			Split bestSplit(fid, bestThreshold);
+			Split* bestSplit = new Split(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
-			NodeStats bestLeftInfo(*nodeInfo - bestRightInfo);
 
-			return SplitInfo(bestSplit, bestThresholdBin, splitGain, bestLeftInfo, bestRightInfo);
+			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
 		}
 
 	};

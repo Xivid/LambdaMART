@@ -149,7 +149,7 @@ namespace LambdaMART {
             bin_cnt = config ? config->max_bin : 16;
         }
 
-        auto get_data() const{
+        auto& get_data() const{
             return data;
         }
 

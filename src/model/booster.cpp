@@ -11,11 +11,12 @@ Model* Booster::train() {
     Log::Debug("Train %d iterations with learning rate %lf", num_iter, learning_rate);
 
     for (int iter = 0; iter < num_iter; ++iter) {
+        Log::Debug("Iteration %d: start", iter);
         ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
-//        double s = 0;
-//        for (auto x: gradients) {
-//            s += x;
-//        }
+        double s = 0;
+        for (auto x: gradients) {
+            s += x;
+        }
 
         Tree* tree = treeLearner->build_new_tree();
         model->add_tree(tree, learning_rate);
@@ -23,7 +24,10 @@ Model* Booster::train() {
         for (sample_t sid = 0; sid < num_samples; ++sid) {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
-        Log::Info("Iteration %d: NDCG = (TODO)", iter);
+
+        for (int eval_at: config->eval_at) {
+            Log::Info("Iteration %d: NDCG@%d = %lf", iter, eval_at, 0.0);
+        }
     }
 
     return model;

@@ -23,7 +23,7 @@ class TreeNode {
         split(nullptr), leftNode(nullptr), rightNode(nullptr) {}
 
 private:
-    nodeidx_t id;
+    nodeidx_t id;  // root node is 1, left child of x is (2x), right child of x is (2x+1)
     score_t predict;
     score_t impurity;
     bool isLeaf;
@@ -50,6 +50,17 @@ private:
         }
     }
 
+    uint32_t get_level() {
+        return static_cast<uint32_t>(std::ceil(std::log2(id+1)));
+    }
+
+    nodeidx_t get_left_child_index() {
+        return id << 1;
+    }
+
+    nodeidx_t get_right_child_index() {
+        return (id << 1) + 1;
+    }
     /*
     // TODO: utility functions
     static TreeNode* newEmptyNode(nodeidx_t nodeIndex)
@@ -113,7 +124,7 @@ public:
     {
         tie(num_samples, num_features) = dataset->shape();
         max_splits = config->max_splits;
-        node_to_score.resize(1<<(config->max_depth));
+        node_to_output.resize(1<<(config->max_depth));
         sample_to_node.resize(num_samples, 0);
         node_to_candidate.resize(1<<(config->max_depth));
         histograms.init(config->max_splits, config->max_bin);
@@ -155,10 +166,10 @@ private:
     feature_t                           num_features;
     bin_t                               num_bins;
     HistogramMatrix                     histograms;
-    unsigned                            cur_depth = 0;
-    std::vector<SplitInfo>               best_splits;
+    uint32_t                            cur_depth = 0;
+    std::vector<SplitInfo>              best_splits;
     size_t                              max_splits;
-    std::vector<double>                 node_to_score;
+    std::vector<double>                 node_to_output;
     std::vector<unsigned int>           sample_to_node;
     std::vector<SplitCandidate*>        split_candidates;
     std::vector<NodeStats*>             node_info;
@@ -172,7 +183,7 @@ private:
     bool   select_split_candidates();
     void   find_best_splits();
     void   perform_split();
-    double get_sample_score(sample_t sid) { return node_to_score[sample_to_node[sid]]; };
+    double get_sample_score(sample_t sid) { return node_to_output[sample_to_node[sid]]; };
 };
 
 }
