@@ -27,7 +27,7 @@ private:
     score_t predict;
     score_t impurity;
     bool isLeaf;
-    SplitInfo* split;
+    Split* split;
     TreeNode* leftNode;
     TreeNode* rightNode;
 
@@ -123,12 +123,12 @@ private:
     struct SplitCandidate
     {
         TreeNode* node;
-        NodeInfoStats* info;
+        NodeStats* info;
         nodeidx_t smallerSibling;  // id
 
         SplitCandidate() = delete;
-        SplitCandidate(TreeNode* n, NodeInfoStats* i) : node(n), info(i), smallerSibling(0) {}
-        SplitCandidate(TreeNode* n, NodeInfoStats* i, nodeidx_t s) : node(n), info(i), smallerSibling(s) {}
+        SplitCandidate(TreeNode* n, NodeStats* i) : node(n), info(i), smallerSibling(0) {}
+        SplitCandidate(TreeNode* n, NodeStats* i, nodeidx_t s) : node(n), info(i), smallerSibling(s) {}
 
         bool operator<(const SplitCandidate& rhs) const
         { // TODO: make smallerSibling == 0 top priority
@@ -156,12 +156,12 @@ private:
     bin_t                               num_bins;
     HistogramMatrix                     histograms;
     unsigned                            cur_depth = 0;
-    std::vector<splitTup>               best_splits;
+    std::vector<SplitInfo>               best_splits;
     size_t                              max_splits;
     std::vector<double>                 node_to_score;
     std::vector<unsigned int>           sample_to_node;
     std::vector<SplitCandidate*>        split_candidates;
-    std::vector<NodeInfoStats*>         node_info;
+    std::vector<NodeStats*>             node_info;
     std::vector<int>                    node_to_candidate;
     std::vector<int>                    sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
     nodeidx_t                           num_candidates = 0;

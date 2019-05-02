@@ -5,61 +5,63 @@
 
 namespace LambdaMART {
 
-	//class FeatureColumn
-	//{
-	//public:
-	//	feature_t fid = 0;
+    /*
+	class FeatureColumn
+	{
+	public:
+		feature_t fid = 0;
 
-	//	std::vector<sample_t> indices;
-	//	std::vector<bin_t> values;
-	//	sample_t used = 0;  // number of non-default elements
-	//	sample_t size = 0;  // total number of elements
-	//	bin_t default_val = 0;  // most occurred value in this array
-	//	std::vector<featval_t> splits; // thresholds
+		std::vector<sample_t> indices;
+		std::vector<bin_t> values;
+		sample_t used = 0;  // number of non-default elements
+		sample_t size = 0;  // total number of elements
+		bin_t default_val = 0;  // most occurred value in this array
+		std::vector<featval_t> splits; // thresholds
 
-	//	void setDefault(bin_t def)
-	//	{
-	//		default_val = def;
-	//	}
+		void setDefault(bin_t def)
+		{
+			default_val = def;
+		}
 
-	//	void setSize(sample_t datasize)
-	//	{
-	//		size = datasize;
-	//	}
+		void setSize(sample_t datasize)
+		{
+			size = datasize;
+		}
 
-	//	void NonDefaultResize(size_t size)
-	//	{
-	//		indices.resize(0);
-	//		indices.reserve(size);
-	//		values.resize(0);
-	//		values.reserve(size);
-	//		used = 0;
-	//	}
+		void NonDefaultResize(size_t size)
+		{
+			indices.resize(0);
+			indices.reserve(size);
+			values.resize(0);
+			values.reserve(size);
+			used = 0;
+		}
 
-	//	void push_back(sample_t index, bin_t value)
-	//	{
-	//		indices.push_back(index);
-	//		values.push_back(value);
-	//		++used;
-	//	}
+		void push_back(sample_t index, bin_t value)
+		{
+			indices.push_back(index);
+			values.push_back(value);
+			++used;
+		}
 
-	//	void toArray(std::vector<bin_t> &vec)
-	//	{
-	//		std::fill(vec.begin(), vec.end(), default_val);
-	//		for (size_t i = 0; i < used; ++i)
-	//		{
-	//			vec[indices[i]] = values[i];
-	//		}
-	//	}
-	//};
+		void toArray(std::vector<bin_t> &vec)
+		{
+			std::fill(vec.begin(), vec.end(), default_val);
+			for (size_t i = 0; i < used; ++i)
+			{
+				vec[indices[i]] = values[i];
+			}
+		}
+	};
+	*/
 
-	struct SplitInfo
+	struct Split
 	{
 		feature_t feature;
 		featval_t threshold;
 
-		SplitInfo() {}
-		SplitInfo(feature_t feature, featval_t threshold) : feature(feature), threshold(threshold) {}
+		Split() {}
+		Split(feature_t feature, featval_t threshold) : feature(feature), threshold(threshold) {}
 
 		std::string toString(const std::string& prefix = "")
 		{
@@ -68,14 +70,14 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-	//typedef struct __declspec(align(8)) BinInfo
-	typedef struct BinInfo
+	//typedef struct __declspec(align(8)) Bin
+	struct Bin
 	{
 		gradient_t sumCount, sumScores;
 
-		BinInfo() { sumCount = sumScores = 0.0f; }
+		Bin() { sumCount = sumScores = 0.0f; }
 
-		BinInfo(gradient_t sumCounts, gradient_t sumTarget)
+		Bin(gradient_t sumCounts, gradient_t sumTarget)
 		{
 			sumCount = sumCounts;
 			sumScores = sumTarget;
@@ -102,50 +104,71 @@ namespace LambdaMART {
 			return "(sumCount = " + std::to_string(sumCount) + ", sumScores = " + std::to_string(sumScores) + ")";
 		}
 
-		inline BinInfo& operator+=(const BinInfo& rhs)
+		inline Bin& operator+=(const Bin& rhs)
 		{
 			this->sumCount += rhs.sumCount;
 			this->sumScores += rhs.sumScores;
 			return *this;
 		}
 
-		inline void getComplement(const BinInfo& lhs, const BinInfo& rhs)
+		inline void getComplement(const Bin& lhs, const Bin& rhs)
 		{
 			this->sumCount = lhs.sumCount - rhs.sumCount;
 			this->sumScores = lhs.sumScores - rhs.sumScores;
 		}
 
-		inline BinInfo& operator^=(const BinInfo& rhs)
+		inline Bin& operator^=(const Bin& rhs)
 		{
 			// get complement from rhs, not really arithmetic ^=
 			this->sumCount = rhs.sumCount - this->sumCount;
 			this->sumScores = rhs.sumScores - this->sumScores;
 			return *this;
 		}
-	} NodeInfoStats;
+	};
 
-	inline BinInfo operator-(BinInfo lhs, const BinInfo& rhs)
+	typedef Bin NodeStats;
+
+	inline Bin operator-(Bin lhs, const Bin& rhs)
 	{
 		lhs.sumCount -= rhs.sumCount;
 		lhs.sumScores -= rhs.sumScores;
 		return lhs;
 	}
 
-	typedef std::tuple<SplitInfo, bin_t, score_t, NodeInfoStats, NodeInfoStats> splitTup;
+	struct SplitInfo {
+		Split split;
+		bin_t bin;
+		score_t gain;
+		NodeStats left_stats;
+		NodeStats right_stats;
+
+		SplitInfo() = default;
+		SplitInfo(Split& _s, bin_t _b, score_t _g, NodeStats& _l, NodeStats& _r)
+			: split(_s), bin(_b), gain(_g), left_stats(_l), right_stats(_r) {}
+
+		string toString() {
+			return "(split: " + split.toString() + ", bin: " + to_string(bin) + ", gain: " + to_string(gain)
+					+ ", left_stats: " + left_stats.toString() + ", right_stats: " + right_stats.toString() + ")";
+		}
+
+		bool operator >=(const SplitInfo& other) {
+			return gain >= other.gain;
+		}
+	};
 
 	struct Histogram
 	{
 		bin_t bin_cnt;
-		std::vector<BinInfo> bins;
+		std::vector<Bin> bins;
 
-		Histogram() {}
+		Histogram() = default;
 
 		Histogram(bin_t numbins) : bin_cnt(numbins)
 		{
 			bins.resize(numbins);
 		}
 
-		Histogram(const BinInfo* hist, bin_t numbins) : bin_cnt(numbins)
+		Histogram(const Bin* hist, bin_t numbins) : bin_cnt(numbins)
 		{
 			bins.assign(hist, hist + numbins);
 		}
@@ -170,7 +193,7 @@ namespace LambdaMART {
 		}
 
 		//TODO: defaultBin - part of optimization
-		//void cumulate(const BinInfo& info, bin_t defaultBin)
+		//void cumulate(const Bin& info, bin_t defaultBin)
 		//{
 		//	if (bin_cnt <= 1)
 		//	{
@@ -208,8 +231,8 @@ namespace LambdaMART {
 
 		inline void GetFromDifference(const Histogram& parent, const Histogram& sibling)
 		{
-			const std::vector<BinInfo>& pbins = parent.bins;
-			const std::vector<BinInfo>& sbins = sibling.bins;
+			const std::vector<Bin>& pbins = parent.bins;
+			const std::vector<Bin>& sbins = sibling.bins;
 
 			for (int i = 0; i < bin_cnt; ++i)
 			{
@@ -231,17 +254,17 @@ namespace LambdaMART {
 			//}
 		}
 
-		splitTup BestSplit(const feature_t& fid,
-						   feature& feat,
-						   const NodeInfoStats* nodeInfo,
-						   sample_t minInstancesPerNode = 1)
+		SplitInfo BestSplit(const feature_t& fid,
+						    feature& feat,
+						    const NodeStats* nodeInfo,
+						    sample_t minInstancesPerNode = 1)
 		{
 			//DEBUG_ASSERT_EX(feat.splits.size() > 0, "empty splits!");
 			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
 
 			//feature_t feature = feat.fid;
 			score_t totalGain = nodeInfo->getLeafSplitGain();
-			NodeInfoStats bestRightInfo;
+			NodeStats bestRightInfo;
 			score_t bestShiftedGain = 0.0l;
 			featval_t bestThreshold = 0.0l;
 			bin_t bestThresholdBin = 0;
@@ -250,7 +273,7 @@ namespace LambdaMART {
 			for (bin_t i = 1; i < temp_threshold_size; ++i)
 			{
 				bin_t threshLeft = i;
-				NodeInfoStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
+				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
 
 				if (lte.sumCount >= minInstancesPerNode && gt.sumCount >= minInstancesPerNode)
@@ -267,11 +290,11 @@ namespace LambdaMART {
 				}
 			}
 
-			SplitInfo bestSplitInfo(fid, bestThreshold);
+			Split bestSplit(fid, bestThreshold);
 			score_t splitGain = bestShiftedGain - totalGain;
-			NodeInfoStats bestLeftInfo(*nodeInfo - bestRightInfo);
+			NodeStats bestLeftInfo(*nodeInfo - bestRightInfo);
 
-			return std::make_tuple(bestSplitInfo, bestThresholdBin, splitGain, bestLeftInfo, bestRightInfo);
+			return SplitInfo(bestSplit, bestThresholdBin, splitGain, bestLeftInfo, bestRightInfo);
 		}
 	};
 
@@ -335,7 +358,7 @@ namespace LambdaMART {
 	//		++used_slots;
 	//	}
 
-	//	void put(nodbin_cntnodeID, bin_t numBins, const BinInfo* hist)
+	//	void put(nodbin_cntnodeID, bin_t numBins, const Bin* hist)
 	//	{
 	//		NodeIDToSlot[nodeID] = used_slots;
 	//		SlotToNodeID[used_slots] = nodeID;
@@ -374,8 +397,8 @@ namespace LambdaMART {
 	private:
 		nodeidx_t num_nodes;
 		bin_t bin_cnt;  // unified max num of bins
-		BinInfo** _head;
-		BinInfo* _data;
+		Bin** _head;
+		Bin* _data;
 
 	public:
 		HistogramMatrix() : num_nodes(0), bin_cnt(0), _head(nullptr), _data(nullptr) {}
@@ -399,10 +422,10 @@ namespace LambdaMART {
 			
 			num_nodes = nodes;
 			bin_cnt = bins;
-			_head = (BinInfo**)malloc(sizeof(BinInfo*) * nodes);
-			_data = (BinInfo*)malloc(sizeof(BinInfo) * nodes * bins);
-			//_head = (BinInfo**)_aligned_malloc(sizeof(BinInfo*) * nodes, sizeof(BinInfo*));
-			//_data = (BinInfo*)_aligned_malloc(sizeof(BinInfo) * nodes * bins, 8);
+			_head = (Bin**)malloc(sizeof(Bin*) * nodes);
+			_data = (Bin*)malloc(sizeof(Bin) * nodes * bins);
+			//_head = (Bin**)_aligned_malloc(sizeof(Bin*) * nodes, sizeof(Bin*));
+			//_data = (Bin*)_aligned_malloc(sizeof(Bin) * nodes * bins, 8);
 			for (nodeidx_t i = 0; i < nodes; ++i)
 			{
 				_head[i] = _data + i * bins;
@@ -433,12 +456,12 @@ namespace LambdaMART {
 			}
 		}
 
-		inline BinInfo* operator[](nodeidx_t node)
+		inline Bin* operator[](nodeidx_t node)
 		{
 			return _head[node];
 		}
 
-		inline BinInfo* data()
+		inline Bin* data()
 		{
 			return _data;
 		}
@@ -455,7 +478,7 @@ namespace LambdaMART {
 				return;
 			}
 
-			BinInfo* bins = _head[node];
+			Bin* bins = _head[node];
 			for (bin_t bin = bin_cnt-2; bin > 0; --bin)
 			{
 				bins[bin] += bins[bin+1];
@@ -463,7 +486,7 @@ namespace LambdaMART {
 			bins[0] += bins[1];
 		}
 		//TODO: defaultBin - part of optimization
-		//inline void cumulate(nodeidx_t node, const NodeInfoStats* info, bin_t defaultBin)
+		//inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)
 		//{
 		//	// TODO: loop unrolling
 
@@ -472,8 +495,8 @@ namespace LambdaMART {
 		//		return;
 		//	}
 
-		//	BinInfo* bins = _head[node];
-		//	const BinInfo total = *info;
+		//	Bin* bins = _head[node];
+		//	const Bin total = *info;
 
 		//	// cumulate from right to left
 		//	for (bin_t bin = bin_cnt - 2; bin > defaultBin; --bin)
@@ -503,10 +526,10 @@ namespace LambdaMART {
 		//	bins[0] = total;
 		//}
 
-		inline void GetFromDifference(nodeidx_t node, const Histogram& parent_hist, BinInfo* sibling)
+		inline void GetFromDifference(nodeidx_t node, const Histogram& parent_hist, Bin* sibling)
 		{
-			BinInfo* bins = _head[node];
-			const std::vector<BinInfo>& pbins = parent_hist.bins;
+			Bin* bins = _head[node];
+			const std::vector<Bin>& pbins = parent_hist.bins;
 
 			for (int i = 0; i < bin_cnt; ++i)
 			{
@@ -531,8 +554,8 @@ namespace LambdaMART {
 		inline void GetFromDifference(nodeidx_t node, bin_t bin_cnt, const Histogram& parent_hist, const Histogram& sibling_hist)
 		{
 			auto bins = _head[node];
-			const std::vector<BinInfo>& pbins = parent_hist.bins;
-			const std::vector<BinInfo>& sbins = sibling_hist.bins;
+			const std::vector<Bin>& pbins = parent_hist.bins;
+			const std::vector<Bin>& sbins = sibling_hist.bins;
 
 			int i;
 			for (i = 0; i < bin_cnt; ++i)
@@ -555,19 +578,19 @@ namespace LambdaMART {
 			//}
 		}
 
-		splitTup BestSplit(nodeidx_t node, feature_t fid,
+		SplitInfo BestSplit(nodeidx_t node, feature_t fid,
 						   const feature& feat,
-						   const NodeInfoStats* nodeInfo,
+						   const NodeStats* nodeInfo,
 						   const sample_t minInstancesPerNode = 1)
 		{
 			//DEBUG_ASSERT_EX(feat.splits.size() > 0, "empty splits!");
 			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
 
-			const BinInfo* bins = _head[node];
+			const Bin* bins = _head[node];
 			const vector<featval_t>& temp_threshold = feat.threshold;
 
 			score_t totalGain = nodeInfo->getLeafSplitGain();
-			NodeInfoStats bestRightInfo;
+			NodeStats bestRightInfo;
 			score_t bestShiftedGain = 0.0l;
 			featval_t bestThreshold = 0.0l;
 			bin_t bestThresholdBin = 0;
@@ -576,7 +599,7 @@ namespace LambdaMART {
 			for (bin_t i = 1; i < temp_threshold_size; ++i)
 			{
 				bin_t threshLeft = i;
-				NodeInfoStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
+				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
 
 				if (lte.sumCount >= minInstancesPerNode && gt.sumCount >= minInstancesPerNode)
@@ -593,11 +616,11 @@ namespace LambdaMART {
 				}
 			}
 
-			SplitInfo bestSplitInfo(fid, bestThreshold);
+			Split bestSplit(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
-			NodeInfoStats bestLeftInfo(*nodeInfo - bestRightInfo);
+			NodeStats bestLeftInfo(*nodeInfo - bestRightInfo);
 
-			return std::make_tuple(bestSplitInfo, bestThresholdBin, splitGain, bestLeftInfo, bestRightInfo);
+			return SplitInfo(bestSplit, bestThresholdBin, splitGain, bestLeftInfo, bestRightInfo);
 		}
 
 	};

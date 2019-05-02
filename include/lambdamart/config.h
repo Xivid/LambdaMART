@@ -56,7 +56,7 @@ namespace LambdaMART {
             GetDouble("min_gain_to_split", &min_gain_to_split);
             GetInt("verbosity", &verbosity);
             Log::ResetLogLevel(LogLevel(verbosity));
-            int t; GetInt("max_bin", &t); max_bin = t > 255 ? 255 : t;
+            { int t; GetInt("max_bin", &t) && (max_bin = t > 255 ? 255 : t); }
             GetInt("min_data_in_bin", &min_data_in_bin);
             GetString("output_model", &output_model);
             GetString("output_result", &output_result);
@@ -90,7 +90,7 @@ namespace LambdaMART {
 
 #pragma region IO Parameters
 
-        // desc = ``< 0``: Fatal, ``= 0``: Error (Warning), ``= 1``: Info, ``> 1``: Debug
+        // desc = ``< 0``: Fatal, ``= 0``: Error (Warning), ``= 1``: Info, ``> 1``: Debug, ``> 2``: Trace
         int verbosity = 1;
 
         // desc = max number of bins that feature values will be bucketed in

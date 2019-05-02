@@ -40,6 +40,7 @@ namespace LambdaMART {
         Warning = 0,
         Info = 1,
         Debug = 2,
+        Trace = 3,
     };
 
 
@@ -56,6 +57,12 @@ namespace LambdaMART {
             GetLevel() = level;
         }
 
+        static void Trace(const char *format, ...) {
+            va_list val;
+            va_start(val, format);
+            Write(LogLevel::Trace, GetCurrentTime(), "Trace", format, val);
+            va_end(val);
+        }
         static void Debug(const char *format, ...) {
             va_list val;
             va_start(val, format);
