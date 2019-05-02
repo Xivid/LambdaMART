@@ -164,7 +164,6 @@ private:
     // as working set
     sample_t                            num_samples;
     feature_t                           num_features;
-    bin_t                               num_bins;
     HistogramMatrix                     histograms;
     uint32_t                            cur_depth = 0;
     std::vector<SplitInfo>              best_splits;
