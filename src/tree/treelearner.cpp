@@ -61,12 +61,6 @@ void TreeLearner::find_best_splits()
 {
     Log::Debug("find_best_splits");
 
-    /*
-     * for each feature in dataset
-     *   for each sample in [0, dataset->num_samples)
-     *     histograms[sample_to_node[sample]][feature[sample]].update(gradients[sample], hessians[sample]);
-     */
-
     best_splits.resize(num_candidates);
     for (feature_t fid = 0; fid < num_features; ++fid)
     {
@@ -104,11 +98,6 @@ void TreeLearner::find_best_splits()
             }
         }
     }
-
-    /*
-     * for each histogram in histograms
-     *   best_splits[histogram.node_id] = histogram.best_split_point()
-     */
 }
 
 void TreeLearner::perform_split()
