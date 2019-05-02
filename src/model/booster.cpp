@@ -6,12 +6,11 @@ Model* Booster::train() {
     auto model = new Model();
     auto treeLearner = new TreeLearner(dataset, gradients.data(), hessians.data(), config);
 
-    bool is_finished = false;
     const int num_iter = config->num_iterations;
     const double learning_rate = config->learning_rate;
     Log::Debug("Train %d iterations with learning rate %lf", num_iter, learning_rate);
 
-    for (int iter = 0; iter < num_iter && !is_finished; ++iter) {
+    for (int iter = 0; iter < num_iter; ++iter) {
         ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
 //        double s = 0;
 //        for (auto x: gradients) {
@@ -21,26 +20,13 @@ Model* Booster::train() {
         Tree* tree = treeLearner->build_new_tree();
         model->add_tree(tree, learning_rate);
 
-        for (size_t sid = 0; sid < num_samples; ++sid) {
+        for (sample_t sid = 0; sid < num_samples; ++sid) {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
-        is_finished = check_early_stopping();
         Log::Info("Iteration %d: NDCG = (TODO)", iter);
     }
 
     return model;
 }
-
-
-// TODO
-// Checks for early stopping:
-// - if there are no more leaves meet the split requirement (should this check be done in build_new_tree?)
-// - others?
-bool Booster::check_early_stopping() {
-    bool early_stopping = false;
-    // TODO
-    return early_stopping;
-}
-
 
 }

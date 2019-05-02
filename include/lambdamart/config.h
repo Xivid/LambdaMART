@@ -90,7 +90,7 @@ namespace LambdaMART {
 
 #pragma region IO Parameters
 
-        // desc = ``< 0``: Fatal, ``= 0``: Error (Warning), ``= 1``: Info, ``> 1``: Debug
+        // desc = ``< 0``: Fatal, ``= 0``: Error (Warning), ``= 1``: Info, ``> 1``: Debug, ``> 2``: Trace
         int verbosity = 1;
 
         // desc = max number of bins that feature values will be bucketed in

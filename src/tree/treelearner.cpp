@@ -70,14 +70,16 @@ void TreeLearner::find_best_splits()
     best_splits.resize(num_candidates);
     for (feature_t fid = 0; fid < num_features; ++fid)
     {
-        Log::Debug("checking feature %lu", fid);
+        Log::Trace("checking feature %lu", fid);
         histograms.clear(num_candidates);
         const feature& feat = dataset->get_data()[fid];
 
         //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx)
         {
-            if (sample_idx % 10 == 0)   Log::Debug("  sample %lu", sample_idx);
+            if (sample_idx % 10 == 0) {
+                Log::Trace("  sample %lu", sample_idx);
+            }
             const int node = sample_to_candidate[sample_idx];
             if (node != -1)
             {
@@ -88,19 +90,19 @@ void TreeLearner::find_best_splits()
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate)
         {
-            Log::Debug("Candidate %lu", candidate);
+            Log::Trace("Candidate %lu", candidate);
             histograms.cumulate(candidate);
             auto temptuple = histograms.BestSplit(candidate, fid, feat, node_info[candidate], config->min_data_in_leaf);
-            Log::Debug("\t\tbestsplit: %s, bin %u, gain %lf, left %s, right %s",
+            Log::Trace("\t\tbestsplit: %s, bin %u, gain %lf, left %s, right %s",
                     std::get<0>(temptuple).toString().c_str(),
                     std::get<1>(temptuple),
                     std::get<2>(temptuple),
                     std::get<3>(temptuple).toString().c_str(),
-                   std::get<4>(temptuple).toString().c_str());
+                    std::get<4>(temptuple).toString().c_str());
             if (std::get<2>(temptuple) >= std::get<2>(best_splits[candidate]))
             {
                 best_splits[candidate] = temptuple;
-                Log::Debug("\t\t-> replaced");
+                Log::Trace("\t\t-> replaced");
             }
         }
     }
