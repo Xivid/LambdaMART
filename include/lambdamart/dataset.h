@@ -231,8 +231,8 @@ namespace LambdaMART {
 
     class RawDataset: public Dataset{
     private:
-        vector<vector<pair<int, double>>> raw_data;
-        vector<vector<double>> data;
+        vector<vector<pair<int, featval_t>>> raw_data;
+        vector<vector<featval_t>> data;
     public:
         void load_dataset(const char* data_path, const char* query_path) {
             load_data_from_file(data_path, raw_data, this->rank, this->d);
@@ -242,7 +242,7 @@ namespace LambdaMART {
             load_query_from_file(query_path);
 
             for(int i=0; i<n; i++)
-                data.emplace_back(vector<double>(this->d, 0));
+                data.emplace_back(this->d, 0);
 
             int row_index = 0;
             for (auto &row: raw_data) {

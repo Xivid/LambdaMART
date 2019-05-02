@@ -4,21 +4,28 @@
 namespace LambdaMART {
 
 
-double* Model::predict(RawDataset* data) {
+vector<double>* Model::predict(RawDataset* data, const string& output_path) {
     size_t num_iter = trees.size();
-    if (num_iter == 0) {
-        Log::Fatal("Empty model!");
-        return nullptr;
-    }
     sample_t num_data = data->num_samples();
-    double *out = new double[num_data];
+    auto *out = new vector<double>(num_data);
     for (sample_t i = 0; i < num_data; ++i) {
-        double score = 0.0f;
-        for (size_t m = 0; m < num_iter; ++m) {
-            score += trees[m]->predict_score(data->get_sample_row(i));
+        if (i % 10 == 0) {
+            Log::Debug("Predicting sample %u", i);
         }
-        out[i] = score;
+        score_t score = 0.0f;
+        for (size_t m = 0; m < num_iter; ++m) {
+            score += trees[m]->predict_score(data->get_sample_row(i)) * tree_weights[m];
+        }
+        (*out)[i] = score;
     }
+
+    Log::Info("Writing predictions to %s", output_path.c_str());
+    ofstream fout(output_path);
+    for (score_t score: *out) {
+        fout << score << '\n';
+    }
+    fout.close();
+
     return out;
 }
 

@@ -15,39 +15,40 @@ class TreeNode {
     friend class Model;
 
     explicit TreeNode(nodeidx_t id) :
-        id(id), predict(0), impurity(0), isLeaf(true),
-        split(nullptr), leftNode(nullptr), rightNode(nullptr) {}
+        id(id), output(0), impurity(0), is_leaf(true),
+        split(nullptr), left_child(nullptr), right_child(nullptr) {}
 
-    TreeNode(nodeidx_t id, score_t predict, score_t impurity, bool isLeaf) :
-        id(id), predict(predict), impurity(impurity), isLeaf(isLeaf),
-        split(nullptr), leftNode(nullptr), rightNode(nullptr) {}
+    TreeNode(nodeidx_t id, score_t output, score_t impurity, bool isLeaf) :
+        id(id), output(output), impurity(impurity), is_leaf(isLeaf),
+        split(nullptr), left_child(nullptr), right_child(nullptr) {}
 
 private:
     nodeidx_t id;  // root node is 1, left child of x is (2x), right child of x is (2x+1)
-    score_t predict;
+    score_t output;
     score_t impurity;
-    bool isLeaf;
+    bool is_leaf;
     Split* split;
-    TreeNode* leftNode;
-    TreeNode* rightNode;
+    TreeNode* left_child;
+    TreeNode* right_child;
 
     std::string toString(const std::string& prefix = "")
     {
-        return prefix + "id = " + std::to_string(id) + ", predict = " + std::to_string(predict) + ", impurity = " + std::to_string(impurity) + ", isLeaf = " + std::to_string(isLeaf)
-               + ", split = " + (split != nullptr ? split->toString() : "none") + ", leftNode = " + std::to_string(leftNode != nullptr ? leftNode->id : 0) + ", rightNode = " + std::to_string(rightNode != nullptr ? rightNode->id : 0)
-               + (isLeaf ? "\n" : ("\n" + leftNode->toString(prefix + "  ") + rightNode->toString(prefix + "  ")));
+        return prefix + "id = " + std::to_string(id) + ", output = " + std::to_string(output) + ", impurity = " + std::to_string(impurity) + ", is_leaf = " + std::to_string(is_leaf)
+               + ", split = " + (split != nullptr ? split->toString() : "none") + ", left_child = " + std::to_string(left_child != nullptr ? left_child->id : 0) + ", right_child = " + std::to_string(right_child != nullptr ? right_child->id : 0)
+               + (is_leaf ? "\n" : ("\n" + left_child->toString(prefix + "  ") + right_child->toString(prefix + "  ")));
     }
 
     score_t predict_score(const std::vector<featval_t> &features)
     {
-        if (isLeaf)
-        {
-            return predict;
+        TreeNode* p = this;
+        while (!p->is_leaf) {
+            if (features[p->split->feature] <= p->split->threshold) {
+                p = p->left_child;
+            } else {
+                p = p->right_child;
+            }
         }
-        else
-        {
-            return (features[split->feature] <= split->threshold) ? leftNode->predict_score(features) : rightNode->predict_score(features);
-        }
+        return p->output;
     }
 
     uint32_t get_level() {
@@ -101,13 +102,13 @@ private:
 
     nodeidx_t numDescendants()
     {
-        return isLeaf ? 0 : (2 + leftNode->numDescendants() + rightNode->numDescendants());
+        return is_leaf ? 0 : (2 + left_child->numDescendants() + right_child->numDescendants());
     }
 
     nodeidx_t internalNodes()
     {
-        // DEBUG_ASSERT_EX(isLeaf || (leftNode != nullptr && rightNode != nullptr), "%u internalNodes counting: no leftnode or rightnode!", id);
-        return isLeaf ? 0 : (1 + leftNode->internalNodes() + rightNode->internalNodes());
+        // DEBUG_ASSERT_EX(is_leaf || (left_child != nullptr && right_child != nullptr), "%u internalNodes counting: no leftnode or rightnode!", id);
+        return is_leaf ? 0 : (1 + left_child->internalNodes() + right_child->internalNodes());
     }
     */
 };

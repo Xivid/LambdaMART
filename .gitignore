@@ -2,3 +2,4 @@ cmake-build-debug
 .idea
 test
 .DS_Store
+predict_result.txt
