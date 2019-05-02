@@ -16,7 +16,8 @@ class LambdaRank {
         boundaries_ = dataset.get_query_boundaries();
         num_queries_ = dataset.num_queries();
         label_ = dataset.get_labels();
-        set_eval_rank(&eval_ranks_);
+        eval_at_ = config.eval_at;
+        //set_eval_rank(&eval_ranks_);
         set_label_gain(config.max_label);
         set_discount();
 
@@ -28,22 +29,38 @@ class LambdaRank {
                 inverse_max_dcg_[i] = 1.0f / inverse_max_dcg_[i];
             }
         }
+
+        eval_inverse_max_dcg_.resize(num_queries_);
+        for (int i = 0; i < num_queries_; ++i) {
+            eval_inverse_max_dcg_[i].resize(eval_at_.size(), 0.0f);
+            cal_maxdcg(eval_at_, label_+boundaries_[i], boundaries_[i+1] - boundaries_[i], &eval_inverse_max_dcg_[i]);
+            for (int j = 0; j < eval_inverse_max_dcg_[i].size(); ++j) {
+                if (eval_inverse_max_dcg_[i][j] > 0.0f) {
+                    eval_inverse_max_dcg_[i][j] = 1.0f / eval_inverse_max_dcg_[i][j];
+                } else {
+                    eval_inverse_max_dcg_[i][j] = -1.0f;
+                }
+            }
+        }
+
         create_sigmoid_table();
     }
-    
+
     void get_derivatives(double* currentScores, double* gradients, double* hessians);
     void get_derivatives_one_query(double* scores, double* gradients,
                                     double* hessians, sample_t query_id);
-
+    std::vector<double> eval(double* scores);
 
     private:
         const sample_t* boundaries_;
         sample_t  num_queries_;
         label_t* label_;
         std::vector<double> inverse_max_dcg_;
+        std::vector<std::vector<double>> eval_inverse_max_dcg_;
         // NDCG related fields
         std::vector<double> label_gain_;
         std::vector<sample_t> eval_ranks_;
+        std::vector<int> eval_at_;
         std::vector<double> discount_;
         // max position of rank
         int kMaxPosition = 10000;
