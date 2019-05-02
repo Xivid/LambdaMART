@@ -56,7 +56,7 @@ namespace LambdaMART {
             GetDouble("min_gain_to_split", &min_gain_to_split);
             GetInt("verbosity", &verbosity);
             Log::ResetLogLevel(LogLevel(verbosity));
-            int t; GetInt("max_bin", &t); max_bin = t > 255 ? 255 : t;
+            { int t; GetInt("max_bin", &t) && (max_bin = t > 255 ? 255 : t); }
             GetInt("min_data_in_bin", &min_data_in_bin);
             GetString("output_model", &output_model);
             GetString("output_result", &output_result);
