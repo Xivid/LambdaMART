@@ -29,8 +29,9 @@ Model* Booster::train() {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
 
-        for (int eval_at: config->eval_at) {
-            Log::Info("Iteration %d: NDCG@%d = %lf", iter, eval_at, 0.0);
+        vector<double> result = ranker->eval(current_scores.data());
+        for (int i = 0 ; i < result.size(); ++i) {
+            Log::Info("Iteration %d: NDCG@%d = %lf", iter, config->eval_at[i], result[i]);
         }
     }
 

@@ -15,7 +15,7 @@ void LambdaRank::get_derivatives(double* currentScores, double* gradients, doubl
 
 inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradients,
                                         double* hessians, sample_t query_id) {
-    
+
     const double kminscore = -std::numeric_limits<double>::infinity();
 
     const sample_t start = boundaries_[query_id];
@@ -86,7 +86,26 @@ inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradie
         hessians[high] += high_sum_hessian;
 
     }
+    std::cout << "Query " << query_id << ": " << gradients[0] << " " << gradients[1] << " " << hessians[0] << " " << hessians[1] << std::endl;
+}
 
+std::vector<double> LambdaRank::eval(double* scores) {
+    std::vector<double> result(eval_at_.size());
+    std::vector<double> tmp_dcg(eval_at_.size(), 0.0f);
+    for (sample_t i = 0; i < num_queries_; ++i) {
+        if (eval_inverse_max_dcg_[i][0] <= 0.0f) {
+            for (int j = 0; j < result.size(); ++j) {
+                result[j] = 1.0f;
+            }
+        } else {
+            sample_t num_data = boundaries_[i+1] - boundaries_[i];
+            cal_dcg(eval_at_, label_ + boundaries_[i], scores + boundaries_[i], num_data, &tmp_dcg);
+            for (int j = 0; j < result.size(); ++j) {
+                result[j] = tmp_dcg[j] * eval_inverse_max_dcg_[i][j];
+            }
+        }
+    }
+    return result;
 }
 
 void LambdaRank::set_eval_rank(std::vector<sample_t>* eval_ranks) {
