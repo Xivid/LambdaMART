@@ -28,7 +28,7 @@ void demo(LambdaMART::Config* config) {
     X_test->load_dataset(vali, vali_query);
 
     LambdaMART::Log::Info("Predicting with validation dataset...");
-    double* predictions = model->predict(X_test);
+    vector<double>* predictions = model->predict(X_test, config->output_result);
     LambdaMART::Log::Info("Validation error: (TODO)");
 }
 

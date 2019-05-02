@@ -28,7 +28,7 @@ Tree* TreeLearner::build_new_tree()
     while (!node_queue.empty()) {
         SplitCandidate* candidate = node_queue.top();
         node_queue.pop();
-        candidate->node->isLeaf = true;
+        candidate->node->is_leaf = true;
     }
 
     return root;
@@ -112,10 +112,10 @@ void TreeLearner::perform_split()
     for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
         if (best_splits[candidate].gain > min_gain_to_split) {
             do_split[candidate] = true;
-            split_candidates[candidate]->node->isLeaf = false;
+            split_candidates[candidate]->node->is_leaf = false;
         } else {
             // do not split this candidate
-            split_candidates[candidate]->node->isLeaf = true;
+            split_candidates[candidate]->node->is_leaf = true;
         }
     }
 
@@ -154,6 +154,8 @@ void TreeLearner::perform_split()
 
             TreeNode* left_child = new TreeNode(candidate_node->get_left_child_index(), left_output, left_impurity, left_child_is_leaf);
             TreeNode* right_child = new TreeNode(candidate_node->get_right_child_index(), right_output, right_impurity, right_child_is_leaf);
+            candidate_node->left_child = left_child;
+            candidate_node->right_child = right_child;
             node_to_output[left_child->id] = left_output;
             node_to_output[right_child->id] = right_output;
 
