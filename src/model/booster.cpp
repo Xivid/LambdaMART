@@ -14,13 +14,9 @@ Model* Booster::train() {
         Log::Debug("Iteration %d: start", iter);
         ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
 
-//        double s = 0;
-//        for (auto x: gradients) {
-//            s += x;
-//        }
-        double maxElement = *std::max_element(gradients.begin(), gradients.end());
+        /* double maxElement = *std::max_element(gradients.begin(), gradients.end());
         size_t maxElementIndex = std::max_element(gradients.begin(),gradients.end()) - gradients.begin();
-        Log::Debug("max: %f, index: %u", maxElement, maxElementIndex);
+        Log::Debug("max: %f, index: %u", maxElement, maxElementIndex); */
 
         Tree* tree = treeLearner->build_new_tree();
         model->add_tree(tree, learning_rate);
