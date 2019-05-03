@@ -86,7 +86,7 @@ void TreeLearner::find_best_splits() {
         }
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-            Log::Trace("Candidate %lu", candidate);
+            Log::Trace("Node %lu = Candidate %lu", split_candidates[candidate]->node->id, candidate);
             histograms.cumulate(candidate);
             auto splitInfo = histograms.BestSplit(candidate, fid, feat, node_info[candidate],
                                                   config->min_data_in_leaf);
@@ -138,6 +138,7 @@ void TreeLearner::perform_split()
 
     // create the children nodes
     for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
+        Log::Trace("do_split[%d]: %s", candidate, do_split[candidate]?"true":"false");
         if (do_split[candidate]) {
             auto& splitInfo = best_splits[candidate];
             TreeNode* candidate_node = split_candidates[candidate]->node;
@@ -151,6 +152,8 @@ void TreeLearner::perform_split()
             bool child_is_leaf = (candidate_node->get_level() + 1 >= config->max_depth);
             bool left_child_is_leaf = (child_is_leaf || left_impurity < config->min_impurity_to_split);
             bool right_child_is_leaf = (child_is_leaf || right_impurity < config->min_impurity_to_split);
+            Log::Trace(" child_is_leaf: %d\n left_child_is_leaf: %d\n right_child_is_leaf: %d",
+                    child_is_leaf, left_child_is_leaf, right_child_is_leaf);
 
             TreeNode* left_child = new TreeNode(candidate_node->get_left_child_index(), left_output, left_impurity, left_child_is_leaf);
             TreeNode* right_child = new TreeNode(candidate_node->get_right_child_index(), right_output, right_impurity, right_child_is_leaf);
@@ -158,6 +161,8 @@ void TreeLearner::perform_split()
             candidate_node->right_child = right_child;
             node_to_output[left_child->id] = left_output;
             node_to_output[right_child->id] = right_output;
+
+            Log::Trace("node to output: %lf %lf", left_output, right_output);
 
             if (!left_child_is_leaf) {
                 node_queue.push(new SplitCandidate(left_child, splitInfo.left_stats));

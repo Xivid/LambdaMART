@@ -143,7 +143,7 @@ void LambdaRank::set_discount() {
 double LambdaRank::cal_dcg_k(int k, const label_t* label, const double* score, sample_t num_data) {
     std::vector<int> sorted_idx(num_data);
     for (int i = 0; i < num_data; ++i) sorted_idx[i] = i;
-    std::stable_sort(sorted_idx.begin(), sorted_idx.end(), [score](int a, int b) 
+    std::stable_sort(sorted_idx.begin(), sorted_idx.end(), [score](int a, int b)
             {return score[a] > score[b]; });
 
     if (k > num_data) k = num_data;
@@ -155,11 +155,11 @@ double LambdaRank::cal_dcg_k(int k, const label_t* label, const double* score, s
     return dcg;
 }
 
-void LambdaRank::cal_dcg(const std::vector<int>& ks, const label_t* label, 
+void LambdaRank::cal_dcg(const std::vector<int>& ks, const label_t* label,
         const double* score, sample_t num_data, std::vector<double>* out) {
     std::vector<int> sorted_idx(num_data);
     for (int i = 0; i < num_data; ++i) sorted_idx[i] = i;
-    std::stable_sort(sorted_idx.begin(), sorted_idx.end(),[score](int a, int b) 
+    std::stable_sort(sorted_idx.begin(), sorted_idx.end(),[score](int a, int b)
         {return score[a] > score[b]; });
 
     double cur_result = 0.0f;
@@ -198,7 +198,7 @@ double LambdaRank::cal_maxdcg_k(int k, sample_t start, sample_t num_data) {
     return ret;
 }
 
-void LambdaRank::cal_maxdcg(const std::vector<int>& ks, const label_t* label, 
+void LambdaRank::cal_maxdcg(const std::vector<int>& ks, const label_t* label,
                             sample_t num_data, std::vector<double>* out) {
     std::vector<int> label_counts(label_gain_.size(), 0);
     // get counts for all labels
