@@ -150,6 +150,7 @@ namespace LambdaMART {
 
         explicit Dataset(Config* config = nullptr){
             bin_cnt = config ? config->max_bin : 16;
+            this->d = INT_MIN;
         }
 
         auto& get_data() const{

@@ -26,9 +26,11 @@ Model* Booster::train() {
         }
 
         vector<double> result = ranker->eval(current_scores.data());
-        for (int i = 0 ; i < result.size(); ++i) {
-            Log::Info("Iteration %d: NDCG@%d = %lf", iter, config->eval_at[i], result[i]);
+        string tmp = "Iteration " + to_string(iter) + ":";
+        for (size_t i = 0 ; i < result.size(); ++i) {
+            tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
         }
+        Log::Info(tmp.c_str());
     }
 
     return model;

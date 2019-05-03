@@ -40,9 +40,10 @@ bool TreeLearner::select_split_candidates() {
     std::fill(node_to_candidate.begin(), node_to_candidate.end(), -1);
     sample_to_candidate.clear();
     sample_to_candidate.resize(num_samples);
+    split_candidates.clear();
+    node_info.clear();
 
     num_candidates = 0;
-    split_candidates.clear();
     while (!node_queue.empty() && num_candidates < max_splits)
     {
         auto* candidate = node_queue.top();

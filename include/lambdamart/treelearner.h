@@ -62,6 +62,8 @@ private:
     nodeidx_t get_right_child_index() {
         return (id << 1) + 1;
     }
+
+
     /*
     // TODO: utility functions
     static TreeNode* newEmptyNode(nodeidx_t nodeIndex)
