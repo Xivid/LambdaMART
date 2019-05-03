@@ -629,6 +629,7 @@ namespace LambdaMART {
 			const vector<featval_t>& temp_threshold = feat.threshold;
 
 			score_t totalGain = nodeInfo->getLeafSplitGain();
+
 			NodeStats bestRightInfo;
 			score_t bestShiftedGain = 0.0l;
 			featval_t bestThreshold = 0.0l;
@@ -648,6 +649,7 @@ namespace LambdaMART {
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
 					if (currentShiftedGain > bestShiftedGain)
 					{
+                        Log::Trace("bestShiftGain updated to: %lf", bestShiftedGain);
 						bestRightInfo = gt;
 						bestShiftedGain = currentShiftedGain;
 						bestThreshold = temp_threshold[th];
@@ -656,8 +658,16 @@ namespace LambdaMART {
 				}
 			}
 
+            Log::Trace("bestRightInfo: %s", bestRightInfo.toString().c_str());
+            Log::Trace("bestShiftedGain: %lf", bestShiftedGain);
+            Log::Trace("bestThreshold: %lf", bestThreshold);
+            Log::Trace("bestThresholdBin: %d", bestThresholdBin);
+
 			Split* bestSplit = new Split(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
+
+            Log::Trace("totalGain: %lf", totalGain);
+            Log::Trace("splitGain: %lf", splitGain);
 
 			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
 		}
