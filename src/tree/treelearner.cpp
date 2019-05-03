@@ -68,6 +68,7 @@ bool TreeLearner::select_split_candidates() {
 void TreeLearner::find_best_splits() {
     Log::Debug("find_best_splits");
 
+    best_splits.clear();
     best_splits.resize(num_candidates);
     for (feature_t fid = 0; fid < num_features; ++fid) {
         Log::Trace("checking feature %lu", fid);
