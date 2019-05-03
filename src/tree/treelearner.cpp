@@ -121,7 +121,7 @@ void TreeLearner::perform_split()
     // update sample_to_node for affected samples, and aggregate their lambdas and weights for children nodes
     for (sample_t sample = 0; sample < num_samples; ++sample) {
         int candidate = sample_to_candidate[sample];
-        if (candidate < 0 || do_split[candidate]) continue;
+        if (candidate < 0 || !do_split[candidate]) continue;
 
         const feature_t feature = best_splits[candidate].split->feature;
         const bin_t bin = best_splits[candidate].bin;
@@ -147,7 +147,7 @@ void TreeLearner::perform_split()
             score_t right_output = splitInfo.get_right_output();
 
             // depth of children is still smaller than max_depth -> they can be further split
-            bool child_is_leaf = (candidate_node->get_level() + 1 < config->max_depth);
+            bool child_is_leaf = (candidate_node->get_level() + 1 >= config->max_depth);
             bool left_child_is_leaf = (child_is_leaf || left_impurity < config->min_impurity_to_split);
             bool right_child_is_leaf = (child_is_leaf || right_impurity < config->min_impurity_to_split);
 
