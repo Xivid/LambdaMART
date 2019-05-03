@@ -185,7 +185,7 @@ namespace LambdaMART {
 
         inline score_t calc_leaf_output(gradient_t totalCount, gradient_t sumGradients, gradient_t sumHessians)
         {
-            const float epsilon = 1.1e-38, maxOutput = 100;
+            const score_t epsilon = 1.1e-38, maxOutput = 100;
             gradient_t leafValue = (sumGradients / totalCount + epsilon) / (2 * sumHessians / totalCount + epsilon);
             return (leafValue > maxOutput) ? maxOutput : ((leafValue < -maxOutput) ? -maxOutput : leafValue);
         }
