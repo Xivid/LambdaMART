@@ -80,9 +80,9 @@ namespace LambdaMART {
 
         int max_depth = 8;
         int max_splits = 128;
-        int min_data_in_leaf = 20;
-        double min_gain_to_split = 0.0;
-        double min_impurity_to_split = 1e-2;
+        int min_data_in_leaf = 1;
+        double min_gain_to_split = 1e-6;
+        double min_impurity_to_split = 1e-6;
 
 #pragma endregion
 
@@ -93,7 +93,7 @@ namespace LambdaMART {
 
         // desc = max number of bins that feature values will be bucketed in
         uint8_t max_bin = 255;
-        int min_data_in_bin = 3;
+        int min_data_in_bin = 3; //unused now in v1
 
         // desc = max cache size in MB for historical histogram; ``< 0`` means no limit
 //        double histogram_pool_size = -1.0;  // TODO: maybe useful later
