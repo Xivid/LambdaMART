@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
+#include <climits>
 
 #include <lambdamart/types.h>
 #include <lambdamart/config.h>
@@ -88,6 +89,10 @@ namespace LambdaMART {
             for(auto & i: this->sample_index)
                 nnz_bin_index.emplace_back(this->bin_index[i]);
             return nnz_bin_index;
+        }
+
+        int bin_count(){
+            return 1 + *max_element(bin_index.begin(), bin_index.end());
         }
     };
 
