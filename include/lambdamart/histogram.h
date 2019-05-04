@@ -501,11 +501,6 @@ namespace LambdaMART {
 			return _data;
 		}
 
-		inline bin_t numBins()
-		{
-			return bin_cnt;
-		}
-
 		void cumulate(nodeidx_t node)
 		{
 			if (bin_cnt <= 1)
@@ -521,11 +516,11 @@ namespace LambdaMART {
 			}
 			bins[0] += bins[1];
 
-            Log::Trace(" Bin # ");
-            for (bin_t bin = 0; bin < bin_cnt; bin++)
-            {
-                Log::Trace("\t%i\t%s", bin, bins[bin].toString().c_str());
-            }
+            //Log::Trace(" Bin # ");
+            //for (bin_t bin = 0; bin < bin_cnt; bin++)
+            //{
+            //    Log::Trace("\t%i\t%s", bin, bins[bin].toString().c_str());
+            //}
 		}
 		//TODO: defaultBin - part of optimization
 		//inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)
@@ -637,7 +632,7 @@ namespace LambdaMART {
 			size_t temp_threshold_size = temp_threshold.size();
 
             Log::Trace(" Threshold #:");
-			for (bin_t i = 1; i < temp_threshold_size; ++i)
+			for (bin_t i = 1; i < feat.bin_count(); ++i)
 			{
 				bin_t threshLeft = i;
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
@@ -649,9 +644,9 @@ namespace LambdaMART {
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
 					if (currentShiftedGain > bestShiftedGain)
 					{
-                        Log::Trace("bestShiftGain updated to: %lf", bestShiftedGain);
 						bestRightInfo = gt;
 						bestShiftedGain = currentShiftedGain;
+                        Log::Trace("\tbestShiftGain updated to: %lf", bestShiftedGain);
 						bestThreshold = temp_threshold[th];
 						bestThresholdBin = th;
 					}
