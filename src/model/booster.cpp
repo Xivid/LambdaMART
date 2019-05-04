@@ -10,11 +10,10 @@ Model* Booster::train() {
     const double learning_rate = config->learning_rate;
     Log::Debug("Train %d iterations with learning rate %lf", num_iter, learning_rate);
 
-
     vector<double> result = ranker->eval(current_scores.data());
-    string tmp = "Iteration init:";
+    string tmp = "Initial";
     for (size_t i = 0 ; i < result.size(); ++i) {
-        tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(round(result[i]*100)/100).substr(0,4);
+        tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
     }
     Log::Info(tmp.c_str());
 
@@ -60,7 +59,7 @@ Model* Booster::train() {
         vector<double> result = ranker->eval(current_scores.data());
         string tmp = "Iteration " + to_string(iter) + ":";
         for (size_t i = 0 ; i < result.size(); ++i) {
-            tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(round(result[i]*100)/100).substr(0,4);
+            tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
         }
         Log::Info(tmp.c_str());
     }

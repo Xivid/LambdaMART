@@ -58,12 +58,12 @@ namespace LambdaMART {
              bin_index.resize(n, -1);
 
              for (int i = 0; i < n; i++) {
-                 if (curr_count++ <= bin_size | fabs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
+                 if (curr_count++ <= bin_size || fabs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
                      bin_index[this->sample_index[i]] = bin_count;
                  else {
                      curr_count = 0;
                      i--;
-                     threshold[bin_count] = i < n-1 ? (this->sample_data[i] + this->sample_data[i + 1]) / 2.0 : this->sample_data[i] + 0.1;
+                     threshold[bin_count] = i < n-1 ? (this->sample_data[i] + this->sample_data[i + 1]) / 2.0 : numeric_limits<double>::max();
                      bin_count++;
                  }
              }
@@ -193,6 +193,79 @@ namespace LambdaMART {
             Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
 
+        void load_debug_dataset(const char* data_path, const char* label_path, const char* query_path, int num_feat){
+            ifstream infile(data_path);
+            string line;
+            if(infile.is_open()){
+                while(getline(infile, line)){
+                    vector<string> tokens;
+                    istringstream row(line);
+                    while(row.good()){
+                        string substring;
+                        getline(row, substring, '#');
+                        tokens.emplace_back(substring);
+                    }
+                    if(tokens.size() != 3){
+                        Log::Fatal("File syntax read incorrectly.");
+                        exit(0);
+                    }
+
+                    vector<int> bins;
+                    vector<double> thresholds;
+                    stringstream proc(tokens[1]);
+                    while(proc.good()){
+                        string bin;
+                        getline(proc, bin, ',');
+                        bins.emplace_back(stoi(bin));
+                    }
+
+                    stringstream proc_(tokens[2]);
+                    while(proc_.good()){
+                        string thres;
+                        getline(proc_, thres, ',');
+                        thresholds.emplace_back(stod(thres));
+                    }
+
+                    feature f = feature(num_feat);
+                    f.bin_index = bins;
+                    f.threshold = thresholds;
+
+                    this->data.emplace_back(f);
+                }
+            } else {
+                Log::Fatal("Cannot open (data) file %s", data_path);
+            }
+            infile.close();
+
+            ifstream infile_(label_path);
+            if(infile_.is_open()){
+                while(getline(infile_, line)){
+                    istringstream row(line);
+                    while(row.good()){
+                        string label;
+                        getline(row, label, ',');
+                        this->rank.emplace_back(stoi(label));
+                    }
+                }
+            } else {
+                Log::Fatal("Cannot open (label) file %s", label_path);
+            }
+
+            ifstream infile__(query_path);
+            if(infile__.is_open()){
+                while(getline(infile__, line)){
+                    istringstream row(line);
+                    while(row.good()){
+                        string qb;
+                        getline(row, qb, ',');
+                        this->query_boundaries.emplace_back(stoi(qb));
+                    }
+                }
+            } else {
+                Log::Fatal("Cannot open (query) file %s", query_path);
+            }
+            infile.close();
+        }
         // initialize a sample-major `n x d` matrix
         void init_data(){
             for(int i=0; i<this->d; i++){

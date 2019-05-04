@@ -76,7 +76,8 @@ inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradie
             double p_gradient = get_sigmoid(delta);
             double p_hessian = p_gradient * (2.0f - p_gradient);
 
-            p_gradient *= -delta_pair_ndcg;
+//            p_gradient *= -delta_pair_ndcg;
+            p_gradient *= delta_pair_ndcg;
             p_hessian *= 2 * delta_pair_ndcg;
             high_sum_gradient += p_gradient;
             high_sum_hessian += p_hessian;
@@ -97,14 +98,14 @@ inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradie
         haccum += hessians[i] * hessians[i];
     }
     double hnorm = sqrt(haccum);
-    std::cout << "Query " << query_id << ": gradient norm: " << norm << " hessian norm: " << hnorm << std::endl;
-    //std::cout << "score " << scores[0] << " " << scores[1] << " " << scores[2] << " " << scores[3] << " " << scores[4] << std::endl;
-
-    std::cout << "score: ";
-    for (int i = 0; i < count; ++i) {
-        std::cout << scores[i] << " ";
-    }
-    std::cout << std::endl;
+//    std::cout << "Query " << query_id << ": gradient norm: " << norm << " hessian norm: " << hnorm << std::endl;
+//    //std::cout << "score " << scores[0] << " " << scores[1] << " " << scores[2] << " " << scores[3] << " " << scores[4] << std::endl;
+//
+//    std::cout << "score: ";
+//    for (int i = 0; i < count; ++i) {
+//        std::cout << scores[i] << " ";
+//    }
+//    std::cout << std::endl;
 
 }
 
