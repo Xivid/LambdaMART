@@ -29,6 +29,7 @@ namespace LambdaMART {
     };
 
     class feature {
+        int bin_cnt;
     public:
         vector<int> bin_index;
         vector<pair<double, int>> samples;
@@ -38,6 +39,7 @@ namespace LambdaMART {
 
         explicit feature(const uint8_t bin_cnt){
             this->threshold.resize(bin_cnt, -1);
+            this->bin_cnt = 0;
         }
 
         //sorts and extracts samples and indexes from vector of pairs
@@ -67,6 +69,7 @@ namespace LambdaMART {
                      bin_count++;
                  }
              }
+             this->bin_cnt = bin_count+1;
          }
 
         //overloaded bin for using predefined threshold values, using binner class and index of feature being binned.
@@ -92,13 +95,13 @@ namespace LambdaMART {
         }
 
         int bin_count() const {
-            return 1 + *max_element(bin_index.begin(), bin_index.end());
+            return this->bin_cnt;
         }
     };
 
     class Dataset {
         vector<feature> data; // feature major; d rows, n columns
-        int bin_size, bin_cnt;
+        int bin_size, bin_cnt, max_lbl;
         Binner binner;
 
     protected:
@@ -113,7 +116,9 @@ namespace LambdaMART {
                     for(auto & token: tokens){
                         int delimiter = token.find(':');
                         if(delimiter == string::npos) {
-                            rank.emplace_back(stoi(token));
+                            int val = stoi(token);
+                            this->max_lbl = max(max_lbl, val);
+                            rank.emplace_back(val);
                             continue;
                         }
                         int index = stoi(token.substr(0, delimiter)) - 1;
@@ -155,6 +160,7 @@ namespace LambdaMART {
 
         explicit Dataset(Config* config = nullptr){
             bin_cnt = config ? config->max_bin : 16;
+            this->max_lbl = INT_MIN;
             this->d = INT_MIN;
         }
 
@@ -163,7 +169,7 @@ namespace LambdaMART {
         }
 
         int max_label(){
-            return *max_element(rank.begin(), rank.end());
+            return this->max_lbl;
         }
 
         void load_dataset(const char* data_path, const char* query_path) {
