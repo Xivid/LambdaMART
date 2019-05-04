@@ -45,6 +45,7 @@ namespace LambdaMART {
 
             GetString("train_data", &train_data);
             GetString("train_query", &train_query);
+            GetString("train_label", &train_label);
             GetString("valid_data", &valid_data);
             GetString("valid_query", &valid_query);
             GetInt("num_iterations", &num_iterations);
@@ -71,7 +72,7 @@ namespace LambdaMART {
         unordered_map<string, string> properties;
 
 #pragma region Core Parameters
-        string train_data, train_query;
+        string train_data, train_query, train_label;
         string valid_data, valid_query;
         int num_iterations = 100;
         double learning_rate = 0.1;

@@ -11,9 +11,11 @@ void demo(LambdaMART::Config* config) {
 //    const char* train_query = "data/mq2008/small.train.query";
     const char* train = config->train_data.c_str();
     const char* train_query = config->train_query.c_str();
+    const char* train_label = config->train_label.c_str();
     LambdaMART::Log::Info("Loading training dataset %s and query boundaries %s", train, train_query);
     auto* X_train = new LambdaMART::Dataset(config);
-    X_train->load_dataset(train, train_query);
+//    X_train->load_dataset(train, train_query);
+    X_train->load_debug_dataset(train, train_label, train_query, 32);
 
     LambdaMART::Log::Info("Start training...");
     LambdaMART::Model* model = (new LambdaMART::Booster(X_train, config))->train();
