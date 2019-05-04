@@ -516,10 +516,10 @@ namespace LambdaMART {
 			}
 			bins[0] += bins[1];
 
-            //Log::Trace(" Bin # ");
+            //LOG_TRACE(" Bin # ");
             //for (bin_t bin = 0; bin < bin_cnt; bin++)
             //{
-            //    Log::Trace("\t%i\t%s", bin, bins[bin].toString().c_str());
+            //    LOG_TRACE("\t%i\t%s", bin, bins[bin].toString().c_str());
             //}
 		}
 		//TODO: defaultBin - part of optimization
@@ -631,14 +631,16 @@ namespace LambdaMART {
 			bin_t bestThresholdBin = 0;
 			size_t temp_threshold_size = temp_threshold.size();
 
-            Log::Trace(" Threshold #:");
+            LOG_TRACE(" Threshold #:");
+
 			for (bin_t i = 1; i < feat.bin_count(); ++i)
 			{
 				bin_t threshLeft = i;
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
-                Log::Trace("\t%d\tlte: %s\n\t\t\t\tgt: %s\tGain: %lf", i, lte.toString().c_str(), gt.toString().c_str(), lte.getLeafSplitGain() + gt.getLeafSplitGain());
-
+				#ifdef DEBUG_OUTPUT
+                LOG_TRACE("\t%d\tlte: %s\n\t\t\t\tgt: %s\tGain: %lf", i, lte.toString().c_str(), gt.toString().c_str(), lte.getLeafSplitGain() + gt.getLeafSplitGain());
+                #endif
 				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
 				{
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
@@ -646,23 +648,27 @@ namespace LambdaMART {
 					{
 						bestRightInfo = gt;
 						bestShiftedGain = currentShiftedGain;
-                        Log::Trace("\tbestShiftGain updated to: %lf", bestShiftedGain);
+                        #ifdef DEBUG_OUTPUT
+                        LOG_TRACE("\tbestShiftGain updated to: %lf", bestShiftedGain);
+                        #endif
 						bestThreshold = temp_threshold[th];
 						bestThresholdBin = th;
 					}
 				}
 			}
 
-            Log::Trace("bestRightInfo: %s", bestRightInfo.toString().c_str());
-            Log::Trace("bestShiftedGain: %lf", bestShiftedGain);
-            Log::Trace("bestThreshold: %lf", bestThreshold);
-            Log::Trace("bestThresholdBin: %d", bestThresholdBin);
-
 			Split* bestSplit = new Split(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
 
-            Log::Trace("totalGain: %lf", totalGain);
-            Log::Trace("splitGain: %lf", splitGain);
+			#ifdef DEBUG_OUTPUT
+            LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
+            LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);
+            LOG_TRACE("bestThreshold: %lf", bestThreshold);
+            LOG_TRACE("bestThresholdBin: %d", bestThresholdBin);
+            LOG_TRACE("totalGain: %lf", totalGain);
+            LOG_TRACE("splitGain: %lf", splitGain);
+            #endif
+
 
 			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
 		}

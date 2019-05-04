@@ -140,10 +140,6 @@ void test3() {
     std::cout << "num samples: " << num_samples << std::endl;
     std::cout << "queries: " << num_queries << std::endl;
 
-//    for (int i = 0; i < 10; i++) {
-//        std::cout << label[i] << std::endl;
-//        std::cout << bounds[i] << std::endl;
-//    }
     LambdaMART::LambdaRank* ranker = new LambdaMART::LambdaRank(bounds, num_queries, label, *config);
     ranker->get_derivatives(currentscores.data(), gradients.data(), hessians.data());
     for (int i = 0; i < num_samples; ++i) {
