@@ -11,6 +11,7 @@ void LambdaRank::get_derivatives(double* currentScores, double* gradients, doubl
     for (sample_t i = 0; i < num_queries_; ++i) {
         get_derivatives_one_query(currentScores, gradients, hessians, i);
     }
+
 }
 
 inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradients,
@@ -86,7 +87,25 @@ inline void LambdaRank::get_derivatives_one_query(double* scores, double* gradie
         hessians[high] += high_sum_hessian;
 
     }
-    std::cout << "Query " << query_id << ": " << gradients[0] << " " << gradients[1] << " " << hessians[0] << " " << hessians[1] << std::endl;
+    double accum = 0.;
+    for (int i = 0; i < count; ++i) {
+        accum += gradients[i] * gradients[i];
+    }
+    double norm = sqrt(accum);
+    double haccum = 0.;
+    for (int i = 0; i < count; ++i) {
+        haccum += hessians[i] * hessians[i];
+    }
+    double hnorm = sqrt(haccum);
+    std::cout << "Query " << query_id << ": gradient norm: " << norm << " hessian norm: " << hnorm << std::endl;
+    //std::cout << "score " << scores[0] << " " << scores[1] << " " << scores[2] << " " << scores[3] << " " << scores[4] << std::endl;
+
+    std::cout << "score: ";
+    for (int i = 0; i < count; ++i) {
+        std::cout << scores[i] << " ";
+    }
+    std::cout << std::endl;
+
 }
 
 std::vector<double> LambdaRank::eval(double* scores) {
@@ -95,16 +114,22 @@ std::vector<double> LambdaRank::eval(double* scores) {
     for (sample_t i = 0; i < num_queries_; ++i) {
         if (eval_inverse_max_dcg_[i][0] <= 0.0f) {
             for (int j = 0; j < result.size(); ++j) {
-                result[j] = 1.0f;
+                result[j] += 1.0f;
             }
         } else {
             sample_t num_data = boundaries_[i+1] - boundaries_[i];
             cal_dcg(eval_at_, label_ + boundaries_[i], scores + boundaries_[i], num_data, &tmp_dcg);
             for (int j = 0; j < result.size(); ++j) {
-                result[j] = tmp_dcg[j] * eval_inverse_max_dcg_[i][j];
+                result[j] += tmp_dcg[j] * eval_inverse_max_dcg_[i][j];
             }
         }
     }
+
+    for (int i = 0; i < eval_at_.size(); ++i) {
+        result[i] /= num_queries_;
+    }
+
+    std::cout << std::endl;
     return result;
 }
 
