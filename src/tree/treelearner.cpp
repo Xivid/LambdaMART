@@ -22,6 +22,9 @@ Tree* TreeLearner::build_new_tree()
         if(!select_split_candidates()) break;  // no more nodes to split -> break
         find_best_splits();
         perform_split();
+        for(sample_t i = 0; i < num_samples; ++i)
+            Log::Trace("sample id %u -> node %u -> score %lf", i, sample_to_node[i]
+                                                       , node_to_output[sample_to_node[i]]);
     }
 
     // mark remaining candidates as leaves
@@ -142,6 +145,7 @@ void TreeLearner::perform_split()
         Log::Trace("do_split[%d]: %s", candidate, do_split[candidate]?"true":"false");
         if (do_split[candidate]) {
             auto& splitInfo = best_splits[candidate];
+            Log::Trace("split on Node %lu = Candidate %lu: %s",split_candidates[candidate]->node->id, candidate, splitInfo.toString().c_str());
             TreeNode* candidate_node = split_candidates[candidate]->node;
             candidate_node->split = splitInfo.split;
             score_t left_impurity = splitInfo.get_left_impurity();
@@ -153,7 +157,7 @@ void TreeLearner::perform_split()
             bool child_is_leaf = (candidate_node->get_level() + 1 >= config->max_depth);
             bool left_child_is_leaf = (child_is_leaf || left_impurity < config->min_impurity_to_split);
             bool right_child_is_leaf = (child_is_leaf || right_impurity < config->min_impurity_to_split);
-            Log::Trace(" child_is_leaf: %d\n left_child_is_leaf: %d\n right_child_is_leaf: %d",
+            Log::Trace(" child_is_leaf: %d\n\t\t  left_child_is_leaf: %d\n\t\t  right_child_is_leaf: %d",
                     child_is_leaf, left_child_is_leaf, right_child_is_leaf);
 
             TreeNode* left_child = new TreeNode(candidate_node->get_left_child_index(), left_output, left_impurity, left_child_is_leaf);
@@ -162,8 +166,6 @@ void TreeLearner::perform_split()
             candidate_node->right_child = right_child;
             node_to_output[left_child->id] = left_output;
             node_to_output[right_child->id] = right_output;
-
-            Log::Trace("node to output: %lf %lf", left_output, right_output);
 
             if (!left_child_is_leaf) {
                 node_queue.push(new SplitCandidate(left_child, splitInfo.left_stats));

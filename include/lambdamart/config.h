@@ -45,11 +45,14 @@ namespace LambdaMART {
 
             GetString("train_data", &train_data);
             GetString("train_query", &train_query);
+            GetString("train_label", &train_label);
             GetString("valid_data", &valid_data);
             GetString("valid_query", &valid_query);
             GetInt("num_iterations", &num_iterations);
             GetDouble("learning_rate", &learning_rate);
             GetInt("max_depth", &max_depth);
+            if(max_depth < 2)
+                Log::Fatal("Max_depth should not be less than 2");
             GetInt("max_splits", &max_splits);
             GetInt("min_data_in_leaf", &min_data_in_leaf);
             GetDouble("min_impurity_to_split", &min_impurity_to_split);
@@ -69,7 +72,7 @@ namespace LambdaMART {
         unordered_map<string, string> properties;
 
 #pragma region Core Parameters
-        string train_data, train_query;
+        string train_data, train_query, train_label;
         string valid_data, valid_query;
         int num_iterations = 100;
         double learning_rate = 0.1;
