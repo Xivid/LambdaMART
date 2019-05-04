@@ -10,6 +10,13 @@ Model* Booster::train() {
     const double learning_rate = config->learning_rate;
     Log::Debug("Train %d iterations with learning rate %lf", num_iter, learning_rate);
 
+    vector<double> result = ranker->eval(current_scores.data());
+    string tmp = "Init";
+    for (size_t i = 0 ; i < result.size(); ++i) {
+        tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
+    }
+    Log::Info(tmp.c_str());
+
     for (int iter = 0; iter < num_iter; ++iter) {
         Log::Debug("Iteration %d: start", iter);
         ranker->get_derivatives(current_scores.data(), gradients.data(), hessians.data());
