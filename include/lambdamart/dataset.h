@@ -91,7 +91,7 @@ namespace LambdaMART {
             return nnz_bin_index;
         }
 
-        int bin_count(){
+        int bin_count() const {
             return 1 + *max_element(bin_index.begin(), bin_index.end());
         }
     };
