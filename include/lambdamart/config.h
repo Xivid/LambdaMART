@@ -25,6 +25,7 @@ namespace LambdaMART {
         inline bool GetInt(const string& name, int* out);
         inline bool GetDouble(const string& name, double* out);
         inline bool GetBool(const string& name, bool* out);
+        inline bool GetIntVector(const string& name, vector<int>* out);
 
         explicit Config(const char* filepath = nullptr) {
             ifstream infile(filepath);
@@ -67,6 +68,7 @@ namespace LambdaMART {
             GetDouble("sigmoid", &sigmoid);
             GetInt("max_position", &max_position);
             GetInt("max_label", &max_label);
+            GetIntVector("eval_at", &eval_at);
         }
 
 #pragma region Parameters
@@ -179,6 +181,18 @@ namespace LambdaMART {
                            name.c_str(), properties.at(name).c_str());
             }
             return true;
+        }
+        return false;
+    }
+
+    inline bool Config::GetIntVector(const string& name, vector<int>* out) {
+        if (properties.count(name) > 0) {
+            std::string value = properties.at(name);
+            std::vector<int> ret = Common::StringToArray<int>(value, ',');
+            if (!ret.empty()) {
+                *out = ret;
+                return true;
+            }
         }
         return false;
     }
