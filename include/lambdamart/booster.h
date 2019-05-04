@@ -30,7 +30,7 @@ namespace LambdaMART {
             vector<double> result = valid_ranker->eval(predictions.data());
             string tmp;
             for (size_t i = 0 ; i < result.size(); ++i) {
-                tmp += "\ttest-ndcg@" + to_string(config->eval_at[i]) + ":" + to_string(result[i]);
+                tmp += "\tvalid-ndcg@" + to_string(config->eval_at[i]) + ":" + to_string(result[i]);
             }
             return tmp;
         }

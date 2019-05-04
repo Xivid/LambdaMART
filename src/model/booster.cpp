@@ -22,7 +22,7 @@ Model* Booster::train() {
         }
 
 
-        if( iter % 10 == 0 )
+        if ( iter % config->eval_interval == 0 )
             Log::Info("[%d]%s%s", iter, get_train_ndcg_string().c_str(), valid_dataset ? get_valid_ndcg_string().c_str() : "");
     }
 

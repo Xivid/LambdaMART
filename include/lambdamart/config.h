@@ -69,6 +69,7 @@ namespace LambdaMART {
             GetInt("max_position", &max_position);
             GetInt("max_label", &max_label);
             GetIntVector("eval_at", &eval_at);
+            GetInt("eval_interval", &eval_interval);
         }
 
 #pragma region Parameters
@@ -127,6 +128,9 @@ namespace LambdaMART {
         // default = 1,3,5
         // desc = used only with ``ndcg`` and ``map`` metrics
         std::vector<int> eval_at = {1, 3, 5, 10};
+
+        // desc = evaluate training and validation ndcg every ``eval_interval`` iterations
+        int eval_interval = 1;
 
 #pragma endregion
 

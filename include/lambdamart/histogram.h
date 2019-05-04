@@ -638,9 +638,7 @@ namespace LambdaMART {
 				bin_t threshLeft = i;
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
 				bin_t th = i - 1;
-				#ifdef DEBUG_OUTPUT
                 LOG_TRACE("\t%d\tlte: %s\n\t\t\t\tgt: %s\tGain: %lf", i, lte.toString().c_str(), gt.toString().c_str(), lte.getLeafSplitGain() + gt.getLeafSplitGain());
-                #endif
 				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
 				{
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
@@ -660,15 +658,12 @@ namespace LambdaMART {
 			Split* bestSplit = new Split(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
 
-			#ifdef DEBUG_OUTPUT
             LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
             LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);
             LOG_TRACE("bestThreshold: %lf", bestThreshold);
             LOG_TRACE("bestThresholdBin: %d", bestThresholdBin);
             LOG_TRACE("totalGain: %lf", totalGain);
             LOG_TRACE("splitGain: %lf", splitGain);
-            #endif
-
 
 			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
 		}
