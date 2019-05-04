@@ -50,6 +50,8 @@ namespace LambdaMART {
             GetInt("num_iterations", &num_iterations);
             GetDouble("learning_rate", &learning_rate);
             GetInt("max_depth", &max_depth);
+            if(max_depth < 2)
+                Log::Fatal("Max_depth should not be less than 2");
             GetInt("max_splits", &max_splits);
             GetInt("min_data_in_leaf", &min_data_in_leaf);
             GetDouble("min_impurity_to_split", &min_impurity_to_split);
