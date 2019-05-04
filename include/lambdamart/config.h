@@ -124,7 +124,7 @@ namespace LambdaMART {
 
         // default = 1,3,5
         // desc = used only with ``ndcg`` and ``map`` metrics
-        std::vector<int> eval_at = {1, 3, 5};
+        std::vector<int> eval_at = {1, 3, 5, 10};
 
 #pragma endregion
 
