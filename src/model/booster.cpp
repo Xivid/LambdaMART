@@ -11,7 +11,7 @@ Model* Booster::train() {
     Log::Debug("Train %d iterations with learning rate %lf", num_iter, learning_rate);
 
     vector<double> result = ranker->eval(current_scores.data());
-    string tmp = "Init";
+    string tmp = "Initial";
     for (size_t i = 0 ; i < result.size(); ++i) {
         tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
     }
@@ -31,6 +31,30 @@ Model* Booster::train() {
         for (sample_t sid = 0; sid < num_samples; ++sid) {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
+//        if (iter == 0) {
+//            current_scores[0] = -0.05;
+//            current_scores[1] = 0.038083;
+//            current_scores[2] = 0.038083;
+//            current_scores[3] = -0.0323499;
+//            current_scores[4] = -0.05;
+//            current_scores[5] = 0.05;
+//            current_scores[6] = 0.05;
+//            current_scores[7] = 0.0130296;
+//            current_scores[8] = 0.0112381;
+//            current_scores[9] = -0.0299174;
+//        }
+//        if (iter == 1) {
+//            current_scores[0] = -0.095734;
+//            current_scores[1] = 0.0300723;
+//            current_scores[2] = 0.0300723;
+//            current_scores[3] = -0.0771052;
+//            current_scores[4] = -0.0957761;
+//            current_scores[5] = 0.0973957;
+//            current_scores[6] = 0.0973957;
+//            current_scores[7] = -0.0234477;
+//            current_scores[8] = -0.0296639;
+//            current_scores[9] = -0.0735101;
+//        }
 
         vector<double> result = ranker->eval(current_scores.data());
         string tmp = "Iteration " + to_string(iter) + ":";
