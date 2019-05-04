@@ -22,9 +22,6 @@ Tree* TreeLearner::build_new_tree()
         if(!select_split_candidates()) break;  // no more nodes to split -> break
         find_best_splits();
         perform_split();
-//        for(sample_t i = 0; i < num_samples; ++i)
-//            LOG_TRACE("sample id %u -> node %u -> score %lf", i, sample_to_node[i]
-//                                                       , node_to_output[sample_to_node[i]]);
     }
 
     // mark remaining candidates as leaves
