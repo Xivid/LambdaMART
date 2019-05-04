@@ -20,7 +20,7 @@ namespace LambdaMART {
             vector<double> result = train_ranker->eval(current_scores.data());
             string tmp;
             for (size_t i = 0 ; i < result.size(); ++i) {
-                tmp += "\ttrain@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
+                tmp += "\ttrain-ndcg@" + to_string(config->eval_at[i]) + ":" + to_string(result[i]);
             }
             return tmp;
         }
@@ -30,7 +30,7 @@ namespace LambdaMART {
             vector<double> result = valid_ranker->eval(predictions.data());
             string tmp;
             for (size_t i = 0 ; i < result.size(); ++i) {
-                tmp += "\tvalid@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
+                tmp += "\ttest-ndcg@" + to_string(config->eval_at[i]) + ":" + to_string(result[i]);
             }
             return tmp;
         }

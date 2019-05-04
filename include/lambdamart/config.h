@@ -84,8 +84,8 @@ namespace LambdaMART {
 
 #pragma region Learning Control Parameters
 
-        int max_depth = 8;
-        int max_splits = 128;
+        int max_depth = 9;
+        int max_splits = 256;
         int min_data_in_leaf = 1;
         double min_gain_to_split = 1e-6;
         double min_impurity_to_split = 1e-6;
@@ -126,7 +126,7 @@ namespace LambdaMART {
 
         // default = 1,3,5
         // desc = used only with ``ndcg`` and ``map`` metrics
-        std::vector<int> eval_at = {1, 3, 5};
+        std::vector<int> eval_at = {1, 3, 5, 10};
 
 #pragma endregion
 
