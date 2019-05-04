@@ -34,8 +34,9 @@ namespace LambdaMART {
                     istringstream row(line);
                     string token = row.str();
                     size_t delimiter = token.find(':');
-                    string key = token.substr(0, delimiter);
-                    string val = token.substr(delimiter + 1, token.length());
+                    string key = Common::Trim(token.substr(0, delimiter));
+                    string val = Common::Trim(token.substr(delimiter + 1, token.length()));
+                    if (key.find("#") == 0) continue;  // ignore comments
                     this->properties[key] = val;
                 }
             } else {
