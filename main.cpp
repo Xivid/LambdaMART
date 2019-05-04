@@ -31,7 +31,13 @@ void demo(LambdaMART::Config* config) {
 
     LambdaMART::Log::Info("Predicting with validation dataset...");
     vector<double>* predictions = model->predict(X_test, config->output_result);
-    LambdaMART::Log::Info("Validation error: (TODO)");
+    LambdaMART::LambdaRank val_ranker(*X_test, *config);
+    vector<double> result = val_ranker.eval(predictions->data());
+    string tmp = "Validation";
+    for (size_t i = 0 ; i < result.size(); ++i) {
+        tmp += "\tNDCG@" + to_string(config->eval_at[i]) + "=" + to_string(result[i]);
+    }
+    LambdaMART::Log::Info(tmp.c_str());
 }
 
 int main(int argc, char** argv) {
