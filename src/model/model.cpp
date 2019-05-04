@@ -10,7 +10,7 @@ vector<double>* Model::predict(RawDataset* data, const string& output_path) {
     auto *out = new vector<double>(num_data);
     for (sample_t i = 0; i < num_data; ++i) {
         if (i % 10 == 0) {
-            Log::Debug("Predicting sample %u", i);
+            LOG_DEBUG("Predicting sample %u", i);
         }
         score_t score = 0.0f;
         for (size_t m = 0; m < num_iter; ++m) {

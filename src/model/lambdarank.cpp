@@ -130,7 +130,6 @@ std::vector<double> LambdaRank::eval(double* scores) {
         result[i] /= num_queries_;
     }
 
-    std::cout << std::endl;
     return result;
 }
 
@@ -143,7 +142,7 @@ void LambdaRank::set_eval_rank(std::vector<sample_t>* eval_ranks) {
         for (int i = 0; i < eval_ranks->size(); ++i) {
             // TODO remove later
             if (!(eval_ranks->at(i) > 0)) {
-                std::cout << "Check failed at lambdarank: DefaultEvalRanks"  << std::endl;
+                Log::Fatal("Check failed at lambdarank: DefaultEvalRanks");
                 break;
             }
         }

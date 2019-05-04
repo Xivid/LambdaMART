@@ -4,6 +4,7 @@
 
 #ifndef LAMBDAMART_LAMBDAMART_H
 #define LAMBDAMART_LAMBDAMART_H
+// #define DEBUG_OUTPUT
 
 #include <lambdamart/config.h>
 #include <lambdamart/common.h>

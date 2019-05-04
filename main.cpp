@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
-
 #include <lambdamart/lambdamart.h>
 
 using namespace std;

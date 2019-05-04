@@ -15,7 +15,7 @@ Tree* TreeLearner::build_new_tree()
     Tree* root = new TreeNode(1);
     auto* topInfo = new NodeStats(num_samples, 0.0);  // sum_gradients is always 0 for root node
     node_queue.push(new SplitCandidate(root, topInfo));
-    Log::Debug("build_new_tree: initialized");
+    LOG_DEBUG("build_new_tree: initialized");
 
     cur_depth = 1;
     while (cur_depth <= config->max_depth) {  // TODO: check num_leaves
@@ -23,7 +23,7 @@ Tree* TreeLearner::build_new_tree()
         find_best_splits();
         perform_split();
         for(sample_t i = 0; i < num_samples; ++i)
-            Log::Trace("sample id %u -> node %u -> score %lf", i, sample_to_node[i]
+            LOG_TRACE("sample id %u -> node %u -> score %lf", i, sample_to_node[i]
                                                        , node_to_output[sample_to_node[i]]);
     }
 
@@ -38,7 +38,7 @@ Tree* TreeLearner::build_new_tree()
 }
 
 bool TreeLearner::select_split_candidates() {
-    Log::Debug("select_split_candidates");
+    LOG_DEBUG("select_split_candidates");
 
     std::fill(node_to_candidate.begin(), node_to_candidate.end(), -1);
     sample_to_candidate.clear();
@@ -69,12 +69,12 @@ bool TreeLearner::select_split_candidates() {
  * Find best splits and put them into `best_splits'
  */
 void TreeLearner::find_best_splits() {
-    Log::Debug("find_best_splits");
+    LOG_DEBUG("find_best_splits");
 
     best_splits.clear();
     best_splits.resize(num_candidates);
     for (feature_t fid = 0; fid < num_features; ++fid) {
-        Log::Trace("checking feature %lu", fid);
+        LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
         const feature &feat = dataset->get_data()[fid];
 
@@ -84,20 +84,20 @@ void TreeLearner::find_best_splits() {
             if (node != -1) {
                 const bin_t bin = feat.bin_index[sample_idx];
                 if(bin > config->max_bin)
-                    Log::Trace("\tsample %d is in bin %d", sample_idx, bin);
+                    LOG_TRACE("\tsample %d is in bin %d", sample_idx, bin);
                 histograms[node][bin].update(1.0, gradients[sample_idx]);
             }
         }
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-            Log::Trace("Node %lu = Candidate %lu", split_candidates[candidate]->node->id, candidate);
+            LOG_TRACE("Node %lu = Candidate %lu", split_candidates[candidate]->node->id, candidate);
             histograms.cumulate(candidate);
             auto splitInfo = histograms.BestSplit(candidate, fid, feat, node_info[candidate],
                                                   config->min_data_in_leaf);
-            Log::Trace("\t%s", splitInfo.toString().c_str());
+            LOG_TRACE("\t%s", splitInfo.toString().c_str());
             if (splitInfo >= best_splits[candidate]) {
                 best_splits[candidate] = splitInfo;
-                Log::Trace("\t\t-> replaced");
+                LOG_TRACE("\t\t-> replaced");
             }
         }
     }
@@ -105,7 +105,7 @@ void TreeLearner::find_best_splits() {
 
 void TreeLearner::perform_split()
 {
-    Log::Debug("perform_split");
+    LOG_DEBUG("perform_split");
     //update node_to_output, sample_to_node
     //update cur_depth;
 
@@ -142,10 +142,10 @@ void TreeLearner::perform_split()
 
     // create the children nodes
     for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-        Log::Trace("do_split[%d]: %s", candidate, do_split[candidate]?"true":"false");
+        LOG_TRACE("do_split[%d]: %s", candidate, do_split[candidate]?"true":"false");
         if (do_split[candidate]) {
             auto& splitInfo = best_splits[candidate];
-            Log::Trace("split on Node %lu = Candidate %lu: %s",split_candidates[candidate]->node->id, candidate, splitInfo.toString().c_str());
+            LOG_TRACE("split on Node %lu = Candidate %lu: %s",split_candidates[candidate]->node->id, candidate, splitInfo.toString().c_str());
             TreeNode* candidate_node = split_candidates[candidate]->node;
             candidate_node->split = splitInfo.split;
             score_t left_impurity = splitInfo.get_left_impurity();
@@ -157,7 +157,7 @@ void TreeLearner::perform_split()
             bool child_is_leaf = (candidate_node->get_level() + 1 >= config->max_depth);
             bool left_child_is_leaf = (child_is_leaf || left_impurity < config->min_impurity_to_split);
             bool right_child_is_leaf = (child_is_leaf || right_impurity < config->min_impurity_to_split);
-            Log::Trace(" child_is_leaf: %d\n\t\t  left_child_is_leaf: %d\n\t\t  right_child_is_leaf: %d",
+            LOG_TRACE(" child_is_leaf: %d\n\t\t  left_child_is_leaf: %d\n\t\t  right_child_is_leaf: %d",
                     child_is_leaf, left_child_is_leaf, right_child_is_leaf);
 
             TreeNode* left_child = new TreeNode(candidate_node->get_left_child_index(), left_output, left_impurity, left_child_is_leaf);
