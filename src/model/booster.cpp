@@ -21,8 +21,7 @@ Model* Booster::train() {
             current_scores[sid] += learning_rate * treeLearner->get_sample_score(sid);
         }
 
-
-        if ( iter % config->eval_interval == 0 )
+        if (iter % config->eval_interval == 0)
             Log::Info("[%d]%s%s", iter, get_train_ndcg_string().c_str(), valid_dataset ? get_valid_ndcg_string().c_str() : "");
     }
 
