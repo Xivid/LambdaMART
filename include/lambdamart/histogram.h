@@ -2,6 +2,13 @@
 #define LAMBDAMART_HISTOGRAM_H
 
 #include <lambdamart/dataset.h>
+#include <mm_malloc.h>
+
+#if defined(_MSC_VER)
+#define ALIGNED(x) __declspec(align(x))
+#else
+#define ALIGNED(x) __attribute__ ((aligned(x)))
+#endif
 
 namespace LambdaMART {
 
@@ -70,8 +77,7 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-//	struct __declspec(align(8)) Bin
-	struct Bin
+	struct ALIGNED(8) Bin
 	{
 		gradient_t sum_count, sum_gradients;
 
@@ -447,16 +453,18 @@ namespace LambdaMART {
             // TODO: use aligned malloc and free (different functions in macos/linux/windows)
 
 			if (_data != nullptr)
-				free(_data);
+				_mm_free(_data);
 				//_aligned_free(_data);
 			if (_head != nullptr)
-				free(_head);
+				_mm_free(_head);
 				//_aligned_free(_head);
 
 			num_nodes = nodes;
 			bin_cnt = bins;
-			_head = (Bin**)malloc(sizeof(Bin*) * nodes);
-			_data = (Bin*)malloc(sizeof(Bin) * nodes * bins);
+            //_head = (Bin**)malloc(sizeof(Bin*) * nodes);
+            //_data = (Bin*)malloc(sizeof(Bin) * nodes * bins);
+            _head = (Bin**) _mm_malloc(sizeof(Bin*) * nodes, sizeof(Bin*));
+            _data = (Bin*) _mm_malloc(sizeof(Bin) * nodes * bins, sizeof(Bin));
 			//_head = (Bin**)_aligned_malloc(sizeof(Bin*) * nodes, sizeof(Bin*));
 			//_data = (Bin*)_aligned_malloc(sizeof(Bin) * nodes * bins, 8);
 			for (nodeidx_t i = 0; i < nodes; ++i)
@@ -467,8 +475,11 @@ namespace LambdaMART {
 
 		~HistogramMatrix()
 		{
-			free(_data);
-			free(_head);
+            _mm_free(_data);
+            _mm_free(_head);
+
+            //free(_data);
+            //free(_head);
 			//_aligned_free(_data);
 			//_aligned_free(_head);
 		}
