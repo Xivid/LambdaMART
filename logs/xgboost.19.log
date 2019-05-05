@@ -1,0 +1,16 @@
+[07:22:49] 524322x137 matrix with 44579538 entries loaded from data/MSLR-WEB30K/19.train
+[07:22:49] 4201 groups are loaded from data/MSLR-WEB30K/19.train.group
+[07:22:54] 524322x137 matrix with 44579538 entries loaded from data/MSLR-WEB30K/19.train
+[07:22:54] 4201 groups are loaded from data/MSLR-WEB30K/19.train.group
+[07:22:55] 131075x137 matrix with 11193166 entries loaded from data/MSLR-WEB30K/17.vali
+[07:22:55] 1180 groups are loaded from data/MSLR-WEB30K/17.vali.group
+[07:23:18] [Info] [10]	train-ndcg@1:0.452847	train-ndcg@3:0.451180	train-ndcg@5:0.457087	train-ndcg@10:0.472837	valid-ndcg@1:0.426618	valid-ndcg@3:0.421271	valid-ndcg@5:0.434761	valid-ndcg@10:0.456190
+[07:23:32] [Info] [20]	train-ndcg@1:0.475188	train-ndcg@3:0.467942	train-ndcg@5:0.471229	train-ndcg@10:0.487017	valid-ndcg@1:0.428668	valid-ndcg@3:0.426887	valid-ndcg@5:0.439454	valid-ndcg@10:0.463978
+[07:23:46] [Info] [30]	train-ndcg@1:0.483277	train-ndcg@3:0.475837	train-ndcg@5:0.479639	train-ndcg@10:0.494826	valid-ndcg@1:0.438531	valid-ndcg@3:0.434535	valid-ndcg@5:0.447457	valid-ndcg@10:0.471121
+[07:24:01] [Info] [40]	train-ndcg@1:0.492796	train-ndcg@3:0.485642	train-ndcg@5:0.490399	train-ndcg@10:0.505692	valid-ndcg@1:0.450960	valid-ndcg@3:0.440452	valid-ndcg@5:0.452681	valid-ndcg@10:0.477389
+[07:24:15] [Info] [50]	train-ndcg@1:0.498475	train-ndcg@3:0.492111	train-ndcg@5:0.497690	train-ndcg@10:0.514104	valid-ndcg@1:0.452058	valid-ndcg@3:0.444962	valid-ndcg@5:0.455097	valid-ndcg@10:0.480557
+[07:24:29] [Info] [60]	train-ndcg@1:0.504927	train-ndcg@3:0.499764	train-ndcg@5:0.505071	train-ndcg@10:0.521241	valid-ndcg@1:0.444851	valid-ndcg@3:0.446722	valid-ndcg@5:0.457552	valid-ndcg@10:0.482015
+[07:24:42] [Info] [70]	train-ndcg@1:0.511386	train-ndcg@3:0.506276	train-ndcg@5:0.511103	train-ndcg@10:0.528167	valid-ndcg@1:0.446521	valid-ndcg@3:0.447920	valid-ndcg@5:0.458749	valid-ndcg@10:0.483089
+[07:24:56] [Info] [80]	train-ndcg@1:0.516952	train-ndcg@3:0.511301	train-ndcg@5:0.516781	train-ndcg@10:0.534970	valid-ndcg@1:0.452098	valid-ndcg@3:0.451143	valid-ndcg@5:0.460980	valid-ndcg@10:0.487389
+[07:25:09] [Info] [90]	train-ndcg@1:0.521318	train-ndcg@3:0.516702	train-ndcg@5:0.522081	train-ndcg@10:0.540119	valid-ndcg@1:0.454891	valid-ndcg@3:0.450445	valid-ndcg@5:0.463719	valid-ndcg@10:0.488646
+[07:25:22] [Info] [100]	train-ndcg@1:0.524821	train-ndcg@3:0.519811	train-ndcg@5:0.526378	train-ndcg@10:0.545026	valid-ndcg@1:0.456473	valid-ndcg@3:0.452412	valid-ndcg@5:0.464153	valid-ndcg@10:0.490279
