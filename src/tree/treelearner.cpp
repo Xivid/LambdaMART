@@ -1,6 +1,5 @@
 #include <lambdamart/treelearner.h>
 #include <numeric>
-
 namespace LambdaMART {
 
 
@@ -75,8 +74,10 @@ void TreeLearner::find_best_splits() {
         histograms.clear(num_candidates);
         const Feature &feat = dataset->get_data()[fid];
 
-        //TODO: unrolling
-        for (sample_t sample_idx = 0; sample_idx < num_samples - 3; sample_idx += 4) {
+        sample_t rest = num_samples & 0x3;
+        sample_t unroll_bound = num_samples - rest;
+
+        for (sample_t sample_idx = 0; sample_idx < unroll_bound; sample_idx += 4) {
             const int c1 = sample_to_candidate[sample_idx];
             const int c2 = sample_to_candidate[sample_idx + 1];
             const int c3 = sample_to_candidate[sample_idx + 2];
@@ -87,10 +88,22 @@ void TreeLearner::find_best_splits() {
             const bin_t bin3 = feat.bin_index[sample_idx + 2];
             const bin_t bin4 = feat.bin_index[sample_idx + 3];
 
+//            __m256 l1 = _mm_load_sd(histograms + c1* sizeof(Bin) + bin1);
+//            __m256 l2 = _mm_load_sd(histograms + c2* sizeof(Bin) + bin2);
+//            __m256 l3 = _mm_load_sd(histograms + c3* sizeof(Bin) + bin3);
+//            __m256 l4 = _mm_load_sd(histograms + c4* sizeof(Bin) + bin4);
+//            __m256 s1 = _mm_shuffle_pd(l1, l2, 0);
+//            __m256 s2 = _mm_shuffle_pd(l3, l4, 0);
             if (c1 != -1) histograms[c1][bin1].update(1.0, gradients[sample_idx]);
             if (c2 != -1) histograms[c2][bin2].update(1.0, gradients[sample_idx + 1]);
             if (c3 != -1) histograms[c3][bin3].update(1.0, gradients[sample_idx + 2]);
             if (c4 != -1) histograms[c4][bin4].update(1.0, gradients[sample_idx + 3]);
+        }
+
+        for (sample_t idx = unroll_bound; idx < num_samples; idx++) {
+            const int c5 = sample_to_candidate[idx];
+            const bin_t bin5 = feat.bin_index[idx];
+            if (c5 != -1) histograms[c5][bin5].update(1.0, gradients[idx]);
         }
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {

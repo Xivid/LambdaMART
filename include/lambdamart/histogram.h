@@ -93,13 +93,13 @@ namespace LambdaMART {
 		inline void clear() { sum_count = sum_gradients = 0.0f; }
 
 		inline void update(gradient_t count, gradient_t gradient)
-		{
-		    __m256 lhs = _mm256_load_pd((double *) this);
-			__m256 rhs = _mm256_set_pd(0, 0, gradient, count);
-			lhs = _mm256_add_pd(lhs, rhs);
-			_mm256_store_pd((double *) this, lhs);
-//			sum_count += count;
-//			sum_gradients += gradient;
+        {
+//		    __m256 lhs = _mm256_load_pd((double *) this);
+//			__m256 rhs = _mm256_set_pd(0, 0, gradient, count);
+//			lhs = _mm256_add_pd(lhs, rhs);
+//			_mm256_store_pd((double *) this, lhs);
+			sum_count += count;
+			sum_gradients += gradient;
 		}
 
 		inline gradient_t getLeafSplitGain() const
