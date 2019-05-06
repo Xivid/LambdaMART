@@ -73,7 +73,7 @@ void TreeLearner::find_best_splits() {
     for (feature_t fid = 0; fid < num_features; ++fid) {
         LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
-        Feature feat = dataset->get_data()[fid];
+        const Feature &feat = dataset->get_data()[fid];
         int non_zero_samples = feat.bin_index.size();
         //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < non_zero_samples; ++sample_idx) {
