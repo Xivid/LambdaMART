@@ -1,0 +1,20 @@
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file mslr.vali.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/14.train and query boundaries data/MSLR-WEB30K/14.train.query
+[1.008s] [Info] Loaded dataset of size: 16418 samples x 136 features
+[1.008s] [Info] Loading validation dataset data/MSLR-WEB30K/17.vali and query boundaries data/MSLR-WEB30K/17.vali.query
+[9.544s] [Info] Loaded dataset of size: 131075 samples x 136 features
+[9.544s] [Info] Start training...
+[9.739s] [Info] [1]	train-ndcg@1:0.578027	train-ndcg@3:0.518760	train-ndcg@5:0.512050	train-ndcg@10:0.502841	valid-ndcg@1:0.277845	valid-ndcg@3:0.297890	valid-ndcg@5:0.311539	valid-ndcg@10:0.344887
+[10.054s] [Info] [2]	train-ndcg@1:0.618980	train-ndcg@3:0.562367	train-ndcg@5:0.554592	train-ndcg@10:0.538439	valid-ndcg@1:0.302615	valid-ndcg@3:0.319591	valid-ndcg@5:0.339139	valid-ndcg@10:0.369085
+[10.307s] [Info] [3]	train-ndcg@1:0.668912	train-ndcg@3:0.596465	train-ndcg@5:0.571657	train-ndcg@10:0.558315	valid-ndcg@1:0.318749	valid-ndcg@3:0.334324	valid-ndcg@5:0.350894	valid-ndcg@10:0.377932
+[10.583s] [Info] [4]	train-ndcg@1:0.698503	train-ndcg@3:0.605640	train-ndcg@5:0.579568	train-ndcg@10:0.564514	valid-ndcg@1:0.316045	valid-ndcg@3:0.331361	valid-ndcg@5:0.350507	valid-ndcg@10:0.379654
+[10.814s] [Info] [5]	train-ndcg@1:0.714150	train-ndcg@3:0.615965	train-ndcg@5:0.590543	train-ndcg@10:0.575823	valid-ndcg@1:0.318935	valid-ndcg@3:0.334516	valid-ndcg@5:0.351541	valid-ndcg@10:0.381809
+[11.051s] [Info] [6]	train-ndcg@1:0.709864	train-ndcg@3:0.634393	train-ndcg@5:0.598126	train-ndcg@10:0.588881	valid-ndcg@1:0.334576	valid-ndcg@3:0.346462	valid-ndcg@5:0.361102	valid-ndcg@10:0.391631
+[11.278s] [Info] [7]	train-ndcg@1:0.715442	train-ndcg@3:0.638100	train-ndcg@5:0.604211	train-ndcg@10:0.594176	valid-ndcg@1:0.341396	valid-ndcg@3:0.351328	valid-ndcg@5:0.365834	valid-ndcg@10:0.396765
+[11.576s] [Info] [8]	train-ndcg@1:0.722245	train-ndcg@3:0.648584	train-ndcg@5:0.616500	train-ndcg@10:0.610187	valid-ndcg@1:0.350121	valid-ndcg@3:0.355693	valid-ndcg@5:0.371224	valid-ndcg@10:0.402747
+[11.849s] [Info] [9]	train-ndcg@1:0.733197	train-ndcg@3:0.649855	train-ndcg@5:0.616990	train-ndcg@10:0.612024	valid-ndcg@1:0.354641	valid-ndcg@3:0.360063	valid-ndcg@5:0.375306	valid-ndcg@10:0.407086
+[12.091s] [Info] [10]	train-ndcg@1:0.736531	train-ndcg@3:0.656777	train-ndcg@5:0.623100	train-ndcg@10:0.618625	valid-ndcg@1:0.356110	valid-ndcg@3:0.361808	valid-ndcg@5:0.378126	valid-ndcg@10:0.407971
+[12.091s] [Info] Training finished.
+[12.091s] [Info] Predicting with validation dataset and saving output to predict_result.txt
+[12.285s] [Info] Writing predictions to predict_result.txt

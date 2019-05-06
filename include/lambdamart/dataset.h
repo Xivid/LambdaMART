@@ -28,7 +28,7 @@ namespace LambdaMART {
         vector<vector<double>> thresholds;
     };
 
-    class feature {
+    class Feature {
         int bin_cnt;
     public:
         vector<bin_t> bin_index;
@@ -36,9 +36,10 @@ namespace LambdaMART {
         vector<int> sample_index;
         vector<double> sample_data;
         vector<double> threshold;
+        vector<sample_t> true_index;
         bin_t default_bin_index;
 
-        explicit feature(const uint8_t bin_cnt){
+        explicit Feature(const uint8_t bin_cnt){
             this->threshold.resize(bin_cnt, -1);
             this->bin_cnt = 0;
         }
@@ -47,6 +48,7 @@ namespace LambdaMART {
         void sort() {
             std::sort(this->samples.begin(), this->samples.end());
 
+            //NOTE: shape(sample_data): n, shape(sample_index): n
             for(auto & sample: this->samples) {
                 this->sample_data.emplace_back(sample.first);
                 this->sample_index.emplace_back(sample.second);
@@ -58,11 +60,12 @@ namespace LambdaMART {
          //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
          void bin(int bin_size, int n) {
              int curr_count = 0, bin_count = 0;
-             bin_index.resize(n, -1);
+             this->bin_index.resize(n, -1);
+            //shape(bin_index): n
 
              for (int i = 0; i < n; i++) {
                  if (curr_count++ <= bin_size || fabs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
-                     bin_index[this->sample_index[i]] = bin_count;
+                     this->bin_index[this->sample_index[i]] = bin_count;
                  else {
                      curr_count = 0;
                      i--;
@@ -89,11 +92,13 @@ namespace LambdaMART {
         }
 
         void set_nonzero_bin_idx(){
-            this->bin_index.clear();
-            for(auto & i: this->sample_index)
-                this->bin_index.emplace_back(this->bin_index[i]);
-            vector<int>().swap(this->sample_index);
+            vector<bin_t> new_indexes;
+            for(auto & i: this->true_index)
+                new_indexes.emplace_back(this->bin_index[i]);
             vector<double>().swap(this->sample_data);
+            vector<int>().swap(this->sample_index);
+            vector<bin_t>().swap(this->bin_index);
+            this->bin_index = new_indexes;
         }
 
         inline int bin_count() const {
@@ -105,11 +110,11 @@ namespace LambdaMART {
             int max_count = INT_MIN;
             bin_t def_bin = -1;
             for(auto & i: this->bin_index){
-                int val = counts[bin_index[i]];
-                val++;
+                counts[i]++;
+                int val = counts[i];
                 if (val > max_count){
                     max_count = val;
-                    def_bin = bin_index[i];
+                    def_bin = i;
                 }
             }
             this->default_bin_index = def_bin;
@@ -121,7 +126,7 @@ namespace LambdaMART {
     };
 
     class Dataset {
-        vector<feature> data; // feature major; d rows, n columns
+        vector<Feature> data, final_data; // feature major; d rows, n columns
         int bin_size, bin_cnt, max_lbl;
         Binner binner;
 
@@ -187,7 +192,7 @@ namespace LambdaMART {
         }
 
         inline auto& get_data() const{
-            return data;
+            return final_data;
         }
 
         inline int max_label() const{
@@ -203,103 +208,39 @@ namespace LambdaMART {
 
             load_query_from_file(query_path);
 
-            int row_index = 0;
+            sample_t row_index = 0;
             for(auto & row: raw_data){
-                for(auto & entry: row)
+                for(auto & entry: row) {
                     this->data[entry.first].samples[row_index].first = entry.second;
+                    this->data[entry.first].true_index.emplace_back(row_index);
+                }
                 row_index++;
             }
 
             // delete raw_data
             vector<vector<pair<int, double>>>().swap(raw_data);
 
+            int final_d = 0;
             for(auto & feat: this->data) {
                 feat.sort();
                 feat.bin(this->bin_size, this->n);
                 this->binner.thresholds.emplace_back(feat.threshold);
-                feat.set_nonzero_bin_idx();
                 feat.calc_default_bin();
+                feat.set_nonzero_bin_idx();
+                if (!feat.bin_index.empty()) {
+                    final_data.emplace_back(feat);
+                    final_d++;
+                }
             }
-            Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
+            Log::Info("Loaded dataset of size: %d samples x %d features (optimized to %d features)", this->n, this->d, final_d);
+            this->d = final_d;
+            vector<Feature>().swap(data);
         }
 
-        void load_debug_dataset(const char* data_path, const char* label_path, const char* query_path, int num_feat){
-            ifstream infile(data_path);
-            string line;
-            if(infile.is_open()){
-                while(getline(infile, line)){
-                    vector<string> tokens;
-                    istringstream row(line);
-                    while(row.good()){
-                        string substring;
-                        getline(row, substring, '#');
-                        tokens.emplace_back(substring);
-                    }
-                    if(tokens.size() != 3){
-                        Log::Fatal("File syntax read incorrectly.");
-                        exit(0);
-                    }
-
-                    vector<bin_t> bins;
-                    vector<double> thresholds;
-                    stringstream proc(tokens[1]);
-                    while(proc.good()){
-                        string bin;
-                        getline(proc, bin, ',');
-                        bins.emplace_back(stoi(bin));
-                    }
-
-                    stringstream proc_(tokens[2]);
-                    while(proc_.good()){
-                        string thres;
-                        getline(proc_, thres, ',');
-                        thresholds.emplace_back(stod(thres));
-                    }
-
-                    feature f = feature(num_feat);
-                    f.bin_index = bins;
-                    f.threshold = thresholds;
-
-                    this->data.emplace_back(f);
-                }
-            } else {
-                Log::Fatal("Cannot open (data) file %s", data_path);
-            }
-            infile.close();
-
-            ifstream infile_(label_path);
-            if(infile_.is_open()){
-                while(getline(infile_, line)){
-                    istringstream row(line);
-                    while(row.good()){
-                        string label;
-                        getline(row, label, ',');
-                        this->rank.emplace_back(stoi(label));
-                    }
-                }
-            } else {
-                Log::Fatal("Cannot open (label) file %s", label_path);
-            }
-
-            ifstream infile__(query_path);
-            if(infile__.is_open()){
-                while(getline(infile__, line)){
-                    istringstream row(line);
-                    while(row.good()){
-                        string qb;
-                        getline(row, qb, ',');
-                        this->query_boundaries.emplace_back(stoi(qb));
-                    }
-                }
-            } else {
-                Log::Fatal("Cannot open (query) file %s", query_path);
-            }
-            infile.close();
-        }
         // initialize a sample-major `n x d` matrix
         void init_data(){
             for(int i=0; i<this->d; i++){
-                feature f = feature(bin_cnt);
+                Feature f = Feature(bin_cnt);
                 for(int k=0; k<this->n; k++)
                     f.samples.emplace_back(make_pair(0.0, k));
                 this->data.emplace_back(f);

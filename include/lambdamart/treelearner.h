@@ -127,6 +127,7 @@ public:
     {
         tie(num_samples, num_features) = dataset->shape();
         max_splits = config->max_splits;
+        min_data_in_leaf = config->min_data_in_leaf;
         node_to_output.resize(1<<(config->max_depth));
         sample_to_node.resize(num_samples, 0);
         node_to_candidate.resize(1<<(config->max_depth));
@@ -171,6 +172,7 @@ private:
     uint32_t                            cur_depth = 0;
     std::vector<SplitInfo>              best_splits;
     size_t                              max_splits;
+    sample_t                            min_data_in_leaf;
     std::vector<double>                 node_to_output;
     std::vector<unsigned int>           sample_to_node;
     std::vector<SplitCandidate*>        split_candidates;
