@@ -28,7 +28,7 @@ namespace LambdaMART {
         vector<vector<double>> thresholds;
     };
 
-    class feature {
+    class Feature {
         int bin_cnt;
     public:
         vector<bin_t> bin_index;
@@ -38,7 +38,7 @@ namespace LambdaMART {
         vector<double> threshold;
         bin_t default_bin_index;
 
-        explicit feature(const uint8_t bin_cnt){
+        explicit Feature(const uint8_t bin_cnt){
             this->threshold.resize(bin_cnt, -1);
             this->bin_cnt = 0;
         }
@@ -121,7 +121,7 @@ namespace LambdaMART {
     };
 
     class Dataset {
-        vector<feature> data; // feature major; d rows, n columns
+        vector<Feature> data; // feature major; d rows, n columns
         int bin_size, bin_cnt, max_lbl;
         Binner binner;
 
@@ -256,7 +256,7 @@ namespace LambdaMART {
                         thresholds.emplace_back(stod(thres));
                     }
 
-                    feature f = feature(num_feat);
+                    Feature f = Feature(num_feat);
                     f.bin_index = bins;
                     f.threshold = thresholds;
 
@@ -299,7 +299,7 @@ namespace LambdaMART {
         // initialize a sample-major `n x d` matrix
         void init_data(){
             for(int i=0; i<this->d; i++){
-                feature f = feature(bin_cnt);
+                Feature f = Feature(bin_cnt);
                 for(int k=0; k<this->n; k++)
                     f.samples.emplace_back(make_pair(0.0, k));
                 this->data.emplace_back(f);

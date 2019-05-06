@@ -25,6 +25,7 @@ namespace LambdaMART {
         inline bool GetInt(const string& name, int* out);
         inline bool GetDouble(const string& name, double* out);
         inline bool GetBool(const string& name, bool* out);
+        inline bool GetIntVector(const string& name, vector<int>* out);
 
         explicit Config(const char* filepath = nullptr) {
             ifstream infile(filepath);
@@ -34,8 +35,9 @@ namespace LambdaMART {
                     istringstream row(line);
                     string token = row.str();
                     size_t delimiter = token.find(':');
-                    string key = token.substr(0, delimiter);
-                    string val = token.substr(delimiter + 1, token.length());
+                    string key = Common::Trim(token.substr(0, delimiter));
+                    string val = Common::Trim(token.substr(delimiter + 1, token.length()));
+                    if (key.find("#") == 0) continue;  // ignore comments
                     this->properties[key] = val;
                 }
             } else {
@@ -66,6 +68,8 @@ namespace LambdaMART {
             GetDouble("sigmoid", &sigmoid);
             GetInt("max_position", &max_position);
             GetInt("max_label", &max_label);
+            GetIntVector("eval_at", &eval_at);
+            GetInt("eval_interval", &eval_interval);
         }
 
 #pragma region Parameters
@@ -81,8 +85,8 @@ namespace LambdaMART {
 
 #pragma region Learning Control Parameters
 
-        int max_depth = 8;
-        int max_splits = 128;
+        int max_depth = 9;
+        int max_splits = 256;
         int min_data_in_leaf = 1;
         double min_gain_to_split = 1e-6;
         double min_impurity_to_split = 1e-6;
@@ -123,7 +127,10 @@ namespace LambdaMART {
 
         // default = 1,3,5
         // desc = used only with ``ndcg`` and ``map`` metrics
-        std::vector<int> eval_at = {1, 3, 5};
+        std::vector<int> eval_at = {1, 3, 5, 10};
+
+        // desc = evaluate training and validation ndcg every ``eval_interval`` iterations
+        int eval_interval = 1;
 
 #pragma endregion
 
@@ -178,6 +185,18 @@ namespace LambdaMART {
                            name.c_str(), properties.at(name).c_str());
             }
             return true;
+        }
+        return false;
+    }
+
+    inline bool Config::GetIntVector(const string& name, vector<int>* out) {
+        if (properties.count(name) > 0) {
+            std::string value = properties.at(name);
+            std::vector<int> ret = Common::StringToArray<int>(value, ',');
+            if (!ret.empty()) {
+                *out = ret;
+                return true;
+            }
         }
         return false;
     }

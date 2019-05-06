@@ -70,7 +70,7 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-	//typedef struct __declspec(align(8)) Bin
+//	struct __declspec(align(8)) Bin
 	struct Bin
 	{
 		gradient_t sum_count, sum_gradients;
@@ -173,13 +173,13 @@ namespace LambdaMART {
             return calc_leaf_output(right_stats->sum_count, right_stats->sum_gradients, right_sum_hessians);
         }
 
-		string toString() {
+		inline string toString() {
 			return "(split: " + (split == nullptr ? "null" : split->toString()) + ", bin: " + to_string(bin) + ", gain: " + to_string(gain)
 					+ ", left_stats: " + (left_stats == nullptr ? "null" : left_stats->toString())
 					+ ", right_stats: " + (right_stats == nullptr ? "null" : right_stats->toString()) + ")";
 		}
 
-		bool operator >=(const SplitInfo& other) {
+		inline bool operator >=(const SplitInfo& other) {
 			return gain >= other.gain;
 		}
 
@@ -290,14 +290,10 @@ namespace LambdaMART {
 		}
 
 		SplitInfo BestSplit(const feature_t& fid,
-						    feature& feat,
+						    Feature& feat,
 						    const NodeStats* nodeInfo,
 						    sample_t minInstancesPerNode = 1)
 		{
-			//DEBUG_ASSERT_EX(feat.splits.size() > 0, "empty splits!");
-			// DLogTrace("[thread %u] binsToBestSplit: nodeInfo = %s", thread_get_id(), nodeInfo.toString().c_str());
-
-			//feature_t feature = feat.fid;
 			score_t totalGain = nodeInfo->getLeafSplitGain();
 			NodeStats bestRightInfo;
 			score_t bestShiftedGain = 0.0l;
@@ -337,95 +333,95 @@ namespace LambdaMART {
 	/*!
 	* HistogramCacheByNode (size of pool < max number of nodes in tree)
 	*/
-	//struct HistogramCacheByNode
-	//{
-	//	int used_slots;
-	//	std::vector<Histogram> pool;
-	//	std::vector<int> NodeIDToSlot, SlotToNodeID;
+	/*struct HistogramCacheByNode
+	{
+		int used_slots;
+		std::vector<Histogram> pool;
+		std::vector<int> NodeIDToSlot, SlotToNodeID;
 
-	//	HistogramCacheByNode() : used_slots(0)
-	//	{
-	//		// in default, max 1024 nodes (10 levels of depth), 64 bins per histogram
-	//		NodeIDToSlot.clear();
-	//		NodeIDToSlot.resize(1024, -1);
-	//		SlotToNodeID.clear();
-	//		SlotToNodeID.resize(1024, -1);
-	//		pool.clear();
-	//		pool.reserve(1024);
-	//	}
+		HistogramCacheByNode() : used_slots(0)
+		{
+			// in default, max 1024 nodes (10 levels of depth), 64 bins per histogram
+			NodeIDToSlot.clear();
+			NodeIDToSlot.resize(1024, -1);
+			SlotToNodeID.clear();
+			SlotToNodeID.resize(1024, -1);
+			pool.clear();
+			pool.reserve(1024);
+		}
 
-	//	HistogramCacheByNode(int maxnodes) : used_slots(0)
-	//	{
-	//		NodeIDToSlot.clear();
-	//		NodeIDToSlot.resize(maxnodes, -1);
-	//		SlotToNodeID.clear();
-	//		SlotToNodeID.resize(maxnodes, -1);
-	//		pool.clear();
-	//		pool.reserve(maxnodes);
-	//	}
+		HistogramCacheByNode(int maxnodes) : used_slots(0)
+		{
+			NodeIDToSlot.clear();
+			NodeIDToSlot.resize(maxnodes, -1);
+			SlotToNodeID.clear();
+			SlotToNodeID.resize(maxnodes, -1);
+			pool.clear();
+			pool.reserve(maxnodes);
+		}
 
-	//	void init(int maxnodes = 1024)
-	//	{
-	//		used_slots = 0;
-	//		NodeIDToSlot.clear();
-	//		NodeIDToSlot.resize(maxnodes, -1);
-	//		SlotToNodeID.clear();
-	//		SlotToNodeID.resize(maxnodes, -1);
-	//		pool.clear();
-	//		pool.reserve(maxnodes);
-	//	}
+		void init(int maxnodes = 1024)
+		{
+			used_slots = 0;
+			NodeIDToSlot.clear();
+			NodeIDToSlot.resize(maxnodes, -1);
+			SlotToNodeID.clear();
+			SlotToNodeID.resize(maxnodes, -1);
+			pool.clear();
+			pool.reserve(maxnodes);
+		}
 
-	//	~HistogramCacheByNode()
-	//	{
-	//		NodeIDToSlot.resize(0);
-	//		NodeIDToSlot.shrink_to_fit();
-	//		SlotToNodeID.resize(0);
-	//		SlotToNodeID.shrink_to_fit();
-	//		pool.resize(0);
-	//		pool.shrink_to_fit();
-	//	}
+		~HistogramCacheByNode()
+		{
+			NodeIDToSlot.resize(0);
+			NodeIDToSlot.shrink_to_fit();
+			SlotToNodeID.resize(0);
+			SlotToNodeID.shrink_to_fit();
+			pool.resize(0);
+			pool.shrink_to_fit();
+		}
 
-	//	void put(nodeidx_t nodeID, const Histogram& hist)
-	//	{
-	//		NodeIDToSlot[nodeID] = used_slots;
-	//		SlotToNodeID[used_slots] = nodeID;
-	//		pool.push_back(hist);
-	//		++used_slots;
-	//	}
+		void put(nodeidx_t nodeID, const Histogram& hist)
+		{
+			NodeIDToSlot[nodeID] = used_slots;
+			SlotToNodeID[used_slots] = nodeID;
+			pool.push_back(hist);
+			++used_slots;
+		}
 
-	//	void put(nodbin_cntnodeID, bin_t numBins, const Bin* hist)
-	//	{
-	//		NodeIDToSlot[nodeID] = used_slots;
-	//		SlotToNodeID[used_slots] = nodeID;
-	//		pool.push_back(Histogram(hist, numBins));
-	//		++used_slots;
-	//	}
+		void put(nodbin_cntnodeID, bin_t numBins, const Bin* hist)
+		{
+			NodeIDToSlot[nodeID] = used_slots;
+			SlotToNodeID[used_slots] = nodeID;
+			pool.push_back(Histogram(hist, numBins));
+			++used_slots;
+		}
 
-	//	bool exist(nodeidx_t nodeID)
-	//	{
-	//		return (NodeIDToSlot[nodeID] >= 0);
-	//	}
+		bool exist(nodeidx_t nodeID)
+		{
+			return (NodeIDToSlot[nodeID] >= 0);
+		}
 
-	//	const Histogram& get(nodeidx_t nodeID)
-	//	{
-	//		//ERROR_HANDLING_ASSERT_EX(NodeIDToSlot[nodeID] >= 0, "Accessing non-existent histogram pool item (node %u)!", nodeID);
-	//		return pool[NodeIDToSlot[nodeID]];
-	//	}
+		const Histogram& get(nodeidx_t nodeID)
+		{
+			//ERROR_HANDLING_ASSERT_EX(NodeIDToSlot[nodeID] >= 0, "Accessing non-existent histogram pool item (node %u)!", nodeID);
+			return pool[NodeIDToSlot[nodeID]];
+		}
 
-	//	void remove(nodeidx_t myID)
-	//	{
-	//		// put the last node's histogram into this node's slot
-	//		int mySlot = NodeIDToSlot[myID];
-	//		nodeidx_t nodeAtEnd = SlotToNodeID[used_slots - 1];
+		void remove(nodeidx_t myID)
+		{
+			// put the last node's histogram into this node's slot
+			int mySlot = NodeIDToSlot[myID];
+			nodeidx_t nodeAtEnd = SlotToNodeID[used_slots - 1];
 
-	//		NodeIDToSlot[nodeAtEnd] = mySlot;
-	//		SlotToNodeID[mySlot] = nodeAtEnd;
+			NodeIDToSlot[nodeAtEnd] = mySlot;
+			SlotToNodeID[mySlot] = nodeAtEnd;
 
-	//		pool[mySlot] = pool.back();
-	//		pool.pop_back();
-	//		--used_slots;
-	//	}
-	//};
+			pool[mySlot] = pool.back();
+			pool.pop_back();
+			--used_slots;
+		}
+	}; */
 
 	class HistogramMatrix
 	{
@@ -448,6 +444,8 @@ namespace LambdaMART {
 
 		void init(nodeidx_t nodes, bin_t bins)
 		{
+            // TODO: use aligned malloc and free (different functions in macos/linux/windows)
+
 			if (_data != nullptr)
 				free(_data);
 				//_aligned_free(_data);
@@ -475,20 +473,15 @@ namespace LambdaMART {
 			//_aligned_free(_head);
 		}
 
+
+        inline void clear(nodeidx_t nodes)
+        {
+            memset(_data, 0, sizeof(Bin) * nodes * bin_cnt);
+        }
+
 		inline void clear()
 		{
-			for (size_t i = 0; i < (size_t)num_nodes * bin_cnt; ++i)
-			{
-				_data[i].clear();
-			}
-		}
-
-		inline void clear(nodeidx_t nodes)
-		{
-			for (size_t i = 0; i < (size_t)nodes * bin_cnt; ++i)
-			{
-				_data[i].clear();
-			}
+			clear(num_nodes);
 		}
 
 		inline Bin* operator[](nodeidx_t node)
@@ -613,10 +606,10 @@ namespace LambdaMART {
 			//}
 		}
 
-		SplitInfo BestSplit(nodeidx_t node, feature_t fid,
-						   const feature& feat,
-						   const NodeStats* nodeInfo,
-						   const sample_t minInstancesPerNode = 1)
+		SplitInfo get_best_split(nodeidx_t node, feature_t fid,
+                                 const Feature &feat,
+                                 const NodeStats *nodeInfo,
+                                 const sample_t minInstancesPerNode = 1)
 		{
 			const Bin* bins = _head[node];
 			const vector<featval_t>& temp_threshold = feat.threshold;
@@ -624,8 +617,8 @@ namespace LambdaMART {
 			score_t totalGain = nodeInfo->getLeafSplitGain();
 
 			NodeStats bestRightInfo;
-			score_t bestShiftedGain = 0.0l;
-			featval_t bestThreshold = 0.0l;
+			score_t bestShiftedGain = 0.0;
+			featval_t bestThreshold = 0.0;
 			bin_t bestThresholdBin = 0;
 			size_t temp_threshold_size = temp_threshold.size();
 
@@ -635,10 +628,8 @@ namespace LambdaMART {
 			{
 				bin_t threshLeft = i;
 				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
-				bin_t th = i - 1;
-				#ifdef DEBUG_OUTPUT
+				bin_t threshBin = i - 1;
                 LOG_TRACE("\t%d\tlte: %s\n\t\t\t\tgt: %s\tGain: %lf", i, lte.toString().c_str(), gt.toString().c_str(), lte.getLeafSplitGain() + gt.getLeafSplitGain());
-                #endif
 				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
 				{
 					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
@@ -646,27 +637,22 @@ namespace LambdaMART {
 					{
 						bestRightInfo = gt;
 						bestShiftedGain = currentShiftedGain;
-                        #ifdef DEBUG_OUTPUT
                         LOG_TRACE("\tbestShiftGain updated to: %lf", bestShiftedGain);
-                        #endif
-						bestThreshold = temp_threshold[th];
-						bestThresholdBin = th;
+						bestThreshold = temp_threshold[threshBin];
+						bestThresholdBin = threshBin;
 					}
 				}
 			}
 
-			Split* bestSplit = new Split(fid, bestThreshold);
+			auto* bestSplit = new Split(fid, bestThreshold);
 			double splitGain = bestShiftedGain - totalGain;
 
-			#ifdef DEBUG_OUTPUT
             LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
             LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);
             LOG_TRACE("bestThreshold: %lf", bestThreshold);
             LOG_TRACE("bestThresholdBin: %d", bestThresholdBin);
             LOG_TRACE("totalGain: %lf", totalGain);
             LOG_TRACE("splitGain: %lf", splitGain);
-            #endif
-
 
 			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
 		}
