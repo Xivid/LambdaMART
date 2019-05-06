@@ -31,16 +31,15 @@ namespace LambdaMART {
     class Feature {
         int bin_cnt;
     public:
-        vector<bin_t> bin_index;
+        vector<bin_t> bin_index, dense_bin_index;
         vector<pair<double, int>> samples;
-        vector<int> sample_index;
+        vector<sample_t> sample_index, dense_sample_index;
         vector<double> sample_data;
         vector<double> threshold;
-        vector<sample_t> true_index;
+        vector<sample_t> true_index, non_dft_index;
         bin_t default_bin_index;
 
         explicit Feature(const uint8_t bin_cnt){
-            this->threshold.resize(bin_cnt, -1);
             this->bin_cnt = 0;
         }
 
@@ -58,22 +57,43 @@ namespace LambdaMART {
         }
 
          //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
-         void bin(int bin_size, int n) {
-             int curr_count = 0, bin_count = 0;
-             this->bin_index.resize(n, -1);
-            //shape(bin_index): n
+         void bin(int bin_size, int n, int max_bin) {
+            int curr_count = 0, bin_count = 0;
+            sample_t this_begin = 0;
+            vector<double> correct_data(n, -1);
+            for(int i=0; i<n; i++)
+                correct_data[sample_index[i]] = sample_data[i];
 
-             for (int i = 0; i < n; i++) {
-                 if (curr_count++ <= bin_size || fabs(this->sample_data[i - 1] - this->sample_data[i]) < 0.00001)
-                     this->bin_index[this->sample_index[i]] = bin_count;
-                 else {
-                     curr_count = 0;
-                     i--;
-                     threshold[bin_count] = i < n-1 ? (this->sample_data[i] + this->sample_data[i + 1]) / 2.0 : numeric_limits<double>::max();
-                     bin_count++;
+             for (int i = 0; i < max_bin; i++) {
+                 int expected = this_begin + (n - this_begin) / (max_bin - i), right = 0, left = 0, real;
+
+                 if (expected + 1 < n){
+                     right = expected + 1;
+                     while (right < n && sample_data[right] == sample_data[expected]) ++right;
+                     right -= expected + 1;
                  }
+                 if (expected - 1 >= this_begin){
+                     left = expected - 1;
+                     while (left >= this_begin && sample_data[left] == sample_data[expected]) --left;
+                     left = expected - left - 1;
+                 }
+                 if (left != expected - this_begin && left < right)
+                     real = expected - left;
+                 else
+                     real = expected + right;
+
+                 double bound = (real + 1 < n) ? (sample_data[real] + sample_data[real + 1]) / 2 : std::numeric_limits<double>::max();
+                 this->threshold.push_back(bound);
+
+                 this_begin = real + 1;
+                 if (this_begin >= n) break;
              }
-             this->bin_cnt = bin_count+1;
+
+             std::transform(correct_data.begin(), correct_data.end(), std::back_inserter(this->bin_index),
+                [&](const double x){
+                        bin_t b = std::lower_bound(this->threshold.begin(), this->threshold.end(), x) - this->threshold.begin();
+                        return b;
+                    });
          }
 
         //overloaded bin for using predefined threshold values, using binner class and index of feature being binned.
@@ -96,17 +116,33 @@ namespace LambdaMART {
             for(auto & i: this->true_index)
                 new_indexes.emplace_back(this->bin_index[i]);
             vector<double>().swap(this->sample_data);
-            vector<int>().swap(this->sample_index);
+            vector<sample_t>().swap(this->sample_index);
             vector<bin_t>().swap(this->bin_index);
             this->bin_index = new_indexes;
         }
 
+        void set_nondft_bin_idx(){
+            calc_default_bin();
+            vector<sample_t> new_indexes;
+            vector<bin_t> new_bins;
+            int ctr = -1;
+            for(auto & i: this->bin_index){
+                ctr++;
+                if(i == default_bin_index)
+                    continue;
+                new_indexes.push_back(ctr);
+                new_bins.push_back(i);
+            }
+            this->dense_bin_index = new_bins;
+            this->dense_sample_index = new_indexes;
+        }
+
         inline int bin_count() const {
-            return this->bin_cnt;
+            return this->threshold.size() + 1;
         }
 
         void calc_default_bin(){
-            map<bin_t, int> counts;
+            unordered_map<bin_t, int> counts;
             int max_count = INT_MIN;
             bin_t def_bin = -1;
             for(auto & i: this->bin_index){
@@ -186,13 +222,13 @@ namespace LambdaMART {
         sample_t max_query_size = 0;
 
         explicit Dataset(Config* config = nullptr){
-            bin_cnt = config ? config->max_bin : 16;
+            this->bin_cnt = config ? config->max_bin : 16;
             this->max_lbl = INT_MIN;
             this->d = INT_MIN;
         }
 
         inline auto& get_data() const{
-            return final_data;
+            return data;
         }
 
         inline int max_label() const{
@@ -223,18 +259,19 @@ namespace LambdaMART {
             int final_d = 0;
             for(auto & feat: this->data) {
                 feat.sort();
-                feat.bin(this->bin_size, this->n);
+                feat.bin(this->bin_size, this->n, this->bin_cnt);
                 this->binner.thresholds.emplace_back(feat.threshold);
-                feat.calc_default_bin();
-                feat.set_nonzero_bin_idx();
-                if (!feat.bin_index.empty()) {
-                    final_data.emplace_back(feat);
-                    final_d++;
-                }
+//                feat.calc_default_bin();
+                feat.set_nondft_bin_idx();
+//                feat.set_nonzero_bin_idx();
+//                if (!feat.bin_index.empty()) {
+//                    final_data.emplace_back(feat);
+//                    final_d++;
+//                }
             }
-            Log::Info("Loaded dataset of size: %d samples x %d features (optimized to %d features)", this->n, this->d, final_d);
-            this->d = final_d;
-            vector<Feature>().swap(data);
+            Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
+//            this->d = final_d;
+//            vector<Feature>().swap(data);
         }
 
         // initialize a sample-major `n x d` matrix

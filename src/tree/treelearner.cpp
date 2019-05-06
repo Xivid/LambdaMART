@@ -74,13 +74,14 @@ void TreeLearner::find_best_splits() {
         LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
         const Feature &feat = dataset->get_data()[fid];
-        int non_zero_samples = feat.bin_index.size();
+        int non_dft_samples = feat.dense_bin_index.size();
         //TODO: unrolling
-        for (sample_t sample_idx = 0; sample_idx < non_zero_samples; ++sample_idx) {
-            auto feat_sample_idx = feat.true_index[sample_idx];
+
+        for (sample_t sample_idx = 0; sample_idx < non_dft_samples; ++sample_idx) {
+            auto feat_sample_idx = feat.dense_sample_index[sample_idx];
             const int candidate = sample_to_candidate[feat_sample_idx];
             if (candidate != -1) {
-                const bin_t bin = feat.bin_index[sample_idx];
+                const bin_t bin = feat.dense_bin_index[sample_idx];
                 if(bin > config->max_bin)
                     LOG_TRACE("\tsample %d is in bin %d", feat_sample_idx, bin);
                 histograms[candidate][bin].update(1.0, gradients[feat_sample_idx]);
