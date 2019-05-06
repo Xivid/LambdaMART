@@ -31,11 +31,12 @@ namespace LambdaMART {
     class feature {
         int bin_cnt;
     public:
-        vector<int> bin_index;
+        vector<bin_t> bin_index;
         vector<pair<double, int>> samples;
         vector<int> sample_index;
         vector<double> sample_data;
         vector<double> threshold;
+        bin_t default_bin_index;
 
         explicit feature(const uint8_t bin_cnt){
             this->threshold.resize(bin_cnt, -1);
@@ -87,15 +88,35 @@ namespace LambdaMART {
             }
         }
 
-        vector<int> get_nonzero_bin_idx(){
-            vector<int> nnz_bin_index;
+        void set_nonzero_bin_idx(){
+            this->bin_index.clear();
             for(auto & i: this->sample_index)
-                nnz_bin_index.emplace_back(this->bin_index[i]);
-            return nnz_bin_index;
+                this->bin_index.emplace_back(this->bin_index[i]);
+            vector<int>().swap(this->sample_index);
+            vector<double>().swap(this->sample_data);
         }
 
-        int bin_count() const {
+        inline int bin_count() const {
             return this->bin_cnt;
+        }
+
+        void calc_default_bin(){
+            map<bin_t, int> counts;
+            int max_count = INT_MIN;
+            bin_t def_bin = -1;
+            for(auto & i: this->bin_index){
+                int val = counts[bin_index[i]];
+                val++;
+                if (val > max_count){
+                    max_count = val;
+                    def_bin = bin_index[i];
+                }
+            }
+            this->default_bin_index = def_bin;
+        }
+
+        inline bin_t get_default_bin_index() const{
+            return this->default_bin_index;
         }
     };
 
@@ -156,6 +177,7 @@ namespace LambdaMART {
         int n, d;
         vector<label_t> rank;
         vector<sample_t> query_boundaries;
+
         sample_t max_query_size = 0;
 
         explicit Dataset(Config* config = nullptr){
@@ -164,11 +186,11 @@ namespace LambdaMART {
             this->d = INT_MIN;
         }
 
-        auto& get_data() const{
+        inline auto& get_data() const{
             return data;
         }
 
-        int max_label(){
+        inline int max_label() const{
             return this->max_lbl;
         }
 
@@ -195,6 +217,8 @@ namespace LambdaMART {
                 feat.sort();
                 feat.bin(this->bin_size, this->n);
                 this->binner.thresholds.emplace_back(feat.threshold);
+                feat.set_nonzero_bin_idx();
+                feat.calc_default_bin();
             }
             Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
@@ -216,7 +240,7 @@ namespace LambdaMART {
                         exit(0);
                     }
 
-                    vector<int> bins;
+                    vector<bin_t> bins;
                     vector<double> thresholds;
                     stringstream proc(tokens[1]);
                     while(proc.good()){
@@ -283,7 +307,7 @@ namespace LambdaMART {
         }
 
         // returns dimensions of raw data
-        pair<int, int> shape() const{
+        inline pair<int, int> shape() const{
             return make_pair(this->n, this->d);
         }
 
@@ -297,19 +321,19 @@ namespace LambdaMART {
             return query_boundaries.data();
         }
 
-        sample_t num_queries() const {
+        inline sample_t num_queries() const {
             return query_boundaries.size() - 1;
         }
 
-        sample_t num_samples() const {
+        inline sample_t num_samples() const {
             return n;
         }
 
-        label_t* get_labels() {
+        inline label_t* get_labels() {
             return rank.data();
         }
 
-        int num_bins() const {
+        inline int num_bins() const {
             return this->bin_cnt;
         }
     };
@@ -338,7 +362,7 @@ namespace LambdaMART {
             Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
 
-        const vector<double>& get_sample_row(sample_t id) {
+        inline const vector<double>& get_sample_row(sample_t id) {
             return data[id];
         }
     };

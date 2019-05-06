@@ -523,45 +523,43 @@ namespace LambdaMART {
             //}
 		}
 		//TODO: defaultBin - part of optimization
-		//inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)
-		//{
+		inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)
+		{
 		//	// TODO: loop unrolling
 
-		//	if (bin_cnt <= 1)
-		//	{
-		//		return;
-		//	}
+			if (bin_cnt <= 1)
+				return;
 
-		//	Bin* bins = _head[node];
-		//	const Bin total = *info;
+			Bin* bins = _head[node];
+			const Bin total = *info;
 
-		//	// cumulate from right to left
-		//	for (bin_t bin = bin_cnt - 2; bin > defaultBin; --bin)
-		//	{
-		//		bin_t binRight = bin + 1;
-		//		bins[bin] += bins[binRight];
-		//	}
+			// cumulate from right to left
+			for (bin_t bin = bin_cnt - 2; bin > defaultBin; --bin)
+			{
+				bin_t binRight = bin + 1;
+				bins[bin] += bins[binRight];
+			}
 
-		//	if (defaultBin != 0)
-		//	{
-		//		// put statistics of bin #1 ~ default in bin #0 ~ #(default - 1) temporarily
-		//		bins[0] ^= total;
-		//		for (bin_t bin = 1; bin < defaultBin; ++bin)
-		//		{
-		//			bin_t binLeft = bin - 1;
-		//			bins[bin] ^= bins[binLeft];
-		//		}
+			if (defaultBin != 0)
+			{
+				// put statistics of bin #1 ~ default in bin #0 ~ #(default - 1) temporarily
+				bins[0] ^= total;
+				for (bin_t bin = 1; bin < defaultBin; ++bin)
+				{
+					bin_t binLeft = bin - 1;
+					bins[bin] ^= bins[binLeft];
+				}
 
-		//		// shift right to the correct place
-		//		for (bin_t bin = defaultBin; bin > 0; --bin)
-		//		{
-		//			bin_t binLeft = bin - 1;
-		//			bins[bin] = bins[binLeft];
-		//		}
-		//	}
+				// shift right to the correct place
+				for (bin_t bin = defaultBin; bin > 0; --bin)
+				{
+					bin_t binLeft = bin - 1;
+					bins[bin] = bins[binLeft];
+				}
+			}
 
-		//	bins[0] = total;
-		//}
+			bins[0] = total;
+		}
 
 		inline void GetFromDifference(nodeidx_t node, const Histogram& parent_hist, Bin* sibling)
 		{

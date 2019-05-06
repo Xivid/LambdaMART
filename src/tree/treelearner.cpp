@@ -76,22 +76,23 @@ void TreeLearner::find_best_splits() {
     for (feature_t fid = 0; fid < num_features; ++fid) {
         LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
-        const feature &feat = dataset->get_data()[fid];
-
+        feature feat = dataset->get_data()[fid];
+        int non_zero_samples = feat.bin_index.size();
         //TODO: unrolling
-        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
-            const int node = sample_to_candidate[sample_idx];
-            if (node != -1) {
+        for (sample_t sample_idx = 0; sample_idx < non_zero_samples; ++sample_idx) {
+            const int candidate = sample_to_candidate[sample_idx];
+            if (candidate != -1) {
                 const bin_t bin = feat.bin_index[sample_idx];
                 if(bin > config->max_bin)
                     LOG_TRACE("\tsample %d is in bin %d", sample_idx, bin);
-                histograms[node][bin].update(1.0, gradients[sample_idx]);
+                histograms[candidate][bin].update(1.0, gradients[sample_idx]);
             }
         }
 
+        bin_t default_bin_index = feat.get_default_bin_index();
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
             LOG_TRACE("Node %lu = Candidate %lu", split_candidates[candidate]->node->id, candidate);
-            histograms.cumulate(candidate);
+            histograms.cumulate(candidate, split_candidates[candidate]->info, default_bin_index);
             auto splitInfo = histograms.BestSplit(candidate, fid, feat, node_info[candidate],
                                                   config->min_data_in_leaf);
             LOG_TRACE("\t%s", splitInfo.toString().c_str());
