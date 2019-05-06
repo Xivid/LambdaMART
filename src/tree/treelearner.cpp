@@ -76,12 +76,21 @@ void TreeLearner::find_best_splits() {
         const Feature &feat = dataset->get_data()[fid];
 
         //TODO: unrolling
-        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
-            const int candidate = sample_to_candidate[sample_idx];
-            if (candidate != -1) {
-                const bin_t bin = feat.bin_index[sample_idx];
-                histograms[candidate][bin].update(1.0, gradients[sample_idx]);
-            }
+        for (sample_t sample_idx = 0; sample_idx < num_samples - 3; sample_idx += 4) {
+            const int c1 = sample_to_candidate[sample_idx];
+            const int c2 = sample_to_candidate[sample_idx + 1];
+            const int c3 = sample_to_candidate[sample_idx + 2];
+            const int c4 = sample_to_candidate[sample_idx + 3];
+
+            const bin_t bin1 = feat.bin_index[sample_idx];
+            const bin_t bin2 = feat.bin_index[sample_idx + 1];
+            const bin_t bin3 = feat.bin_index[sample_idx + 2];
+            const bin_t bin4 = feat.bin_index[sample_idx + 3];
+
+            if (c1 != -1) histograms[c1][bin1].update(1.0, gradients[sample_idx]);
+            if (c2 != -1) histograms[c2][bin2].update(1.0, gradients[sample_idx + 1]);
+            if (c3 != -1) histograms[c3][bin3].update(1.0, gradients[sample_idx + 2]);
+            if (c4 != -1) histograms[c4][bin4].update(1.0, gradients[sample_idx + 3]);
         }
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
