@@ -67,28 +67,17 @@ namespace LambdaMART {
              for (int i = 0; i < max_bin; i++) {
                  int expected = this_begin + (n - this_begin) / (max_bin - i), right = 0, left = 0, real;
 
-                 if (expected + 1 < n){
-                     right = expected + 1;
-                     while (right < n && sample_data[right] == sample_data[expected]) ++right;
-                     right -= expected + 1;
+                 if (expected + 1 < n) {
+                     right = std::upper_bound(sample_data.begin() + expected + 1, sample_data.end(), sample_data[expected])
+                             - (sample_data.begin() + expected + 1);
                  }
-                 if (expected - 1 >= this_begin){
-                     left = expected - 1;
-                     while (left >= this_begin && sample_data[left] == sample_data[expected]) --left;
-                     left = expected - left - 1;
+
+                 if (expected - 1 >= this_begin) {
+                     left = (sample_data.begin() + expected)
+                             - std::lower_bound(sample_data.begin() + this_begin,
+                                                sample_data.begin() + expected,
+                                                sample_data[expected]);
                  }
-//
-//                 if (expected + 1 < n) {
-//                     right = std::upper_bound(sample_data.begin() + expected, sample_data.end(), sample_data[expected])
-//                             - (sample_data.begin() + expected + 1);
-//                 }
-//
-//                 if (expected - 1 >= this_begin) {
-//                     left = (sample_data.begin() + expected - 1)
-//                             - std::lower_bound(sample_data.begin() + this_begin,
-//                                                sample_data.begin() + expected - 1,
-//                                                sample_data[expected]);
-//                 }
 
                  if (left != expected - this_begin && left < right)
                      real = expected - left;
