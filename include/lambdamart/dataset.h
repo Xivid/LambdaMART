@@ -59,7 +59,7 @@ namespace LambdaMART {
          //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
          void bin(int bin_size, int n, int max_bin) {
             int curr_count = 0, bin_count = 0;
-            sample_t this_begin = 0;
+            int this_begin = 0;
             vector<double> correct_data(n, -1);
             for(int i=0; i<n; i++)
                 correct_data[sample_index[i]] = sample_data[i];
@@ -67,16 +67,18 @@ namespace LambdaMART {
              for (int i = 0; i < max_bin; i++) {
                  int expected = this_begin + (n - this_begin) / (max_bin - i), right = 0, left = 0, real;
 
-                 if (expected + 1 < n){
-                     right = expected + 1;
-                     while (right < n && sample_data[right] == sample_data[expected]) ++right;
-                     right -= expected + 1;
+                 if (expected + 1 < n) {
+                     right = std::upper_bound(sample_data.begin() + expected + 1, sample_data.end(), sample_data[expected])
+                             - (sample_data.begin() + expected + 1);
                  }
-                 if (expected - 1 >= this_begin){
-                     left = expected - 1;
-                     while (left >= this_begin && sample_data[left] == sample_data[expected]) --left;
-                     left = expected - left - 1;
+
+                 if (expected - 1 >= this_begin) {
+                     left = (sample_data.begin() + expected)
+                             - std::lower_bound(sample_data.begin() + this_begin,
+                                                sample_data.begin() + expected,
+                                                sample_data[expected]);
                  }
+
                  if (left != expected - this_begin && left < right)
                      real = expected - left;
                  else
