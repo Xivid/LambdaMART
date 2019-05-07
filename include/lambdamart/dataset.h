@@ -228,7 +228,8 @@ namespace LambdaMART {
         }
 
         inline auto& get_data() const{
-            return data;
+//            return data;
+            return final_data;
         }
 
         inline int max_label() const{
@@ -261,17 +262,16 @@ namespace LambdaMART {
                 feat.sort();
                 feat.bin(this->bin_size, this->n, this->bin_cnt);
                 this->binner.thresholds.emplace_back(feat.threshold);
-//                feat.calc_default_bin();
                 feat.set_nondft_bin_idx();
 //                feat.set_nonzero_bin_idx();
-//                if (!feat.bin_index.empty()) {
-//                    final_data.emplace_back(feat);
-//                    final_d++;
-//                }
+                if (!feat.true_index.empty()) {
+                    final_data.emplace_back(feat);
+                    final_d++;
+                }
             }
-            Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
-//            this->d = final_d;
-//            vector<Feature>().swap(data);
+            Log::Info("Loaded dataset of size: %d samples x %d features (optimized to %d features)", this->n, this->d, final_d);
+            this->d = final_d;
+            vector<Feature>().swap(data);
         }
 
         // initialize a sample-major `n x d` matrix
