@@ -1,0 +1,9 @@
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tmp.14.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/14.train and query boundaries data/MSLR-WEB30K/14.train.query
+[1.275s] [Info] Loaded dataset of size: 16418 samples x 136 features
+[1.275s] [Info] Loading validation dataset data/MSLR-WEB30K/17.vali and query boundaries data/MSLR-WEB30K/17.vali.query
+[8.978s] [Info] Loaded dataset of size: 131075 samples x 136 features
+[8.978s] [Info] Start training...
+[20.187s] [Info] [100]	train-ndcg@1:0.876327	train-ndcg@3:0.830350	train-ndcg@5:0.812615	train-ndcg@10:0.782511	valid-ndcg@1:0.409346	valid-ndcg@3:0.411857	valid-ndcg@5:0.420611	valid-ndcg@10:0.446827
+[20.187s] [Info] Training finished.
