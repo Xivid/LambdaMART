@@ -8,10 +8,10 @@ namespace LambdaMART {
     typedef uint32_t feature_t;
     typedef uint8_t  bin_t;
     typedef uint16_t label_t;
-    typedef uint32_t nodeidx_t;
-    typedef double   score_t; // score of a node
-    typedef double   gradient_t;
-    typedef double   featval_t;
+    typedef uint8_t nodeidx_t;
+    typedef float   score_t; // score of a node
+    typedef float   gradient_t;
+    typedef float   featval_t;
 }
 
 #endif //LAMBDAMART_TYPES_H
