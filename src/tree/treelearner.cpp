@@ -70,32 +70,44 @@ void TreeLearner::find_best_splits() {
 
     best_splits.clear();
     best_splits.resize(num_candidates);
-    feature_t fid;
     LOG_TRACE("%lu", num_feature_blocking);
-    for (fid = 0; fid < num_features; fid += num_feature_blocking) {
-        LOG_TRACE("checking feature %lu, %lu", fid, fid+1);
+
+    feature_t fid;
+    const feature_t feature_rest = num_features % num_feature_blocking;
+
+    for (fid = 0; fid < num_features - feature_rest; fid += num_feature_blocking) {
+        LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
         histograms.clear(num_candidates * num_feature_blocking);
         const Feature &feat0 = dataset->get_data()[fid];
         const Feature &feat1 = dataset->get_data()[fid+1];
+        const Feature &feat2 = dataset->get_data()[fid+2];
+        const Feature &feat3 = dataset->get_data()[fid+3];
 
-        //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
                 const bin_t bin0 = feat0.bin_index[sample_idx];
                 const bin_t bin1 = feat1.bin_index[sample_idx];
+                const bin_t bin2 = feat2.bin_index[sample_idx];
+                const bin_t bin3 = feat3.bin_index[sample_idx];
 
                 histograms[candidate*num_feature_blocking][bin0].update(1.0, gradients[sample_idx]);
                 histograms[candidate*num_feature_blocking+1][bin1].update(1.0, gradients[sample_idx]);
+                histograms[candidate*num_feature_blocking+2][bin2].update(1.0, gradients[sample_idx]);
+                histograms[candidate*num_feature_blocking+3][bin3].update(1.0, gradients[sample_idx]);
             }
         }
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
             histograms.cumulate(candidate*num_feature_blocking);
             histograms.cumulate(candidate*num_feature_blocking+1);
+            histograms.cumulate(candidate*num_feature_blocking+2);
+            histograms.cumulate(candidate*num_feature_blocking+3);
 
             auto local_best0 = histograms.get_best_split(candidate*num_feature_blocking, fid, feat0, node_info[candidate], min_data_in_leaf);
             auto local_best1 = histograms.get_best_split(candidate*num_feature_blocking+1, fid+1, feat1, node_info[candidate], min_data_in_leaf);
+            auto local_best2 = histograms.get_best_split(candidate*num_feature_blocking+2, fid+2, feat2, node_info[candidate], min_data_in_leaf);
+            auto local_best3 = histograms.get_best_split(candidate*num_feature_blocking+3, fid+3, feat3, node_info[candidate], min_data_in_leaf);
 
             if (local_best0 >= best_splits[candidate]) {
                 best_splits[candidate] = local_best0;
@@ -103,11 +115,17 @@ void TreeLearner::find_best_splits() {
             if (local_best1 >= best_splits[candidate]) {
                 best_splits[candidate] = local_best1;
             }
+            if (local_best2 >= best_splits[candidate]) {
+                best_splits[candidate] = local_best2;
+            }
+            if (local_best3 >= best_splits[candidate]) {
+                best_splits[candidate] = local_best3;
+            }
         }
     }
 
-    for (; fid < num_features % num_feature_blocking; ++fid) {
-        LOG_TRACE("checking feature %lu", fid);
+    for (; fid < num_features; ++fid) {
+        LOG_DEBUG("checking feature %lu", fid);
         histograms.clear(num_candidates);
         const Feature &feat = dataset->get_data()[fid];
 

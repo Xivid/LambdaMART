@@ -34,7 +34,7 @@ namespace LambdaMART {
   if ((pointer) == nullptr) Log::Fatal(#pointer " Can't be NULL at %s, line %d .\n", __FILE__,  __LINE__);
 #endif
 
-//#define DEBUG_OUTPUT_LEVEL 3
+#define DEBUG_OUTPUT_LEVEL 1
 
 #if DEBUG_OUTPUT_LEVEL >= 3
 #define LOG_TRACE(...) LambdaMART::Log::Trace(__VA_ARGS__)
