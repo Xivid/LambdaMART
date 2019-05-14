@@ -127,6 +127,7 @@ public:
     {
         tie(num_samples, num_features) = dataset->shape();
         num_feature_blocking = config->num_feature_blocking;
+        num_sample_blocking = config->num_sample_blocking;
         max_splits = config->max_splits;
         min_data_in_leaf = config->min_data_in_leaf;
         node_to_output.resize(1<<(config->max_depth));
@@ -170,6 +171,7 @@ private:
     sample_t                            num_samples;
     feature_t                           num_features;
     feature_t                           num_feature_blocking;
+    sample_t                            num_sample_blocking;
     HistogramMatrix                     histograms;
     uint32_t                            cur_depth = 0;
     std::vector<SplitInfo>              best_splits;

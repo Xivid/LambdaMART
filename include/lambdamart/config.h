@@ -134,6 +134,7 @@ namespace LambdaMART {
         int eval_interval = 1;
 
         int num_feature_blocking = 4;
+        int num_sample_blocking = 4;
 
 #pragma endregion
 
