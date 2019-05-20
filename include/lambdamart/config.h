@@ -23,7 +23,7 @@ namespace LambdaMART {
         string ToString() const;
         inline bool GetString(const string& name, string* out);
         inline bool GetInt(const string& name, int* out);
-        inline bool GetDouble(const string& name, float* out);
+        inline bool GetDouble(const string& name, double* out);
         inline bool GetFloat(const string& name, float* out);
         inline bool GetBool(const string& name, bool* out);
         inline bool GetIntVector(const string& name, vector<int>* out);
@@ -52,21 +52,21 @@ namespace LambdaMART {
             GetString("valid_data", &valid_data);
             GetString("valid_query", &valid_query);
             GetInt("num_iterations", &num_iterations);
-            GetDouble("learning_rate", &learning_rate);
+            GetFloat("learning_rate", &learning_rate);
             GetInt("max_depth", &max_depth);
             if(max_depth < 2)
                 Log::Fatal("Max_depth should not be less than 2");
             GetInt("max_splits", &max_splits);
             GetInt("min_data_in_leaf", &min_data_in_leaf);
-            GetDouble("min_impurity_to_split", &min_impurity_to_split);
-            GetDouble("min_gain_to_split", &min_gain_to_split);
+            GetFloat("min_impurity_to_split", &min_impurity_to_split);
+            GetFloat("min_gain_to_split", &min_gain_to_split);
             GetInt("verbosity", &verbosity);
             Log::ResetLogLevel(LogLevel(verbosity));
             { int t; GetInt("max_bin", &t) && (max_bin = t > 255 ? 255 : t); }
             GetInt("min_data_in_bin", &min_data_in_bin);
             GetString("output_model", &output_model);
             GetString("output_result", &output_result);
-            GetDouble("sigmoid", &sigmoid);
+            GetFloat("sigmoid", &sigmoid);
             GetInt("max_position", &max_position);
             GetInt("max_label", &max_label);
             GetIntVector("eval_at", &eval_at);
@@ -163,12 +163,14 @@ namespace LambdaMART {
         return false;
     }
 
-    inline bool Config::GetDouble(const std::string& name, float* out) {
+    inline bool Config::GetDouble(const std::string& name, double* out) {
         if (properties.count(name) > 0) {
-            if (!Common::AtofAndCheck(properties.at(name).c_str(), out)) {
-                Log::Fatal("Parameter %s should be of type float, got \"%s\"",
+            float fout;
+            if (!Common::AtofAndCheck(properties.at(name).c_str(), &fout)) {
+                Log::Fatal("Parameter %s should be of type double, got \"%s\"",
                            name.c_str(), properties.at(name).c_str());
             }
+            *out = fout;
             return true;
         }
         return false;
