@@ -1,0 +1,12 @@
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tmp.20.conf
+[0.001s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[80.197s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[80.197s] [Info] Loading validation dataset data/MSLR-WEB30K/17.vali and query boundaries data/MSLR-WEB30K/17.vali.query
+[87.920s] [Info] Loaded dataset of size: 131075 samples x 136 features
+[87.922s] [Info] Start training...
+[87.994s] [Info] num_feature_blocking: 2, num_sample_blocking: 1
+[372.592s] [Info] [100]	train-ndcg@1:0.481782	train-ndcg@3:0.454610	train-ndcg@5:0.457289	train-ndcg@10:0.475465	valid-ndcg@1:0.449193	valid-ndcg@3:0.437139	valid-ndcg@5:0.448490	valid-ndcg@10:0.475462
+[372.593s] [Info] Training finished.
+[372.593s] [Info] Predicting with validation dataset and saving output to predict_result.txt
+[373.830s] [Info] Writing predictions to predict_result.txt
