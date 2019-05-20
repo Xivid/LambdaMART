@@ -160,8 +160,8 @@ private:
     };
 
     // as input
-    const Config*             config;
-    const Dataset*            dataset;
+    const Config*            config;
+    const Dataset*           dataset;
     const float*             gradients;
     const float*             hessians;
 
@@ -173,13 +173,13 @@ private:
     std::vector<SplitInfo>              best_splits;
     size_t                              max_splits;
     sample_t                            min_data_in_leaf;
-    std::vector<float>                 node_to_output;
-    std::vector<uint16_t>           sample_to_node;
+    std::vector<score_t>                node_to_output;
+    std::vector<nodeidx_t>              sample_to_node;
     std::vector<SplitCandidate*>        split_candidates;
     std::vector<NodeStats*>             node_info;
-    std::vector<uint16_t>                    node_to_candidate;
-    std::vector<int16_t>                    sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
-    nodeidx_t                           num_candidates = 0;
+    std::vector<candidateidx_t>         node_to_candidate;
+    std::vector<candidateidx_t>         sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
+    candidateidx_t                      num_candidates = 0;
     std::priority_queue<SplitCandidate*, std::vector<SplitCandidate*>, CmpCandidates> node_queue;
 
     // tree building methods
