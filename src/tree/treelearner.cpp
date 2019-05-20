@@ -80,17 +80,13 @@ void TreeLearner::find_best_splits() {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
                 const bin_t bin = feat.bin_index[sample_idx];
-                histograms[candidate][bin].update(1.0, gradients[sample_idx]);
+                histograms[bin][candidate].update(1.0, gradients[sample_idx]);
             }
         }
 
-        for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-            histograms.cumulate(candidate);
-            auto local_best = histograms.get_best_split(candidate, fid, feat, node_info[candidate], min_data_in_leaf);
-            if (local_best >= best_splits[candidate]) {
-                best_splits[candidate] = local_best;
-            }
-        }
+        histograms.cumulate(num_candidates);
+
+        histograms.get_best_splits(num_candidates, fid, feat, node_info, best_splits, min_data_in_leaf);
     }
 }
 
