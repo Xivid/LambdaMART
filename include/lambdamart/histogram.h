@@ -647,7 +647,7 @@ namespace LambdaMART {
 			}
 
 			auto* bestSplit = new Split(fid, bestThreshold);
-			double splitGain = bestShiftedGain - totalGain;
+			float splitGain = bestShiftedGain - totalGain;
 
             LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
             LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);

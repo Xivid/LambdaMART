@@ -100,7 +100,7 @@ void TreeLearner::perform_split()
     //update node_to_output, sample_to_node
     //update cur_depth;
 
-    double min_gain_to_split = config->min_gain_to_split;
+    float min_gain_to_split = config->min_gain_to_split;
     vector<bool> do_split(num_candidates, false);
 
     // determine which nodes to really split

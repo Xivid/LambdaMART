@@ -7,7 +7,7 @@ Model* Booster::train() {
     auto treeLearner = new TreeLearner(train_dataset, gradients.data(), hessians.data(), config);
 
     const int num_iter = config->num_iterations;
-    const double learning_rate = config->learning_rate;
+    const float learning_rate = config->learning_rate;
     LOG_DEBUG("Train %d iterations with learning rate %lf", num_iter, learning_rate);
 
     for (int iter = 1; iter <= num_iter; ++iter) {

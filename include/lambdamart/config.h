@@ -23,7 +23,8 @@ namespace LambdaMART {
         string ToString() const;
         inline bool GetString(const string& name, string* out);
         inline bool GetInt(const string& name, int* out);
-        inline bool GetDouble(const string& name, double* out);
+        inline bool GetDouble(const string& name, float* out);
+        inline bool GetFloat(const string& name, float* out);
         inline bool GetBool(const string& name, bool* out);
         inline bool GetIntVector(const string& name, vector<int>* out);
 
@@ -79,7 +80,7 @@ namespace LambdaMART {
         string train_data, train_query, train_label;
         string valid_data, valid_query;
         int num_iterations = 100;
-        double learning_rate = 0.1;
+        float learning_rate = 0.1;
 
 #pragma endregion
 
@@ -88,8 +89,8 @@ namespace LambdaMART {
         int max_depth = 9;
         int max_splits = 256;
         int min_data_in_leaf = 1;
-        double min_gain_to_split = 1e-6;
-        double min_impurity_to_split = 1e-6;
+        float min_gain_to_split = 1e-6;
+        float min_impurity_to_split = 1e-6;
 
 #pragma endregion
 
@@ -103,7 +104,7 @@ namespace LambdaMART {
         int min_data_in_bin = 3; //unused now in v1
 
         // desc = max cache size in MB for historical histogram; ``< 0`` means no limit
-//        double histogram_pool_size = -1.0;  // TODO: maybe useful later
+//        float histogram_pool_size = -1.0;  // TODO: maybe useful later
 
         string output_model = "model.txt";
         string output_result = "predict_result.txt";
@@ -113,7 +114,7 @@ namespace LambdaMART {
 #pragma region Objective Parameters
 
         // desc = parameter for the sigmoid function
-        double sigmoid = 1.0;
+        float sigmoid = 1.0;
 
         // desc = optimizes `NDCG <https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG>`__ at this position
         // We assume that the number of sample in each query is at most 10000
@@ -123,7 +124,8 @@ namespace LambdaMART {
         // default = 0,1,3,7,15,31,63,...,2^30-1
         // desc = relevant gain for labels. For example, the gain of label ``2`` is ``3`` in case of default label gains
         // desc = separate by ``,``
-        vector<double> label_gain = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767, 65535, 131071, 262143, 524287, 1048575, 2097151, 4194303, 8388607, 16777215, 33554431, 67108863, 134217727, 268435455, 536870911};
+        vector<double> label_gain = {0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767, 65535, 131071, 262143, 524287, 1048575,
+                                    2097151, 4194303, 8388607, 16777215, 33554431, 67108863, 134217727, 268435455, 536870911};
 
         // default = 1,3,5
         // desc = used only with ``ndcg`` and ``map`` metrics
@@ -161,10 +163,10 @@ namespace LambdaMART {
         return false;
     }
 
-    inline bool Config::GetDouble(const std::string& name, double* out) {
+    inline bool Config::GetDouble(const std::string& name, float* out) {
         if (properties.count(name) > 0) {
             if (!Common::AtofAndCheck(properties.at(name).c_str(), out)) {
-                Log::Fatal("Parameter %s should be of type double, got \"%s\"",
+                Log::Fatal("Parameter %s should be of type float, got \"%s\"",
                            name.c_str(), properties.at(name).c_str());
             }
             return true;
@@ -172,6 +174,17 @@ namespace LambdaMART {
         return false;
     }
 
+    inline bool Config::GetFloat(const std::string& name, float* out) {
+        if (properties.count(name) > 0) {
+            if (!Common::AtofAndCheck(properties.at(name).c_str(), out)) {
+                Log::Fatal("Parameter %s should be of type float, got \"%s\"",
+                           name.c_str(), properties.at(name).c_str());
+            }
+            return true;
+        }
+        return false;
+    }
+    
     inline bool Config::GetBool(const std::string& name, bool* out) {
         if (properties.count(name) > 0) {
             std::string value = properties.at(name);

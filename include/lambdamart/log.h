@@ -114,7 +114,7 @@ namespace LambdaMART {
         static void Write(LogLevel level, long cur_time, const char* level_str, const char *format, va_list val) {
             if (level <= GetLevel()) {  // omit the message with low level
                 // write to STDOUT
-                printf("[%.3lfs] [%s] ", double(cur_time) / 1000, level_str);
+                printf("[%.3lfs] [%s] ", float(cur_time) / 1000, level_str);
                 vprintf(format, val);
                 printf("\n");
                 fflush(stdout);
