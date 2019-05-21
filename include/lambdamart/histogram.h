@@ -481,25 +481,18 @@ namespace LambdaMART {
 
             for (nodeidx_t node = 0; node < num_candidates; ++node)
             {
-                auto* bestSplit = new Split(fid, bestThresholds[node]);
                 double splitGain = bestShiftedGains[node] - totalGains[node];
 
-                auto local_best = SplitInfo(bestSplit, bestThresholdBins[node], splitGain, new NodeStats(*nodeInfo[node] - bestRightInfos[node]), new NodeStats(bestRightInfos[node]));
-                if (local_best >= best_splits[node]) {
-                    best_splits[node] = local_best;
-                    //check if best_splits returns;
+                if (splitGain >= best_splits[node].gain) {
+                    best_splits[node] = SplitInfo(
+                            new Split(fid, bestThresholds[node]),
+                            bestThresholdBins[node],
+                            splitGain,
+                            new NodeStats(*nodeInfo[node] - bestRightInfos[node]),
+                            new NodeStats(bestRightInfos[node]));
                 }
             }
 
-
-            //LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
-            //LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);
-            //LOG_TRACE("bestThreshold: %lf", bestThreshold);
-            //LOG_TRACE("bestThresholdBin: %d", bestThresholdBin);
-            //LOG_TRACE("totalGain: %lf", totalGain);
-            //LOG_TRACE("splitGain: %lf", splitGain);
-
-            //return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
         }
 
     };
