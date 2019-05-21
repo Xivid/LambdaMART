@@ -79,27 +79,17 @@ void TreeLearner::find_best_splits() {
         LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
         histograms.clear(num_candidates * num_feature_blocking);
 
-        const Feature &feat0 = feats[fid];
-        const Feature &feat1 = feats[fid+1];
-        const Feature &feat2 = feats[fid+2];
-        const Feature &feat3 = feats[fid+3];
-
-        //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
-            const gradient_t grad = gradients[sample_idx];
 
             if (candidate != -1) {
-                const bin_t bin0 = feat0.bin_index[sample_idx];
-                const bin_t bin1 = feat1.bin_index[sample_idx];
-                const bin_t bin2 = feat2.bin_index[sample_idx];
-                const bin_t bin3 = feat3.bin_index[sample_idx];
-
                 size_t offset = candidate * num_feature_blocking;
-                histograms[bin0][offset].update(1.0, grad);
-                histograms[bin1][offset + 1].update(1.0, grad);
-                histograms[bin2][offset + 2].update(1.0, grad);
-                histograms[bin3][offset + 3].update(1.0, grad);
+                const gradient_t grad = gradients[sample_idx];
+
+                for (int i = 0; i < num_feature_blocking; i++) {
+                    const bin_t bin0 = feats[fid + i].bin_index[sample_idx];
+                    histograms[bin0][offset + i].update(1.0, grad);
+                }
             }
         }
 
@@ -113,7 +103,6 @@ void TreeLearner::find_best_splits() {
         histograms.clear(num_candidates);
         const Feature &feat = feats[fid];
 
-        //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {

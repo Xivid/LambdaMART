@@ -80,7 +80,7 @@ namespace LambdaMART {
         string valid_data, valid_query;
         int num_iterations = 100;
         double learning_rate = 0.1;
-        const int num_feature_blocking = 1;
+        const int num_feature_blocking = 4;
 #pragma endregion
 
 #pragma region Learning Control Parameters

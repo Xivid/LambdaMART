@@ -355,6 +355,22 @@ public:
         return _data;
     }
 
+
+    void cumulate_noavx(nodeidx_t num_candidates) {
+        Bin* bins_high = _head[bin_cnt-1];
+        for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
+        {
+            Bin* bins_low = _head[bin - 1];
+
+            for (nodeidx_t i = 0; i < num_candidates; ++i)
+            {
+                bins_low[i] += bins_high[i];
+            }
+
+            bins_high = bins_low;
+        }
+    }
+
     void cumulate(nodeidx_t num_candidates)
     {
         if (bin_cnt <= 1)
@@ -362,7 +378,7 @@ public:
             return;
         }
 
-        const nodeidx_t simd_blocking = 8;
+        const nodeidx_t simd_blocking = 4;
         const nodeidx_t bins_per_register = 32 / sizeof(Bin);
         const nodeidx_t overall_blocking = simd_blocking * bins_per_register;
         const nodeidx_t node_rest = num_candidates % overall_blocking;
@@ -429,6 +445,7 @@ public:
 
     }
 
+    // TODO: avx
     void get_best_splits(nodeidx_t num_candidates,
                          feature_t fid,
                          const int num_feature_blocking,
