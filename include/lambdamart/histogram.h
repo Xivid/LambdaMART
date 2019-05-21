@@ -396,7 +396,8 @@ namespace LambdaMART {
                                  const Feature &feat,
                                  vector<NodeStats*>& nodeInfo,
                                  vector<SplitInfo>& best_splits,
-                                 const sample_t minInstancesPerNode = 1)
+                                 const sample_t minInstancesPerNode = 1,
+                                 const nodeidx_t offset = 0)
         {
             LOG_TRACE("histgorms transpose get_best_splits...");
             //const Bin* bins = _head[node];
@@ -415,10 +416,10 @@ namespace LambdaMART {
 
             size_t temp_threshold_size = temp_threshold.size();
 
-            const Bin* bin0s = _data;
+            const Bin* bin0s = _data+offset;
             for (bin_t i = 1; i < feat.bin_count(); ++i)
             {
-                const Bin* bins = _head[i];
+                const Bin* bins = _head[i]+offset;
                 bin_t threshBin = i - 1;
                 for (nodeidx_t node = 0; node < num_candidates; ++node)
                 {

@@ -125,13 +125,15 @@ public:
     TreeLearner(const Dataset* _dataset, const double* _gradients, const double* _hessians, const Config* _config) :
         dataset(_dataset), gradients(_gradients), hessians(_hessians), config(_config)
     {
+
         tie(num_samples, num_features) = dataset->shape();
+        num_feature_blocking = config->num_feature_blocking;
         max_splits = config->max_splits;
         min_data_in_leaf = config->min_data_in_leaf;
         node_to_output.resize(1<<(config->max_depth));
         sample_to_node.resize(num_samples, 0);
         node_to_candidate.resize(1<<(config->max_depth));
-        histograms.init(config->max_splits, config->max_bin);
+        histograms.init(config->max_splits*num_feature_blocking, config->max_bin);
     }
 
 private:
@@ -168,6 +170,7 @@ private:
     // as working set
     sample_t                            num_samples;
     feature_t                           num_features;
+    feature_t                           num_feature_blocking;
     HistogramMatrixTrans                histograms;
     uint32_t                            cur_depth = 0;
     std::vector<SplitInfo>              best_splits;

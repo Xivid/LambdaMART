@@ -70,7 +70,46 @@ void TreeLearner::find_best_splits() {
 
     best_splits.clear();
     best_splits.resize(num_candidates);
-    for (feature_t fid = 0; fid < num_features; ++fid) {
+
+    feature_t fid;
+    const feature_t feature_rest = num_features % num_feature_blocking;
+
+    for (fid = 0; fid < num_features - feature_rest; fid += num_feature_blocking) {
+        LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
+        histograms.clear(num_candidates * num_feature_blocking);
+
+        const Feature &feat0 = dataset->get_data()[fid];
+        const Feature &feat1 = dataset->get_data()[fid+1];
+        const Feature &feat2 = dataset->get_data()[fid+2];
+        const Feature &feat3 = dataset->get_data()[fid+3];
+
+        //TODO: unrolling
+        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
+            const int candidate = sample_to_candidate[sample_idx];
+            const gradient_t grad = gradients[sample_idx];
+
+            if (candidate != -1) {
+                const bin_t bin0 = feat0.bin_index[sample_idx];
+                const bin_t bin1 = feat1.bin_index[sample_idx];
+                const bin_t bin2 = feat2.bin_index[sample_idx];
+                const bin_t bin3 = feat3.bin_index[sample_idx];
+
+                histograms[bin0][candidate].update(1.0, grad);
+                histograms[bin1][candidate+num_candidates].update(1.0, grad);
+                histograms[bin2][candidate+num_candidates*2].update(1.0, grad);
+                histograms[bin3][candidate+num_candidates*3].update(1.0, grad);
+            }
+        }
+
+        histograms.cumulate(num_candidates * num_feature_blocking);
+
+        histograms.get_best_splits(num_candidates, fid, feat0, node_info, best_splits, min_data_in_leaf, 0);
+        histograms.get_best_splits(num_candidates, fid+1, feat1, node_info, best_splits, min_data_in_leaf, num_candidates);
+        histograms.get_best_splits(num_candidates, fid+2, feat2, node_info, best_splits, min_data_in_leaf, num_candidates*2);
+        histograms.get_best_splits(num_candidates, fid+3, feat3, node_info, best_splits, min_data_in_leaf, num_candidates*3);
+    }
+
+    for (; fid < num_features; ++fid) {
         LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
         const Feature &feat = dataset->get_data()[fid];
