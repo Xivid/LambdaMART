@@ -28,7 +28,7 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-	struct ALIGNED(8) Bin
+	struct ALIGNED(sizeof(gradient_t)*2) Bin
 	{
 		gradient_t sum_count, sum_gradients;
 
@@ -364,50 +364,71 @@ namespace LambdaMART {
                 return;
             }
 
-            const nodeidx_t node_blocking = 4;
-            const nodeidx_t node_rest = num_candidates % node_blocking;
+            const nodeidx_t simd_blocking = 8;
+            const nodeidx_t bins_per_register = 32 / sizeof(Bin);
+            const nodeidx_t overall_blocking = simd_blocking * bins_per_register;
+            const nodeidx_t node_rest = num_candidates % overall_blocking;
 
             nodeidx_t node;
-            for (node=0; node < num_candidates - node_rest; node += node_blocking)
+            for (node = 0; node < num_candidates - node_rest; node += overall_blocking)
             {
-                Bin* bins = _head[bin_cnt-1];
-                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                Bin* bins_high = _head[bin_cnt - 1] + node;
+
+                // get last bin
+                for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
                 {
-                    Bin* bins_tmp = _head[bin];
-                    for (nodeidx_t i = 0; i < node_blocking ; ++i)
-                    {
-                        bins_tmp[node+i] += bins[node+i];
+                    Bin* bins_low = _head[bin - 1] + node;
+
+                    // do `simd_blocking` simds, each simd adds `bins_per_register` bins to the lower row
+                    Bin* doubles_high = bins_high;
+                    Bin* doubles_low = bins_low;
+                    for (int i = 0; i < simd_blocking; i++) {
+                        __m256d high = _mm256_load_pd((gradient_t*) doubles_high);
+                        __m256d low = _mm256_load_pd((gradient_t*) doubles_low);
+                        _mm256_store_pd((gradient_t*) doubles_low, _mm256_add_pd(low, high));
+
+                        doubles_high += bins_per_register;
+                        doubles_low += bins_per_register;
                     }
-                    bins = bins_tmp;
-                }
-                Bin* bin0s = _data;
-                for (nodeidx_t i = 0; i < node_blocking; ++i)
-                {
-                    bin0s[node+i] += bins[node+i];
+
+                    bins_high = bins_low;
                 }
             }
 
-            Bin* bins = _head[bin_cnt-1];
-            for (bin_t bin = bin_cnt-2; bin > 0; --bin)
-            {
-                Bin* bins_tmp = _head[bin];
-                for (nodeidx_t i = 0; i < node_rest; ++i)
+            if (node_rest > 0) {
+                const nodeidx_t node_rest = num_candidates % bins_per_register;
+                for (; node < num_candidates - node_rest; node += bins_per_register)
                 {
-                    bins_tmp[node+i] += bins[node+i];
+                    // get last bin
+                    Bin* bins_high = _head[bin_cnt - 1] + node;
+
+                    for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
+                    {
+                        Bin* bins_low = _head[bin - 1] + node;
+
+                        __m256d high = _mm256_load_pd((gradient_t*) bins_high);
+                        __m256d low = _mm256_load_pd((gradient_t*) bins_low);
+                        _mm256_store_pd((gradient_t*) bins_low, _mm256_add_pd(low, high));
+
+                        bins_high = bins_low;
+                    }
                 }
-                bins = bins_tmp;
-            }
-            Bin* bin0s = _data;
-            for (nodeidx_t i = 0; i < node_rest; ++i)
-            {
-                bin0s[node+i] += bins[node+i];
+                if (node_rest > 0) {
+                    Bin* bins_high = _head[bin_cnt-1] + node;
+                    for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
+                    {
+                        Bin* bins_low = _head[bin - 1] + node;
+
+                        for (nodeidx_t i = 0; i < node_rest; ++i)
+                        {
+                            bins_low[i] += bins_high[i];
+                        }
+
+                        bins_high = bins_low;
+                    }
+                }
             }
 
-            //LOG_TRACE(" Bin # ");
-            //for (bin_t bin = 0; bin < bin_cnt; bin++)
-            //{
-            //    LOG_TRACE("\t%i\t%s", bin, bins[bin].toString().c_str());
-            //}
         }
 
         void get_best_splits(nodeidx_t num_candidates, feature_t fid,
@@ -571,24 +592,18 @@ namespace LambdaMART {
 
             for (nodeidx_t node = 0; node < num_candidates; ++node)
             {
-                auto* bestSplit = new Split(fid, bestThresholds[node]);
                 double splitGain = bestShiftedGains[node] - totalGains[node];
 
                 if (splitGain >= best_splits[node].gain) {
-                    auto local_best = SplitInfo(bestSplit, bestThresholdBins[node], splitGain, new NodeStats(*nodeInfo[node] - bestRightInfos[node]), new NodeStats(bestRightInfos[node]));
-                    best_splits[node] = local_best;
+                    best_splits[node] = SplitInfo(
+                            new Split(fid, bestThresholds[node]),
+                            bestThresholdBins[node],
+                            splitGain,
+                            new NodeStats(*nodeInfo[node] - bestRightInfos[node]),
+                            new NodeStats(bestRightInfos[node]));
                 }
             }
 
-
-            //LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
-            //LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);
-            //LOG_TRACE("bestThreshold: %lf", bestThreshold);
-            //LOG_TRACE("bestThresholdBin: %d", bestThresholdBin);
-            //LOG_TRACE("totalGain: %lf", totalGain);
-            //LOG_TRACE("splitGain: %lf", splitGain);
-
-            //return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
         }
 
     };
