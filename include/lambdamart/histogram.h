@@ -364,47 +364,71 @@ namespace LambdaMART {
                 return;
             }
 
-            const nodeidx_t bins_per_register = 2;
-            const nodeidx_t node_rest = num_candidates % bins_per_register;
+            const nodeidx_t simd_blocking = 8;
+            const nodeidx_t bins_per_register = 32 / sizeof(Bin);
+            const nodeidx_t overall_blocking = simd_blocking * bins_per_register;
+            const nodeidx_t node_rest = num_candidates % overall_blocking;
 
             nodeidx_t node;
-            for (node = 0; node < num_candidates - node_rest; node += bins_per_register)
+            for (node = 0; node < num_candidates - node_rest; node += overall_blocking)
             {
-                // get last bin
                 Bin* bins_high = _head[bin_cnt - 1] + node;
 
+                // get last bin
                 for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
                 {
                     Bin* bins_low = _head[bin - 1] + node;
 
-                    __m256d high = _mm256_load_pd((double*) bins_high);
-                    __m256d low = _mm256_load_pd((double*) bins_low);
-                    _mm256_store_pd((double*) bins_low, _mm256_add_pd(low, high));
+                    // do `simd_blocking` simds, each simd adds `bins_per_register` bins to the lower row
+                    Bin* doubles_high = bins_high;
+                    Bin* doubles_low = bins_low;
+                    for (int i = 0; i < simd_blocking; i++) {
+                        __m256d high = _mm256_load_pd((gradient_t*) doubles_high);
+                        __m256d low = _mm256_load_pd((gradient_t*) doubles_low);
+                        _mm256_store_pd((gradient_t*) doubles_low, _mm256_add_pd(low, high));
 
-                    bins_high = bins_low;
-                }
-            }
-
-            if (node_rest > 0) {
-                Bin* bins_high = _head[bin_cnt-1] + node;
-                for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
-                {
-                    Bin* bins_low = _head[bin - 1] + node;
-
-                    for (nodeidx_t i = 0; i < node_rest; ++i)
-                    {
-                        bins_low[i] += bins_high[i];
+                        doubles_high += bins_per_register;
+                        doubles_low += bins_per_register;
                     }
 
                     bins_high = bins_low;
                 }
             }
 
-            //LOG_TRACE(" Bin # ");
-            //for (bin_t bin = 0; bin < bin_cnt; bin++)
-            //{
-            //    LOG_TRACE("\t%i\t%s", bin, bins[bin].toString().c_str());
-            //}
+            if (node_rest > 0) {
+                const nodeidx_t node_rest = num_candidates % bins_per_register;
+                for (; node < num_candidates - node_rest; node += bins_per_register)
+                {
+                    // get last bin
+                    Bin* bins_high = _head[bin_cnt - 1] + node;
+
+                    for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
+                    {
+                        Bin* bins_low = _head[bin - 1] + node;
+
+                        __m256d high = _mm256_load_pd((gradient_t*) bins_high);
+                        __m256d low = _mm256_load_pd((gradient_t*) bins_low);
+                        _mm256_store_pd((gradient_t*) bins_low, _mm256_add_pd(low, high));
+
+                        bins_high = bins_low;
+                    }
+                }
+                if (node_rest > 0) {
+                    Bin* bins_high = _head[bin_cnt-1] + node;
+                    for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
+                    {
+                        Bin* bins_low = _head[bin - 1] + node;
+
+                        for (nodeidx_t i = 0; i < node_rest; ++i)
+                        {
+                            bins_low[i] += bins_high[i];
+                        }
+
+                        bins_high = bins_low;
+                    }
+                }
+            }
+
         }
 
         void get_best_splits(nodeidx_t num_candidates, feature_t fid,
