@@ -70,7 +70,6 @@ namespace LambdaMART {
             GetInt("max_label", &max_label);
             GetIntVector("eval_at", &eval_at);
             GetInt("eval_interval", &eval_interval);
-            GetInt("num_feature_blocking", &num_feature_blocking);
         }
 
 #pragma region Parameters

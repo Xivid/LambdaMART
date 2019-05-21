@@ -100,10 +100,12 @@ void TreeLearner::find_best_splits() {
                 const bin_t bin2 = feat2.bin_index[sample_idx];
                 const bin_t bin3 = feat3.bin_index[sample_idx];
 
-                histograms[candidate0*num_feature_blocking][bin0].update(1.0, gradients[sample_idx]);
-                histograms[candidate0*num_feature_blocking+1][bin1].update(1.0, gradients[sample_idx]);
-                histograms[candidate0*num_feature_blocking+2][bin2].update(1.0, gradients[sample_idx]);
-                histograms[candidate0*num_feature_blocking+3][bin3].update(1.0, gradients[sample_idx]);
+                const gradient_t grad = gradients[sample_idx];
+
+                histograms[candidate0*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate0*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate0*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate0*num_feature_blocking+3][bin3].update(1.0, grad);
             }
             if (candidate1 != -1) {
                 const bin_t bin0 = feat0.bin_index[sample_idx+1];
@@ -111,10 +113,12 @@ void TreeLearner::find_best_splits() {
                 const bin_t bin2 = feat2.bin_index[sample_idx+1];
                 const bin_t bin3 = feat3.bin_index[sample_idx+1];
 
-                histograms[candidate1*num_feature_blocking][bin0].update(1.0, gradients[sample_idx+1]);
-                histograms[candidate1*num_feature_blocking+1][bin1].update(1.0, gradients[sample_idx+1]);
-                histograms[candidate1*num_feature_blocking+2][bin2].update(1.0, gradients[sample_idx+1]);
-                histograms[candidate1*num_feature_blocking+3][bin3].update(1.0, gradients[sample_idx+1]);
+                const gradient_t grad = gradients[sample_idx+1];
+
+                histograms[candidate1*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate1*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate1*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate1*num_feature_blocking+3][bin3].update(1.0, grad);
             }
             if (candidate2 != -1) {
                 const bin_t bin0 = feat0.bin_index[sample_idx+2];
@@ -122,10 +126,12 @@ void TreeLearner::find_best_splits() {
                 const bin_t bin2 = feat2.bin_index[sample_idx+2];
                 const bin_t bin3 = feat3.bin_index[sample_idx+2];
 
-                histograms[candidate2*num_feature_blocking][bin0].update(1.0, gradients[sample_idx+2]);
-                histograms[candidate2*num_feature_blocking+1][bin1].update(1.0, gradients[sample_idx+2]);
-                histograms[candidate2*num_feature_blocking+2][bin2].update(1.0, gradients[sample_idx+2]);
-                histograms[candidate2*num_feature_blocking+3][bin3].update(1.0, gradients[sample_idx+2]);
+                const gradient_t grad = gradients[sample_idx+2];
+
+                histograms[candidate2*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate2*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate2*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate2*num_feature_blocking+3][bin3].update(1.0, grad);
             }
             if (candidate3 != -1) {
                 const bin_t bin0 = feat0.bin_index[sample_idx+3];
@@ -133,10 +139,12 @@ void TreeLearner::find_best_splits() {
                 const bin_t bin2 = feat2.bin_index[sample_idx+3];
                 const bin_t bin3 = feat3.bin_index[sample_idx+3];
 
-                histograms[candidate3*num_feature_blocking][bin0].update(1.0, gradients[sample_idx+3]);
-                histograms[candidate3*num_feature_blocking+1][bin1].update(1.0, gradients[sample_idx+3]);
-                histograms[candidate3*num_feature_blocking+2][bin2].update(1.0, gradients[sample_idx+3]);
-                histograms[candidate3*num_feature_blocking+3][bin3].update(1.0, gradients[sample_idx+3]);
+                const gradient_t grad = gradients[sample_idx+3];
+
+                histograms[candidate3*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate3*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate3*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate3*num_feature_blocking+3][bin3].update(1.0, grad);
             }
         }
         for (; sample_idx < num_samples; ++sample_idx)
@@ -148,10 +156,12 @@ void TreeLearner::find_best_splits() {
                 const bin_t bin2 = feat2.bin_index[sample_idx];
                 const bin_t bin3 = feat3.bin_index[sample_idx];
 
-                histograms[candidate*num_feature_blocking][bin0].update(1.0, gradients[sample_idx]);
-                histograms[candidate*num_feature_blocking+1][bin1].update(1.0, gradients[sample_idx]);
-                histograms[candidate*num_feature_blocking+2][bin2].update(1.0, gradients[sample_idx]);
-                histograms[candidate*num_feature_blocking+3][bin3].update(1.0, gradients[sample_idx]);
+                const gradient_t grad = gradients[sample_idx];
+
+                histograms[candidate*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate*num_feature_blocking+3][bin3].update(1.0, grad);
             }
         }
 
