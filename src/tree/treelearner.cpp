@@ -1,6 +1,5 @@
 #include <lambdamart/treelearner.h>
 #include <numeric>
-
 namespace LambdaMART {
 
 
@@ -127,6 +126,7 @@ void TreeLearner::find_best_splits() {
 
         histograms.get_best_splits(num_candidates, fid, feat, node_info, best_splits, min_data_in_leaf);
     }
+
 }
 
 void TreeLearner::perform_split()
