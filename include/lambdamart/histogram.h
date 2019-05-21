@@ -28,7 +28,7 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-	struct ALIGNED(8) Bin
+	struct ALIGNED(sizeof(gradient_t)*2) Bin
 	{
 		gradient_t sum_count, sum_gradients;
 
@@ -364,43 +364,40 @@ namespace LambdaMART {
                 return;
             }
 
-            const nodeidx_t node_blocking = 4;
-            const nodeidx_t node_rest = num_candidates % node_blocking;
+            const nodeidx_t bins_per_register = 2;
+            const nodeidx_t node_rest = num_candidates % bins_per_register;
 
             nodeidx_t node;
-            for (node=0; node < num_candidates - node_rest; node += node_blocking)
+            for (node = 0; node < num_candidates - node_rest; node += bins_per_register)
             {
-                Bin* bins = _head[bin_cnt-1];
-                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                // get last bin
+                Bin* bins_high = _head[bin_cnt - 1] + node;
+
+                for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
                 {
-                    Bin* bins_tmp = _head[bin];
-                    for (nodeidx_t i = 0; i < node_blocking ; ++i)
-                    {
-                        bins_tmp[node+i] += bins[node+i];
-                    }
-                    bins = bins_tmp;
-                }
-                Bin* bin0s = _data;
-                for (nodeidx_t i = 0; i < node_blocking; ++i)
-                {
-                    bin0s[node+i] += bins[node+i];
+                    Bin* bins_low = _head[bin - 1] + node;
+
+                    __m256d high = _mm256_load_pd((double*) bins_high);
+                    __m256d low = _mm256_load_pd((double*) bins_low);
+                    _mm256_store_pd((double*) bins_low, _mm256_add_pd(low, high));
+
+                    bins_high = bins_low;
                 }
             }
 
-            Bin* bins = _head[bin_cnt-1];
-            for (bin_t bin = bin_cnt-2; bin > 0; --bin)
-            {
-                Bin* bins_tmp = _head[bin];
-                for (nodeidx_t i = 0; i < node_rest; ++i)
+            if (node_rest > 0) {
+                Bin* bins_high = _head[bin_cnt-1] + node;
+                for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
                 {
-                    bins_tmp[node+i] += bins[node+i];
+                    Bin* bins_low = _head[bin - 1] + node;
+
+                    for (nodeidx_t i = 0; i < node_rest; ++i)
+                    {
+                        bins_low[i] += bins_high[i];
+                    }
+
+                    bins_high = bins_low;
                 }
-                bins = bins_tmp;
-            }
-            Bin* bin0s = _data;
-            for (nodeidx_t i = 0; i < node_rest; ++i)
-            {
-                bin0s[node+i] += bins[node+i];
             }
 
             //LOG_TRACE(" Bin # ");
