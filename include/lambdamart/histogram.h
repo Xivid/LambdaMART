@@ -364,20 +364,43 @@ namespace LambdaMART {
                 return;
             }
 
+            const nodeidx_t node_blocking = 4;
+            const nodeidx_t node_rest = num_candidates % node_blocking;
+
+            nodeidx_t node;
+            for (node=0; node < num_candidates - node_rest; node += node_blocking)
+            {
+                Bin* bins = _head[bin_cnt-1];
+                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                {
+                    Bin* bins_tmp = _head[bin];
+                    for (nodeidx_t i = 0; i < node_blocking ; ++i)
+                    {
+                        bins_tmp[node+i] += bins[node+i];
+                    }
+                    bins = bins_tmp;
+                }
+                Bin* bin0s = _data;
+                for (nodeidx_t i = 0; i < node_blocking; ++i)
+                {
+                    bin0s[node+i] += bins[node+i];
+                }
+            }
+
             Bin* bins = _head[bin_cnt-1];
             for (bin_t bin = bin_cnt-2; bin > 0; --bin)
             {
                 Bin* bins_tmp = _head[bin];
-                for (nodeidx_t node = 0; node < num_candidates; ++node)
+                for (nodeidx_t i = 0; i < node_rest; ++i)
                 {
-                    bins_tmp[node] += bins[node];
+                    bins_tmp[node+i] += bins[node+i];
                 }
                 bins = bins_tmp;
             }
             Bin* bin0s = _data;
-            for (nodeidx_t node = 0; node < num_candidates; ++node)
+            for (nodeidx_t i = 0; i < node_rest; ++i)
             {
-                bin0s[node] += bins[node];
+                bin0s[node+i] += bins[node+i];
             }
 
             //LOG_TRACE(" Bin # ");
