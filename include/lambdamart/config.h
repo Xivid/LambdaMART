@@ -132,8 +132,8 @@ namespace LambdaMART {
         // desc = evaluate training and validation ndcg every ``eval_interval`` iterations
         int eval_interval = 1;
 
-        int num_feature_blocking = 4;
-        int num_sample_blocking = 4;
+        const int num_feature_blocking = 4;
+        const int num_sample_blocking = 4;
 
 #pragma endregion
 
