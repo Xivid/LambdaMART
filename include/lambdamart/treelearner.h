@@ -136,6 +136,9 @@ public:
         histograms.init(config->max_splits*num_feature_blocking, config->max_bin);
     }
 
+    // perf
+    int64_t sum_cycles_cumulate = 0;
+
 private:
     struct SplitCandidate
     {
@@ -191,6 +194,7 @@ private:
     void   find_best_splits();
     void   perform_split();
     double get_sample_score(sample_t sid) { return node_to_output[sample_to_node[sid]]; };
+
 };
 
 }

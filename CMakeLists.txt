@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -mavx -mfma -save-temps")
 
 include_directories(include)
 file (GLOB SOURCES
+        src/perf/*.cpp
         src/model/*.cpp
         src/dataset/*.cpp
         src/tree/*.cpp)
