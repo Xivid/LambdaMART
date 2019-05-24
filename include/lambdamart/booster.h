@@ -2,6 +2,7 @@
 #define LAMBDAMART_BOOSTER_H
 
 #include <lambdamart/model.h>
+#include <lambdamart/config.h>
 
 namespace LambdaMART {
     class Booster {
@@ -9,15 +10,15 @@ namespace LambdaMART {
         RawDataset*               valid_dataset;
         Config*                   config;
         uint64_t                  num_samples;
-        std::vector<double>       current_scores;
-        std::vector<double>       gradients;
-        std::vector<double>       hessians;
+        std::vector<gradient_t>   current_scores;
+        std::vector<gradient_t>   gradients;
+        std::vector<gradient_t>   hessians;
         LambdaRank*               train_ranker;
         LambdaRank*               valid_ranker;
         Model*                    model;
 
         inline string get_train_ndcg_string() {
-            vector<double> result = train_ranker->eval(current_scores.data());
+            vector<float> result = train_ranker->eval(current_scores.data());
             string tmp;
             for (size_t i = 0 ; i < result.size(); ++i) {
                 tmp += "\ttrain-ndcg@" + to_string(config->eval_at[i]) + ":" + to_string(result[i]);
@@ -26,8 +27,8 @@ namespace LambdaMART {
         }
 
         inline string get_valid_ndcg_string() {
-            vector<double> predictions = model->predict(valid_dataset);
-            vector<double> result = valid_ranker->eval(predictions.data());
+            vector<float> predictions = model->predict(valid_dataset);
+            vector<float> result = valid_ranker->eval(predictions.data());
             string tmp;
             for (size_t i = 0 ; i < result.size(); ++i) {
                 tmp += "\tvalid-ndcg@" + to_string(config->eval_at[i]) + ":" + to_string(result[i]);

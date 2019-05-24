@@ -4,10 +4,10 @@
 namespace LambdaMART {
 
 
-vector<double> Model::predict(RawDataset* data) {
+vector<float> Model::predict(RawDataset* data) {
     size_t num_iter = trees.size();
     sample_t num_data = data->num_samples();
-    vector<double> predictions(num_data);
+    vector<float> predictions(num_data);
     for (sample_t i = 0; i < num_data; ++i) {
         score_t score = 0.0f;
         for (size_t m = 0; m < num_iter; ++m) {
@@ -18,10 +18,10 @@ vector<double> Model::predict(RawDataset* data) {
     return predictions;
 }
 
-vector<double> Model::predict(RawDataset* data, const string& output_path) {
+vector<float> Model::predict(RawDataset* data, const string& output_path) {
     size_t num_iter = trees.size();
     sample_t num_data = data->num_samples();
-    vector<double> predictions(num_data);
+    vector<float> predictions(num_data);
     for (sample_t i = 0; i < num_data; ++i) {
         score_t score = 0.0f;
         for (size_t m = 0; m < num_iter; ++m) {

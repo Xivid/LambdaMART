@@ -273,7 +273,7 @@ namespace LambdaMART {
 			}
 
 			auto* bestSplit = new Split(fid, bestThreshold);
-			double splitGain = bestShiftedGain - totalGain;
+			float splitGain = bestShiftedGain - totalGain;
 
             LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
             LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);
@@ -364,7 +364,7 @@ namespace LambdaMART {
                 return;
             }
 
-            const nodeidx_t simd_blocking = 6;
+            const nodeidx_t simd_blocking = 8;
             const nodeidx_t bins_per_register = 32 / sizeof(Bin);
             const nodeidx_t overall_blocking = simd_blocking * bins_per_register;
             const nodeidx_t node_rest = num_candidates % overall_blocking;
@@ -380,15 +380,15 @@ namespace LambdaMART {
                     Bin* bins_low = _head[bin - 1] + node;
 
                     // do `simd_blocking` simds, each simd adds `bins_per_register` bins to the lower row
-                    Bin* doubles_high = bins_high;
-                    Bin* doubles_low = bins_low;
+                    Bin* floats_high = bins_high;
+                    Bin* floats_low = bins_low;
                     for (int i = 0; i < simd_blocking; i++) {
-                        __m256d high = _mm256_load_pd((gradient_t*) doubles_high);
-                        __m256d low = _mm256_load_pd((gradient_t*) doubles_low);
-                        _mm256_store_pd((gradient_t*) doubles_low, _mm256_add_pd(low, high));
+                        __m256 high = _mm256_load_ps((gradient_t*) floats_high);
+                        __m256 low = _mm256_load_ps((gradient_t*) floats_low);
+                        _mm256_store_ps((gradient_t*) floats_low, _mm256_add_ps(low, high));
 
-                        doubles_high += bins_per_register;
-                        doubles_low += bins_per_register;
+                        floats_high += bins_per_register;
+                        floats_low += bins_per_register;
                     }
 
                     bins_high = bins_low;
@@ -406,9 +406,9 @@ namespace LambdaMART {
                     {
                         Bin* bins_low = _head[bin - 1] + node;
 
-                        __m256d high = _mm256_load_pd((gradient_t*) bins_high);
-                        __m256d low = _mm256_load_pd((gradient_t*) bins_low);
-                        _mm256_store_pd((gradient_t*) bins_low, _mm256_add_pd(low, high));
+                        __m256 high = _mm256_load_ps((gradient_t*) bins_high);
+                        __m256 low = _mm256_load_ps((gradient_t*) bins_low);
+                        _mm256_store_ps((gradient_t*) bins_low, _mm256_add_ps(low, high));
 
                         bins_high = bins_low;
                     }
