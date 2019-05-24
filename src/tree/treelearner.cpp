@@ -104,10 +104,12 @@ void TreeLearner::find_best_splits() {
         histograms.cumulate(num_candidates * num_feature_blocking);
         sum_cycles_cumulate += cycles_count_stop();
 
+        cycles_count_start();
         histograms.get_best_splits(num_candidates, fid, feat0, node_info, best_splits, min_data_in_leaf, 0);
         histograms.get_best_splits(num_candidates, fid+1, feat1, node_info, best_splits, min_data_in_leaf, num_candidates);
         histograms.get_best_splits(num_candidates, fid+2, feat2, node_info, best_splits, min_data_in_leaf, num_candidates*2);
         histograms.get_best_splits(num_candidates, fid+3, feat3, node_info, best_splits, min_data_in_leaf, num_candidates*3);
+        sum_cycles_getbestsplits += cycles_count_stop();
     }
 
     for (; fid < num_features; ++fid) {
