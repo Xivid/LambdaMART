@@ -26,7 +26,7 @@ Model* Booster::train() {
             Log::Info("[%d]%s%s", iter, get_train_ndcg_string().c_str(), valid_dataset ? get_valid_ndcg_string().c_str() : "");
     }
 
-    Log::Info("sum cycles cumulate: %ld, sum cycles get_best_splits: %ld", treeLearner->sum_cycles_cumulate, treeLearner->sum_cycles_getbestsplits);
+    Log::Info("sum cycles (update, cumulate, get_best_splits): (%ld, %ld, %ld)", treeLearner->sum_cycles_update, treeLearner->sum_cycles_cumulate, treeLearner->sum_cycles_getbestsplits);
     return model;
 }
 

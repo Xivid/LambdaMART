@@ -83,6 +83,7 @@ void TreeLearner::find_best_splits() {
         const Feature &feat3 = dataset->get_data()[fid+3];
 
         //TODO: unrolling
+        cycles_count_start();
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
 
@@ -99,6 +100,7 @@ void TreeLearner::find_best_splits() {
                 histograms[bin3][candidate+num_candidates*3].update(1.0, grad);
             }
         }
+        sum_cycles_update += cycles_count_stop();
 
         cycles_count_start();
         histograms.cumulate(num_candidates * num_feature_blocking);
