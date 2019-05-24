@@ -364,7 +364,7 @@ namespace LambdaMART {
                 return;
             }
 
-            const nodeidx_t simd_blocking = 8;
+            const nodeidx_t simd_blocking = 6;
             const nodeidx_t bins_per_register = 32 / sizeof(Bin);
             const nodeidx_t overall_blocking = simd_blocking * bins_per_register;
             const nodeidx_t node_rest = num_candidates % overall_blocking;

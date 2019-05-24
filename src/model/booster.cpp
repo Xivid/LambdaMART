@@ -1,3 +1,4 @@
+#include <lambdamart/perf.h>
 #include <lambdamart/booster.h>
 
 namespace LambdaMART {
@@ -25,6 +26,7 @@ Model* Booster::train() {
             Log::Info("[%d]%s%s", iter, get_train_ndcg_string().c_str(), valid_dataset ? get_valid_ndcg_string().c_str() : "");
     }
 
+    Log::Info("sum cycles cumulate: %ld", treeLearner->sum_cycles_cumulate);
     return model;
 }
 

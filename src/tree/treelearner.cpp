@@ -1,7 +1,7 @@
+#include <lambdamart/perf.h>
 #include <lambdamart/treelearner.h>
 #include <numeric>
 namespace LambdaMART {
-
 
 Tree* TreeLearner::build_new_tree()
 {
@@ -100,7 +100,9 @@ void TreeLearner::find_best_splits() {
             }
         }
 
+        cycles_count_start();
         histograms.cumulate(num_candidates * num_feature_blocking);
+        sum_cycles_cumulate += cycles_count_stop();
 
         histograms.get_best_splits(num_candidates, fid, feat0, node_info, best_splits, min_data_in_leaf, 0);
         histograms.get_best_splits(num_candidates, fid+1, feat1, node_info, best_splits, min_data_in_leaf, num_candidates);
@@ -122,7 +124,9 @@ void TreeLearner::find_best_splits() {
             }
         }
 
+        cycles_count_start();
         histograms.cumulate(num_candidates);
+        sum_cycles_cumulate += cycles_count_stop();
 
         histograms.get_best_splits(num_candidates, fid, feat, node_info, best_splits, min_data_in_leaf);
     }

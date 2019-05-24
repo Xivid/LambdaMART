@@ -12,6 +12,7 @@
 #include <lambdamart/booster.h>
 #include <lambdamart/model.h>
 #include <lambdamart/log.h>
+#include <lambdamart/perf.h>
 
 namespace LambdaMART {
 
