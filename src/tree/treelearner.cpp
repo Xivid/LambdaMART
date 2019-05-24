@@ -85,13 +85,13 @@ void TreeLearner::find_best_splits() {
         //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
-            const gradient_t grad = gradients[sample_idx];
 
             if (candidate != -1) {
                 const bin_t bin0 = feat0.bin_index[sample_idx];
                 const bin_t bin1 = feat1.bin_index[sample_idx];
                 const bin_t bin2 = feat2.bin_index[sample_idx];
                 const bin_t bin3 = feat3.bin_index[sample_idx];
+                const gradient_t grad = gradients[sample_idx];
 
                 histograms[bin0][candidate].update(1.0, grad);
                 histograms[bin1][candidate+num_candidates].update(1.0, grad);
