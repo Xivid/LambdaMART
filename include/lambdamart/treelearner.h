@@ -138,6 +138,7 @@ public:
 
     // perf
     int64_t sum_cycles_cumulate = 0;
+    int64_t sum_cycles_getbestsplits = 0;
 
 private:
     struct SplitCandidate
