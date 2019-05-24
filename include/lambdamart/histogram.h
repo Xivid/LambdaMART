@@ -462,9 +462,9 @@ namespace LambdaMART {
 
             nodeidx_t node = 0;
 
-            __m256d min_leaf = _mm256_set1_pd((double)minInstancesPerNode);
-            score_t     gains[2*bins_per_register];
-            double      masks[2*bins_per_register];
+            __m256 min_leaf = _mm256_set1_ps((float)minInstancesPerNode);
+            score_t gains[2*bins_per_register];
+            score_t masks[2*bins_per_register];
 
             for (; node < num_candidates - node_rest; node += 2 * bins_per_register)
             {
@@ -476,92 +476,65 @@ namespace LambdaMART {
                     const Bin* bins = _head[i]+offset;
                     bin_t threshBin = i - 1;
 
-                    __m256d cgcg0    = _mm256_load_pd((gradient_t*) (bin0s+node));
-                    __m256d cgcg0_gt = _mm256_load_pd((gradient_t*) (bins+node));
-                    __m256d cgcg0_lte= _mm256_sub_pd(cgcg0, cgcg0_gt);
+                    __m256 cgcg0    = _mm256_load_ps((gradient_t*) (bin0s+node));
+                    __m256 cgcg0_gt = _mm256_load_ps((gradient_t*) (bins+node));
+                    __m256 cgcg0_lte= _mm256_sub_ps(cgcg0, cgcg0_gt);
 
-                    __m256d cgcg1    = _mm256_load_pd((gradient_t*) (bin0s+node+bins_per_register));
-                    __m256d cgcg1_gt = _mm256_load_pd((gradient_t*) (bins+node+bins_per_register));
-                    __m256d cgcg1_lte= _mm256_sub_pd(cgcg1, cgcg1_gt);
+                    __m256 cgcg1    = _mm256_load_ps((gradient_t*) (bin0s+node+bins_per_register));
+                    __m256 cgcg1_gt = _mm256_load_ps((gradient_t*) (bins+node+bins_per_register));
+                    __m256 cgcg1_lte= _mm256_sub_ps(cgcg1, cgcg1_gt);
 
-                    __m256d cccc_gt  = _mm256_unpacklo_pd(cgcg0_gt, cgcg1_gt);
-                    __m256d gggg_gt  = _mm256_unpackhi_pd(cgcg0_gt, cgcg1_gt);
+                    __m256 cccc_gt  = _mm256_shuffle_ps(cgcg0_gt, cgcg1_gt, 0b10001000);
+                    __m256 gggg_gt  = _mm256_shuffle_ps(cgcg0_gt, cgcg1_gt, 0b11011101);
+                    //__m256 cccc_gt  = _mm256_unpacklo_pd(cgcg0_gt, cgcg1_gt);
+                    //__m256 gggg_gt  = _mm256_unpackhi_pd(cgcg0_gt, cgcg1_gt);
 
-                    __m256d cccc_lte = _mm256_unpacklo_pd(cgcg0_lte, cgcg1_lte);
-                    __m256d gggg_lte = _mm256_unpackhi_pd(cgcg0_lte, cgcg1_lte);
+                    __m256 cccc_lte  = _mm256_shuffle_ps(cgcg0_lte, cgcg1_lte, 0b10001000);
+                    __m256 gggg_lte  = _mm256_shuffle_ps(cgcg0_lte, cgcg1_lte, 0b11011101);
+                    //__m256 cccc_lte = _mm256_unpacklo_pd(cgcg0_lte, cgcg1_lte);
+                    //__m256 gggg_lte = _mm256_unpackhi_pd(cgcg0_lte, cgcg1_lte);
 
-                    __m256d mask_gt  = _mm256_cmp_pd(cccc_gt, min_leaf, _CMP_GE_OS);
-                    __m256d mask_lte = _mm256_cmp_pd(cccc_lte, min_leaf, _CMP_GE_OS);
+                    __m256 mask_gt  = _mm256_cmp_ps(cccc_gt, min_leaf, _CMP_GE_OS);
+                    __m256 mask_lte = _mm256_cmp_ps(cccc_lte, min_leaf, _CMP_GE_OS);
 
-                    __m256d _mm_mask = _mm256_and_pd(mask_gt, mask_lte);
+                    __m256 _mm_mask = _mm256_and_ps(mask_gt, mask_lte);
 
-                    __m256d gain_gt  = _mm256_div_pd(gggg_gt, cccc_gt);
-                    __m256d gain_lte = _mm256_div_pd(gggg_lte, cccc_lte);
+                    __m256 gain_gt  = _mm256_div_ps(gggg_gt, cccc_gt);
+                    __m256 gain_lte = _mm256_div_ps(gggg_lte, cccc_lte);
 
-                    __m256d _mm_gain = _mm256_mul_pd(gain_gt, gggg_gt);
-                    _mm_gain         = _mm256_fmadd_pd(gain_lte, gggg_lte, _mm_gain);
+                    __m256 _mm_gain = _mm256_mul_ps(gain_gt, gggg_gt);
+                    _mm_gain        = _mm256_fmadd_ps(gain_lte, gggg_lte, _mm_gain);
 
                     //TODO: not sure if worth it
-                    __m256d best_gain = _mm256_load_pd(&bestShiftedGains[node]);
-                    //_mm_mask          = _mm256_and_pd(_mm_mask,
-                    //                        _mm256_cmp_pd(_mm_gain, best_gain, _CMP_GE_OS));
+                    //__m256 best_gain = _mm256_load_ps(&bestShiftedGains[node]);
+                    //_mm_mask         = _mm256_and_ps(_mm_mask,
+                    //                        _mm256_cmp_ps(_mm_gain, best_gain, _CMP_GE_OS));
 
                     //__m256d mask0 = _mm256_setzero_pd();
                     //_mm_mask = _mm256_and_pd(_mm_mask, mask0);
 
-                    _mm256_store_pd(masks, _mm_mask);
-                    _mm256_store_pd(gains, _mm_gain);
+                    _mm256_store_ps(masks, _mm_mask);
+                    _mm256_store_ps(gains, _mm_gain);
 
                     LOG_TRACE("mask: %lf %lf %lf %lf", masks[0], masks[1], masks[2], masks[3]);
                     LOG_TRACE("gain: %lf %lf %lf %lf", gains[0], gains[1], gains[2], gains[3]);
 
-                    if(isnan(masks[0]))
+                    int remap[] = {0, 1, 4, 5, 2, 3, 6, 7};
+
+                    for(bin_t b = 0; b < 2 * bins_per_register; ++b)
                     {
-                        //check TODO at line 482
-                        score_t currentShiftedGain = gains[0];
-                        if (currentShiftedGain > bestShiftedGains[node])
+                        if(isnan(masks[b]))
                         {
-                            bestRightInfos[node] = bins[node];
-                            bestShiftedGains[node] = gains[0];
-                            LOG_TRACE("\tbestShiftGain updated to: %lf, node: %d", bestShiftedGains[node], node);
-                            bestThresholds[node] = temp_threshold[threshBin];
-                            bestThresholdBins[node] = threshBin;
-                        }
-                    }
-                    if(isnan(masks[2]))
-                    {
-                        score_t currentShiftedGain = gains[2];
-                        if (currentShiftedGain > bestShiftedGains[node+1])
-                        {
-                            bestRightInfos[node+1] = bins[node+1];
-                            bestShiftedGains[node+1] = gains[2];
-                            LOG_TRACE("\tbestShiftGain updated to: %lf, node: %d", bestShiftedGains[node+1], node+1);
-                            bestThresholds[node+1] = temp_threshold[threshBin];
-                            bestThresholdBins[node+1] = threshBin;
-                        }
-                    }
-                    if(isnan(masks[1]))
-                    {
-                        score_t currentShiftedGain = gains[1];
-                        if (currentShiftedGain > bestShiftedGains[node+2])
-                        {
-                            bestRightInfos[node+2] = bins[node+2];
-                            bestShiftedGains[node+2] = gains[1];
-                            LOG_TRACE("\tbestShiftGain updated to: %lf, node: %d", bestShiftedGains[node+2], node+2);
-                            bestThresholds[node+2] = temp_threshold[threshBin];
-                            bestThresholdBins[node+2] = threshBin;
-                        }
-                    }
-                    if(isnan(masks[3]))
-                    {
-                        score_t currentShiftedGain = gains[3];
-                        if (currentShiftedGain > bestShiftedGains[node+3])
-                        {
-                            bestRightInfos[node+3] = bins[node+3];
-                            bestShiftedGains[node+3] = gains[3];
-                            LOG_TRACE("\tbestShiftGain updated to: %lf, node: %d", bestShiftedGains[node+3], node+3);
-                            bestThresholds[node+3] = temp_threshold[threshBin];
-                            bestThresholdBins[node+3] = threshBin;
+                            bin_t bin_o = node + remap[b];
+                            score_t currentShiftedGain = gains[b];
+                            if (currentShiftedGain > bestShiftedGains[bin_o])
+                            {
+                                bestRightInfos[bin_o] = bins[bin_o];
+                                bestShiftedGains[bin_o] = gains[b];
+                                LOG_TRACE("\tbestShiftGain updated to: %lf, node: %d", bestShiftedGains[bin_o], bin_o);
+                                bestThresholds[bin_o] = temp_threshold[threshBin];
+                                bestThresholdBins[bin_o] = threshBin;
+                            }
                         }
                     }
                 }
