@@ -79,26 +79,28 @@ namespace LambdaMART {
             double* const hist_base_addr = (double*) (&histograms[0][0]);
 
             const int size_hist_one_row = 255*16; //sizeof(histograms[0]);
-            const __m256i hist_offset = _mm256_set1_epi32(size_hist_one_row);
+            const __m256i hist_offset = _mm256_set1_epi64x(size_hist_one_row);
 
             const int size_hist_one_bin = sizeof(histograms[0][0]);
             const __m256i bin_size_offset = _mm256_set1_epi64x(size_hist_one_bin);
 
             const __m256i mones = _mm256_set1_epi64x(-1);
-            const __m256i zeros = _mm256_set1_epi64x(0);
+            const __m256d zeros = _mm256_setzero_pd();
             const __m256d ones = _mm256_set1_pd(1);
             const __m256i fours = _mm256_set1_epi64x(4);
             const __m256i eights = _mm256_set1_epi64x(8);
-            __m256i first_ones = zeros;
 
-            long long store_mask[4] = {1, 0, 0, 0};
-            const __m256i store_mask_vec = _mm256_loadu_si256((__m256i*)&(store_mask[0]));
-            const __m256i one_MASK_STORE = _mm256_cmpgt_epi64(store_mask_vec, zeros);
+            const __m256i upper_MASK_STORE = _mm256_set_epi64x(-1, -1, 0, 0);
+            const __m256i lower_MASK_STORE = _mm256_set_epi64x(0, 0, -1, -1);
 
-            int iterations = num_samples/4;
-            for (sample_t sample_idx = 0; sample_idx < iterations*4; sample_idx += 4) {
-                const __m256i candidate_vec = _mm256_lddqu_si256((__m256i*) &(sample_to_candidate[sample_idx]));
-                const __m256i bin_idx_vec = _mm256_lddqu_si256((__m256i*) &(feat.bin_index[sample_idx]));
+            const sample_t remaining = num_samples % 4;
+            sample_t sample_idx = 0;
+            for (; sample_idx < num_samples - remaining; sample_idx += 4) {
+                const __m128i candidate_vec32 = _mm_load_si128((__m128i*) &(sample_to_candidate[sample_idx]));
+                const __m128i bin_idx_vec32 = _mm_load_si128((__m128i*) &(feat.bin_index[sample_idx]));
+
+                const __m256i candidate_vec = _mm256_cvtepu32_epi64(candidate_vec32);
+                const __m256i bin_idx_vec = _mm256_cvtepu32_epi64(bin_idx_vec32);
 
                 //cand*histoff + bin*binoffset
                 const __m256i candidate_off = _mm256_mul_epi32(candidate_vec, hist_offset);
@@ -107,8 +109,7 @@ namespace LambdaMART {
 //        const __m256i final_hist_ptr = _mm256_add_epi32(hist_base_vec, total_offset);
 
                 const __m256i not_one_MASK = _mm256_cmpgt_epi64(candidate_vec, mones);
-                const __m256 not_one_MASK_float = _mm256_cvtepi32_ps(not_one_MASK);
-                const __m256d not_one_MASK_dbl = _mm256_castps_pd(not_one_MASK_float);
+                const __m256d not_one_MASK_dbl = _mm256_castps_pd(not_one_MASK);
 
                 const __m256d gradients_vec = _mm256_loadu_pd(&(gradients[sample_idx]));
 
@@ -116,42 +117,41 @@ namespace LambdaMART {
                 const __m256i sum_counts_ptr = total_offset; //_mm256_add_epi32(total_offset, fours);
                 const __m256i sum_gradients_ptr = _mm256_add_epi64(total_offset, eights);
 
-                const __m256d sum_counts_val = _mm256_mask_i64gather_pd(ones, hist_base_addr, sum_counts_ptr, not_one_MASK_dbl, 1);
-                const __m256d sum_gradients_val = _mm256_mask_i64gather_pd(ones, hist_base_addr, sum_gradients_ptr, not_one_MASK_dbl, 1);
+                const __m256d sum_counts_val = _mm256_mask_i64gather_pd(zeros, hist_base_addr, sum_counts_ptr, not_one_MASK_dbl, 1);
+                const __m256d sum_gradients_val = _mm256_mask_i64gather_pd(zeros, hist_base_addr, sum_gradients_ptr, not_one_MASK_dbl, 1);
 
-                const __m256d new_sum_counts_val = _mm256_add_pd(sum_counts_val, ones);
-                const __m256d new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, gradients_vec);
+                const __m256d new_sum_counts_val = _mm256_add_pd(sum_counts_val, _mm256_and_pd(ones, not_one_MASK_dbl));
+                const __m256d new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, _mm256_and_pd(gradients_vec, not_one_MASK_dbl));
+
+                const __m256d c1g1c3g3 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0);
+                const __m256d c2g2c4g4 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0xF);
+                const __m256d store_mask13 = _mm256_cmp_pd(c1g1c3g3, zeros, _CMP_NEQ_UQ);
+                const __m256d store_mask24 = _mm256_cmp_pd(c2g2c4g4, zeros, _CMP_NEQ_UQ);
                 int offset;
-                const int candidate = sample_to_candidate[sample_idx];
-                const int bin = feat.bin_index[sample_idx];
 
-                const int i0 = 0;
-                offset = _mm256_extract_epi64(total_offset, i0);
-                double* a = hist_base_addr + offset/8;
-                double* b = a + 1;
-                _mm256_maskstore_pd(a, one_MASK_STORE , new_sum_counts_val);
-                _mm256_maskstore_pd(b, one_MASK_STORE , new_sum_gradients_val);
-
-                const int i1 = 1;
+                const int i1 = 0;
                 offset = _mm256_extract_epi64(total_offset, i1);
-                a = hist_base_addr + offset/8;
-                b = a + 1;
-                _mm256_maskstore_pd(a, one_MASK_STORE , new_sum_counts_val);
-                _mm256_maskstore_pd(b, one_MASK_STORE , new_sum_gradients_val);
+                double* a = hist_base_addr + offset/8;
+                __m256d final_mask = _mm256_and_pd(lower_MASK_STORE, store_mask13);
+                _mm256_maskstore_pd(a, final_mask, c1g1c3g3);
 
-                const int i2 = 2;
+                const int i3 = 2;
+                offset = _mm256_extract_epi64(total_offset, i3);
+                a = hist_base_addr + offset/8 - 2;
+                final_mask = _mm256_and_pd(upper_MASK_STORE, store_mask13);
+                _mm256_maskstore_pd(a, final_mask, c1g1c3g3);
+
+                const int i2 = 1;
                 offset = _mm256_extract_epi64(total_offset, i2);
                 a = hist_base_addr + offset/8;
-                b = a + 1;
-                _mm256_maskstore_pd(a, one_MASK_STORE , new_sum_counts_val);
-                _mm256_maskstore_pd(b, one_MASK_STORE , new_sum_gradients_val);
+                final_mask = _mm256_and_pd(lower_MASK_STORE, store_mask24);
+                _mm256_maskstore_pd(a, final_mask, c2g2c4g4);
 
-                const int i3 = 3;
-                offset = _mm256_extract_epi64(total_offset, i3);
-                a = hist_base_addr + offset/8;
-                b = a + 1;
-                _mm256_maskstore_pd(a, one_MASK_STORE , new_sum_counts_val);
-                _mm256_maskstore_pd(b, one_MASK_STORE , new_sum_gradients_val);
+                const int i4 = 3;
+                offset = _mm256_extract_epi64(total_offset, i4);
+                a = hist_base_addr + offset/8 - 2;
+                final_mask = _mm256_and_pd(upper_MASK_STORE, store_mask24);
+                _mm256_maskstore_pd(a, final_mask, c2g2c4g4);
 
 //            cout<<"offset: "<<offset<<",\tnew addr[COUNT]:"<<hist_base_addr + offset/8 <<",\tnew addr[GRAD]:"<<hist_base_addr + offset/8 + 1<<",\tval[count]:"<<*(hist_base_addr + offset/8)
 //            <<",\tval[grad]:"<<*(hist_base_addr + offset/8 + 1) <<",\tcorrect_addr[count]:"<<&(histograms[candidate][bin].sum_count)
@@ -164,6 +164,15 @@ namespace LambdaMART {
 //                <<",\tcorrect_addr[grad]:"<<&(histograms[candidate][bin].sum_gradients)<<",\tcand:"<<candidate<<",\tbin:"<<bin<<",\t correct val[count]:"<<histograms[candidate][bin].sum_count
 //                <<"correct val[grad]:"<<histograms[candidate][bin].sum_gradients<<endl;
 //            cout<<endl;
+            }
+
+            for (; sample_idx < num_samples; sample_idx++)
+            {
+                const int candidate = sample_to_candidate[sample_idx];
+                if (candidate != -1) {
+                    const bin_t bin = feat.bin_index[sample_idx];
+                    histograms[candidate][bin].update(1.0, gradients[sample_idx]);
+                }
             }
 
             for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
