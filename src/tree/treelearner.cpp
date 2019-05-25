@@ -92,6 +92,7 @@ void TreeLearner::find_best_splits() {
                 const bin_t bin1 = feat1.bin_index[sample_idx];
                 const bin_t bin2 = feat2.bin_index[sample_idx];
                 const bin_t bin3 = feat3.bin_index[sample_idx];
+
                 const gradient_t grad = gradients[sample_idx];
 
                 histograms[bin0][candidate].update(1.0, grad);
@@ -120,6 +121,7 @@ void TreeLearner::find_best_splits() {
         const Feature &feat = dataset->get_data()[fid];
 
         //TODO: unrolling
+        cycles_count_start();
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
@@ -127,12 +129,15 @@ void TreeLearner::find_best_splits() {
                 histograms[bin][candidate].update(1.0, gradients[sample_idx]);
             }
         }
+        sum_cycles_update += cycles_count_stop();
 
         cycles_count_start();
         histograms.cumulate(num_candidates);
         sum_cycles_cumulate += cycles_count_stop();
 
+        cycles_count_start();
         histograms.get_best_splits(num_candidates, fid, feat, node_info, best_splits, min_data_in_leaf);
+        sum_cycles_getbestsplits += cycles_count_stop();
     }
 
 }
