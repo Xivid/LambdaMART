@@ -93,17 +93,7 @@ void TreeLearner::find_best_splits() {
     const __m256i lower_MASK_STORE = _mm256_set_epi64x(0, 0, -1, -1);
     const __m256i num_feat_block_vec = _mm256_set1_epi64x(num_feature_blocking);
     const __m256i feature_const_offset = _mm256_set_epi64x(3, 2, 1, 0);
-
-    int candidate0, candidate1, candidate2, candidate3;
-    int bin0, bin1, bin2, bin3;
-
-    __m256i candidate_vec, bin_idx_vec, simple_offset, net_offset;
-    __m256i candidate_off, bin_off, total_offset;
-    __m256d gradients_vec;
-    __m256i sum_counts_ptr, sum_gradients_ptr;
-    __m256d sum_counts_val, sum_gradients_val, new_sum_counts_val, new_sum_gradients_val, c1g1c3g3, c2g2c4g4;
     const int i1 = 0, i3 = 2, i2 = 1, i4 = 3;
-    int offset;
 
     for (fid = 0; fid < num_features - feature_rest; fid += num_feature_blocking) {
         LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
@@ -113,43 +103,39 @@ void TreeLearner::find_best_splits() {
         const Feature &feat2 = dataset->get_data()[fid+2];
         const Feature &feat3 = dataset->get_data()[fid+3];
 
-        for (sample_idx = 0; sample_idx < num_samples - sample_rest; sample_idx += num_sample_blocking)
+        for (sample_idx = 0; sample_idx < num_samples - sample_rest; sample_idx ++)
         {
-            candidate0 = sample_to_candidate[sample_idx];
-            candidate1 = sample_to_candidate[sample_idx+1];
-            candidate2 = sample_to_candidate[sample_idx+2];
-            candidate3 = sample_to_candidate[sample_idx+3];
+            const int candidate = sample_to_candidate[sample_idx];
+            if (candidate != -1) {
+                const int bin0 = feat0.bin_index[sample_idx];
+                const int bin1 = feat1.bin_index[sample_idx];
+                const int bin2 = feat2.bin_index[sample_idx];
+                const int bin3 = feat3.bin_index[sample_idx];
 
-            if (candidate0 != -1) {
-                bin0 = feat0.bin_index[sample_idx];
-                bin1 = feat1.bin_index[sample_idx];
-                bin2 = feat2.bin_index[sample_idx];
-                bin3 = feat3.bin_index[sample_idx];
+                const __m256i candidate_vec = _mm256_set1_epi64x(candidate);
+                const __m256i bin_idx_vec = _mm256_set_epi64x(bin3, bin2, bin1, bin0);
+                const __m256i simple_offset = _mm256_mul_epi32(candidate_vec, num_feat_block_vec);
+                const __m256i net_offset = _mm256_add_epi64(simple_offset, feature_const_offset);
 
-                candidate_vec = _mm256_set1_epi64x(candidate0);
-                bin_idx_vec = _mm256_set_epi64x(bin3, bin2, bin1, bin0);
-                simple_offset = _mm256_mul_epi32(candidate_vec, num_feat_block_vec);
-                net_offset = _mm256_add_epi64(simple_offset, feature_const_offset);
+                const __m256i candidate_off = _mm256_mul_epi32(net_offset, hist_offset);
+                const __m256i bin_off = _mm256_mul_epi32(bin_idx_vec, bin_size_offset);
+                const __m256i total_offset = _mm256_add_epi64(candidate_off, bin_off);
 
-                candidate_off = _mm256_mul_epi32(net_offset, hist_offset);
-                bin_off = _mm256_mul_epi32(bin_idx_vec, bin_size_offset);
-                total_offset = _mm256_add_epi64(candidate_off, bin_off);
+                const __m256d gradients_vec = _mm256_set1_pd(gradients[sample_idx]);
 
-                gradients_vec = _mm256_set1_pd(gradients[sample_idx]);
+                const __m256i sum_counts_ptr = total_offset;
+                const __m256i sum_gradients_ptr = _mm256_add_epi64(total_offset, eights);
 
-                sum_counts_ptr = total_offset;
-                sum_gradients_ptr = _mm256_add_epi64(total_offset, eights);
+                const __m256d sum_counts_val = _mm256_i64gather_pd(hist_base_addr, sum_counts_ptr, 1);
+                const __m256d sum_gradients_val = _mm256_i64gather_pd(hist_base_addr, sum_gradients_ptr, 1);
 
-                sum_counts_val = _mm256_i64gather_pd(hist_base_addr, sum_counts_ptr, 1);
-                sum_gradients_val = _mm256_i64gather_pd(hist_base_addr, sum_gradients_ptr, 1);
+                const __m256d new_sum_counts_val = _mm256_add_pd(sum_counts_val, ones);
+                const __m256d new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, gradients_vec);
 
-                new_sum_counts_val = _mm256_add_pd(sum_counts_val, ones);
-                new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, gradients_vec);
+                const __m256d c1g1c3g3 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0);
+                const __m256d c2g2c4g4 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0xF);
 
-                c1g1c3g3 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0);
-                c2g2c4g4 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0xF);
-
-                offset = _mm256_extract_epi64(total_offset, i1);
+                int offset = _mm256_extract_epi64(total_offset, i1);
                 double* a = hist_base_addr + offset/8;
                 _mm256_maskstore_pd(a, lower_MASK_STORE, c1g1c3g3);
 
@@ -162,141 +148,6 @@ void TreeLearner::find_best_splits() {
                 _mm256_maskstore_pd(a, lower_MASK_STORE, c2g2c4g4);
 
                  offset = _mm256_extract_epi64(total_offset, i4);
-                a = hist_base_addr + offset/8 - 2;
-                _mm256_maskstore_pd(a, upper_MASK_STORE, c2g2c4g4);
-            }
-            if (candidate1 != -1) {
-                const bin_t bin0 = feat0.bin_index[sample_idx+1];
-                const bin_t bin1 = feat1.bin_index[sample_idx+1];
-                const bin_t bin2 = feat2.bin_index[sample_idx+1];
-                const bin_t bin3 = feat3.bin_index[sample_idx+1];
-
-                candidate_vec = _mm256_set1_epi64x(candidate1);
-                bin_idx_vec = _mm256_set_epi64x(bin3, bin2, bin1, bin0);
-                simple_offset = _mm256_mul_epi32(candidate_vec, num_feat_block_vec);
-                net_offset = _mm256_add_epi64(simple_offset, feature_const_offset);
-
-                candidate_off = _mm256_mul_epi32(net_offset, hist_offset);
-                bin_off = _mm256_mul_epi32(bin_idx_vec, bin_size_offset);
-                total_offset = _mm256_add_epi64(candidate_off, bin_off);
-
-                gradients_vec = _mm256_set1_pd(gradients[sample_idx+1]);
-
-                sum_counts_ptr = total_offset;
-                sum_gradients_ptr = _mm256_add_epi64(total_offset, eights);
-
-                sum_counts_val = _mm256_i64gather_pd(hist_base_addr, sum_counts_ptr, 1);
-                sum_gradients_val = _mm256_i64gather_pd(hist_base_addr, sum_gradients_ptr, 1);
-
-                new_sum_counts_val = _mm256_add_pd(sum_counts_val, ones);
-                new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, gradients_vec);
-
-                c1g1c3g3 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0);
-                c2g2c4g4 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0xF);
-
-                offset = _mm256_extract_epi64(total_offset, i1);
-                double* a = hist_base_addr + offset/8;
-                _mm256_maskstore_pd(a, lower_MASK_STORE, c1g1c3g3);
-
-                offset = _mm256_extract_epi64(total_offset, i3);
-                a = hist_base_addr + offset/8 - 2;
-                _mm256_maskstore_pd(a, upper_MASK_STORE, c1g1c3g3);
-
-                offset = _mm256_extract_epi64(total_offset, i2);
-                a = hist_base_addr + offset/8;
-                _mm256_maskstore_pd(a, lower_MASK_STORE, c2g2c4g4);
-
-                offset = _mm256_extract_epi64(total_offset, i4);
-                a = hist_base_addr + offset/8 - 2;
-                _mm256_maskstore_pd(a, upper_MASK_STORE, c2g2c4g4);
-            }
-            if (candidate2 != -1) {
-                const bin_t bin0 = feat0.bin_index[sample_idx+2];
-                const bin_t bin1 = feat1.bin_index[sample_idx+2];
-                const bin_t bin2 = feat2.bin_index[sample_idx+2];
-                const bin_t bin3 = feat3.bin_index[sample_idx+2];
-
-                candidate_vec = _mm256_set1_epi64x(candidate2);
-                bin_idx_vec = _mm256_set_epi64x(bin3, bin2, bin1, bin0);
-                simple_offset = _mm256_mul_epi32(candidate_vec, num_feat_block_vec);
-                net_offset = _mm256_add_epi64(simple_offset, feature_const_offset);
-
-                candidate_off = _mm256_mul_epi32(net_offset, hist_offset);
-                bin_off = _mm256_mul_epi32(bin_idx_vec, bin_size_offset);
-                total_offset = _mm256_add_epi64(candidate_off, bin_off);
-
-                gradients_vec = _mm256_set1_pd(gradients[sample_idx+2]);
-
-                sum_counts_ptr = total_offset;
-                sum_gradients_ptr = _mm256_add_epi64(total_offset, eights);
-
-                sum_counts_val = _mm256_i64gather_pd(hist_base_addr, sum_counts_ptr, 1);
-                sum_gradients_val = _mm256_i64gather_pd(hist_base_addr, sum_gradients_ptr, 1);
-
-                new_sum_counts_val = _mm256_add_pd(sum_counts_val, ones);
-                new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, gradients_vec);
-
-                c1g1c3g3 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0);
-                c2g2c4g4 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0xF);
-
-                offset = _mm256_extract_epi64(total_offset, i1);
-                double* a = hist_base_addr + offset/8;
-                _mm256_maskstore_pd(a, lower_MASK_STORE, c1g1c3g3);
-
-                offset = _mm256_extract_epi64(total_offset, i3);
-                a = hist_base_addr + offset/8 - 2;
-                _mm256_maskstore_pd(a, upper_MASK_STORE, c1g1c3g3);
-
-                offset = _mm256_extract_epi64(total_offset, i2);
-                a = hist_base_addr + offset/8;
-                _mm256_maskstore_pd(a, lower_MASK_STORE, c2g2c4g4);
-
-                offset = _mm256_extract_epi64(total_offset, i4);
-                a = hist_base_addr + offset/8 - 2;
-                _mm256_maskstore_pd(a, upper_MASK_STORE, c2g2c4g4);
-            }
-            if (candidate3 != -1) {
-                const bin_t bin0 = feat0.bin_index[sample_idx+3];
-                const bin_t bin1 = feat1.bin_index[sample_idx+3];
-                const bin_t bin2 = feat2.bin_index[sample_idx+3];
-                const bin_t bin3 = feat3.bin_index[sample_idx+3];
-
-                candidate_vec = _mm256_set1_epi64x(candidate3);
-                bin_idx_vec = _mm256_set_epi64x(bin3, bin2, bin1, bin0);
-                simple_offset = _mm256_mul_epi32(candidate_vec, num_feat_block_vec);
-                net_offset = _mm256_add_epi64(simple_offset, feature_const_offset);
-
-                candidate_off = _mm256_mul_epi32(net_offset, hist_offset);
-                bin_off = _mm256_mul_epi32(bin_idx_vec, bin_size_offset);
-                total_offset = _mm256_add_epi64(candidate_off, bin_off);
-
-                gradients_vec = _mm256_set1_pd(gradients[sample_idx+3]);
-
-                sum_counts_ptr = total_offset;
-                sum_gradients_ptr = _mm256_add_epi64(total_offset, eights);
-
-                sum_counts_val = _mm256_i64gather_pd(hist_base_addr, sum_counts_ptr, 1);
-                sum_gradients_val = _mm256_i64gather_pd(hist_base_addr, sum_gradients_ptr, 1);
-
-                new_sum_counts_val = _mm256_add_pd(sum_counts_val, ones);
-                new_sum_gradients_val = _mm256_add_pd(sum_gradients_val, gradients_vec);
-
-                c1g1c3g3 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0);
-                c2g2c4g4 = _mm256_shuffle_pd(new_sum_counts_val, new_sum_gradients_val, 0xF);
-
-                offset = _mm256_extract_epi64(total_offset, i1);
-                double* a = hist_base_addr + offset/8;
-                _mm256_maskstore_pd(a, lower_MASK_STORE, c1g1c3g3);
-
-                offset = _mm256_extract_epi64(total_offset, i3);
-                a = hist_base_addr + offset/8 - 2;
-                _mm256_maskstore_pd(a, upper_MASK_STORE, c1g1c3g3);
-
-                offset = _mm256_extract_epi64(total_offset, i2);
-                a = hist_base_addr + offset/8;
-                _mm256_maskstore_pd(a, lower_MASK_STORE, c2g2c4g4);
-
-                offset = _mm256_extract_epi64(total_offset, i4);
                 a = hist_base_addr + offset/8 - 2;
                 _mm256_maskstore_pd(a, upper_MASK_STORE, c2g2c4g4);
             }
