@@ -373,25 +373,71 @@ namespace LambdaMART {
             for (node = 0; node < num_candidates - node_rest; node += overall_blocking)
             {
                 Bin* bins_high = _head[bin_cnt - 1] + node;
+                //Bin* doubles_high = bins_high;
+                __m256d high0 = _mm256_load_pd((gradient_t*) (bins_high));
+                __m256d high1 = _mm256_load_pd((gradient_t*) (bins_high+2));
+                __m256d high2 = _mm256_load_pd((gradient_t*) (bins_high+4));
+                __m256d high3 = _mm256_load_pd((gradient_t*) (bins_high+6));
+                __m256d high4 = _mm256_load_pd((gradient_t*) (bins_high+8));
+                __m256d high5 = _mm256_load_pd((gradient_t*) (bins_high+10));
+
+                __m256d low0, low1, low2, low3, low4, low5;
+                Bin* bins_low0;
+                Bin* bins_low1;
+                Bin* bins_low2;
+                Bin* bins_low3;
+                Bin* bins_low4;
+                Bin* bins_low5;
 
                 // get last bin
                 for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
                 {
-                    Bin* bins_low = _head[bin - 1] + node;
+                    bins_low0 = _head[bin - 1] + node;
+                    bins_low1 = bins_low0+2;
+                    bins_low2 = bins_low0+4;
+                    bins_low3 = bins_low0+6;
+                    bins_low4 = bins_low0+8;
+                    bins_low5 = bins_low0+10;
+
+                    low0 = _mm256_load_pd((gradient_t*) (bins_low0));
+                    low1 = _mm256_load_pd((gradient_t*) (bins_low1));
+                    low2 = _mm256_load_pd((gradient_t*) (bins_low2));
+                    low3 = _mm256_load_pd((gradient_t*) (bins_low3));
+                    low4 = _mm256_load_pd((gradient_t*) (bins_low4));
+                    low5 = _mm256_load_pd((gradient_t*) (bins_low5));
+
+                    low0 = _mm256_add_pd(low0, high0);
+                    low1 = _mm256_add_pd(low1, high1);
+                    low2 = _mm256_add_pd(low2, high2);
+                    low3 = _mm256_add_pd(low3, high3);
+                    low4 = _mm256_add_pd(low4, high4);
+                    low5 = _mm256_add_pd(low5, high5);
+
+                    _mm256_store_pd((gradient_t*) (bins_low0), low0);
+                    _mm256_store_pd((gradient_t*) (bins_low1), low1);
+                    _mm256_store_pd((gradient_t*) (bins_low2), low2);
+                    _mm256_store_pd((gradient_t*) (bins_low3), low3);
+                    _mm256_store_pd((gradient_t*) (bins_low4), low4);
+                    _mm256_store_pd((gradient_t*) (bins_low5), low5);
+
+                    high0 = low0;
+                    high1 = low1;
+                    high2 = low2;
+                    high3 = low3;
+                    high4 = low4;
+                    high5 = low5;
 
                     // do `simd_blocking` simds, each simd adds `bins_per_register` bins to the lower row
-                    Bin* doubles_high = bins_high;
-                    Bin* doubles_low = bins_low;
-                    for (int i = 0; i < simd_blocking; i++) {
-                        __m256d high = _mm256_load_pd((gradient_t*) doubles_high);
-                        __m256d low = _mm256_load_pd((gradient_t*) doubles_low);
-                        _mm256_store_pd((gradient_t*) doubles_low, _mm256_add_pd(low, high));
+                    //for (int i = 0; i < simd_blocking; i++) {
+                    //    __m256d high = _mm256_load_pd((gradient_t*) doubles_high);
+                    //    __m256d low = _mm256_load_pd((gradient_t*) doubles_low);
+                    //    _mm256_store_pd((gradient_t*) doubles_low, _mm256_add_pd(low, high));
 
-                        doubles_high += bins_per_register;
-                        doubles_low += bins_per_register;
-                    }
+                    //    doubles_high += bins_per_register;
+                    //    doubles_low += bins_per_register;
+                    //}
 
-                    bins_high = bins_low;
+                    //bins_high = bins_low;
                 }
             }
 
@@ -400,17 +446,18 @@ namespace LambdaMART {
                 for (; node < num_candidates - node_rest; node += bins_per_register)
                 {
                     // get last bin
-                    Bin* bins_high = _head[bin_cnt - 1] + node;
+                    __m256d high = _mm256_load_pd((gradient_t *) (_head[bin_cnt - 1] + node));
+                    __m256d low;
+                    Bin* bins_low;
 
                     for (bin_t bin = bin_cnt - 1; bin > 0; --bin)
                     {
-                        Bin* bins_low = _head[bin - 1] + node;
+                        bins_low = _head[bin - 1] + node;
 
-                        __m256d high = _mm256_load_pd((gradient_t*) bins_high);
-                        __m256d low = _mm256_load_pd((gradient_t*) bins_low);
-                        _mm256_store_pd((gradient_t*) bins_low, _mm256_add_pd(low, high));
-
-                        bins_high = bins_low;
+                        low = _mm256_load_pd((gradient_t*) bins_low);
+                        low = _mm256_add_pd(low, high);
+                        _mm256_store_pd((gradient_t*) bins_low, low);
+                        high = low;
                     }
                 }
                 if (node_rest > 0) {
