@@ -494,26 +494,45 @@ namespace LambdaMART {
 			return _data;
 		}
 
-		void cumulate(nodeidx_t node)
-		{
-			if (bin_cnt <= 1)
-			{
-				return;
-			}
+        void cumulate(nodeidx_t num_candidates)
+        {
+            if (bin_cnt <= 1)
+            {
+                return;
+            }
 
-			Bin* bins = _head[node];
+            const nodeidx_t node_unrolloing = 4;
+            const nodeidx_t node_rest = num_candidates % node_unrolloing;
 
-			for (bin_t bin = bin_cnt-2; bin > 0; --bin)
-			{
-				bins[bin] += bins[bin+1];
-			}
-			bins[0] += bins[1];
+            nodeidx_t node = 0;
+            for (;node < num_candidates - node_rest; node += node_unrolloing)
+            {
+                Bin* bins0 = _head[node];
+                Bin* bins1 = _head[node+1];
+                Bin* bins2 = _head[node+2];
+                Bin* bins3 = _head[node+3];
 
-            //LOG_TRACE(" Bin # ");
-            //for (bin_t bin = 0; bin < bin_cnt; bin++)
-            //{
-            //    LOG_TRACE("\t%i\t%s", bin, bins[bin].toString().c_str());
-            //}
+                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                {
+                    bins0[bin] += bins0[bin+1];
+                    bins1[bin] += bins1[bin+1];
+                    bins2[bin] += bins2[bin+1];
+                    bins3[bin] += bins3[bin+1];
+                }
+                bins0[0] += bins0[1];
+                bins1[0] += bins1[1];
+                bins2[0] += bins2[1];
+                bins3[0] += bins3[1];
+            }
+            for (; node < num_candidates; ++node)
+            {
+                Bin* bins = _head[node];
+                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                {
+                    bins[bin] += bins[bin+1];
+                }
+                bins[0] += bins[1];
+            }
 		}
 		//TODO: defaultBin - part of optimization
 		//inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)

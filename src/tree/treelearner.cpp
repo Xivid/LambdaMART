@@ -165,11 +165,9 @@ void TreeLearner::find_best_splits() {
             }
         }
 
+        histograms.cumulate(num_candidates*num_feature_blocking);
+
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-            histograms.cumulate(candidate*num_feature_blocking);
-            histograms.cumulate(candidate*num_feature_blocking+1);
-            histograms.cumulate(candidate*num_feature_blocking+2);
-            histograms.cumulate(candidate*num_feature_blocking+3);
 
             auto local_best0 = histograms.get_best_split(candidate*num_feature_blocking, fid, feat0, node_info[candidate], min_data_in_leaf);
             auto local_best1 = histograms.get_best_split(candidate*num_feature_blocking+1, fid+1, feat1, node_info[candidate], min_data_in_leaf);
@@ -228,8 +226,9 @@ void TreeLearner::find_best_splits() {
             }
         }
 
+        histograms.cumulate(num_candidates);
+
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-            histograms.cumulate(candidate);
             auto local_best = histograms.get_best_split(candidate, fid, feat, node_info[candidate], min_data_in_leaf);
             if (local_best >= best_splits[candidate]) {
                 best_splits[candidate] = local_best;
