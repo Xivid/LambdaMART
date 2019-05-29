@@ -98,10 +98,10 @@ void TreeLearner::find_best_splits() {
     for (fid = 0; fid < num_features - feature_rest; fid += num_feature_blocking) {
         LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
         histograms.clear(num_candidates * num_feature_blocking);
-        const Feature &feat0 = dataset->get_data()[fid];
-        const Feature &feat1 = dataset->get_data()[fid+1];
-        const Feature &feat2 = dataset->get_data()[fid+2];
-        const Feature &feat3 = dataset->get_data()[fid+3];
+        const Feature &feat0 = dataset->get_data(fid);
+        const Feature &feat1 = dataset->get_data(fid+1);
+        const Feature &feat2 = dataset->get_data(fid+2);
+        const Feature &feat3 = dataset->get_data(fid+3);
 
         for (sample_idx = 0; sample_idx < num_samples - sample_rest; sample_idx ++)
         {
@@ -199,7 +199,7 @@ void TreeLearner::find_best_splits() {
     for (; fid < num_features; ++fid) {
         LOG_DEBUG("checking feature %lu", fid);
         histograms.clear(num_candidates);
-        const Feature &feat = dataset->get_data()[fid];
+        const Feature &feat = dataset->get_data(fid);
 
         //TODO: unrolling
         for (sample_idx = 0; sample_idx < num_samples - sample_rest; sample_idx += num_sample_blocking) {
@@ -271,7 +271,7 @@ void TreeLearner::perform_split()
         const feature_t feature = best_splits[candidate].split->feature;
         const bin_t bin = best_splits[candidate].bin;
         // TODO: is there a way to optimize this 2-level random access?
-        if (dataset->get_data()[feature].bin_index[sample] <= bin) {
+        if (dataset->get_data(feature).bin_index[sample] <= bin) {
             sample_to_node[sample] <<= 1;  // move to left child
             best_splits[candidate].update_children_stats(gradients[sample] * gradients[sample], hessians[sample], 0., 0.);
         } else {
