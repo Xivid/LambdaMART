@@ -23,11 +23,6 @@ using namespace std;
 
 namespace LambdaMART {
 
-    struct Binner{
-        // NOTE: Features are assumed to be arranged accordingly
-        vector<vector<double>> thresholds;
-    };
-
     class Feature {
         int bin_cnt;
     public:
@@ -72,28 +67,6 @@ namespace LambdaMART {
              this->bin_cnt = bin_count+1;
          }
 
-        //overloaded bin for using predefined threshold values, using binner class and index of feature being binned.
-        void bin(int n, Binner *binner, int f) {
-            this->bin_index.resize(n, -1);
-            vector<double> thresholds = binner->thresholds[f];
-            int bin_count = 0;
-            for (int i = 0; i < n; i++) {
-                if(sample_data[i] <= thresholds[bin_count])
-                    bin_index[i] = bin_count;
-                else{
-                    bin_count++;
-                    i--;
-                }
-            }
-        }
-
-        vector<int> get_nonzero_bin_idx(){
-            vector<int> nnz_bin_index;
-            for(auto & i: this->sample_index)
-                nnz_bin_index.emplace_back(this->bin_index[i]);
-            return nnz_bin_index;
-        }
-
         int bin_count() const {
             return this->bin_cnt;
         }
@@ -102,7 +75,6 @@ namespace LambdaMART {
     class Dataset {
         vector<Feature> data; // feature major; d rows, n columns
         int bin_size, bin_cnt, max_lbl;
-        Binner binner;
 
     protected:
         void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<label_t> &rank, int& max_d){
@@ -164,12 +136,8 @@ namespace LambdaMART {
             this->d = INT_MIN;
         }
 
-        auto& get_data() const{
-            return data;
-        }
-
-        int max_label(){
-            return this->max_lbl;
+        auto& get_data(int i) const{
+            return data[i];
         }
 
         void load_dataset(const char* data_path, const char* query_path) {
@@ -194,7 +162,6 @@ namespace LambdaMART {
             for(auto & feat: this->data) {
                 feat.sort();
                 feat.bin(this->bin_size, this->n);
-                this->binner.thresholds.emplace_back(feat.threshold);
             }
             Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
@@ -287,11 +254,6 @@ namespace LambdaMART {
             return make_pair(this->n, this->d);
         }
 
-        // return binner
-        Binner* get_binner(){
-            return &(this->binner);
-        }
-
         // query boundaries (the first sample_id of each query)
         inline const sample_t* get_query_boundaries() const {
             return query_boundaries.data();
@@ -307,10 +269,6 @@ namespace LambdaMART {
 
         label_t* get_labels() {
             return rank.data();
-        }
-
-        int num_bins() const {
-            return this->bin_cnt;
         }
     };
 
