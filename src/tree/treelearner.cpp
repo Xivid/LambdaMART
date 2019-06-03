@@ -29,8 +29,8 @@ Tree* TreeLearner::build_new_tree()
         find_best_splits();
         perform_split();
     }
-//    Log::Info("update, cumulate, gbs, total cycles: %lld, %lld, %lld, %lld", sum_cycles_update,
-//              sum_cycles_cumulate, sum_cycles_gbs, sum_cycles_update+sum_cycles_cumulate+sum_cycles_gbs);
+    Log::Info("update, cumulate, gbs, total cycles: %lld, %lld, %lld, %lld", sum_cycles_update,
+              sum_cycles_cumulate, sum_cycles_gbs, sum_cycles_update+sum_cycles_cumulate+sum_cycles_gbs);
     // mark remaining candidates as leaves
     while (!node_queue.empty()) {
         SplitCandidate* candidate = node_queue.top();
