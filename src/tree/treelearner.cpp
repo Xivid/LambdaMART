@@ -73,14 +73,22 @@ void TreeLearner::find_best_splits() {
     for (feature_t fid = 0; fid < num_features; ++fid) {
         LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
+        const bin_t bin_cnt = histograms.bin_cnt;
+        Bin* histogram_data = (Bin*) histograms.data();
         const Feature &feat = dataset->get_data()[fid];
+        const vector<bin_t> &sample_to_bin = feat.bin_index;
 
         //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
-                const bin_t bin = feat.bin_index[sample_idx];
-                histograms[candidate][bin].update(1.0, gradients[sample_idx]);
+                const bin_t bin = sample_to_bin[sample_idx];
+                const double grad = gradients[sample_idx];
+
+                double *p = (double*) (histogram_data + candidate * bin_cnt + bin);
+                *p += 1.0;
+                *(p+1) += grad;
+//                 histograms[candidate][bin].update(1.0, gradients[sample_idx]);
             }
         }
 
