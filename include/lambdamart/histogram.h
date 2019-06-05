@@ -44,14 +44,14 @@ namespace LambdaMART {
 
 		inline void clear() { sum_count = sum_gradients = 0.0f; }
 
-		inline void update(gradient_t count, gradient_t gradient)
-		{
-			//__m128 tmp = _mm_setzero_ps(), rhs = _mm_set_ps(0, 0, gradient, count);
-			//tmp = _mm_add_ps(_mm_loadl_pi(tmp, (__m64 const *) this), rhs);
-			//_mm_storel_pi((__m64 *) this, tmp);
-			sum_count += count;
-			sum_gradients += gradient;
-		}
+//		inline void update(gradient_t count, gradient_t gradient)
+//		{
+//			//__m128 tmp = _mm_setzero_ps(), rhs = _mm_set_ps(0, 0, gradient, count);
+//			//tmp = _mm_add_ps(_mm_loadl_pi(tmp, (__m64 const *) this), rhs);
+//			//_mm_storel_pi((__m64 *) this, tmp);
+//			sum_count += count;
+//			sum_gradients += gradient;
+//		}
 
 		inline gradient_t getLeafSplitGain() const
 		{
@@ -150,15 +150,13 @@ namespace LambdaMART {
         }
 	};
 
-	class HistogramMatrix
+	struct HistogramMatrix
 	{
-	private:
 		nodeidx_t num_nodes;
 		bin_t bin_cnt;  // unified max num of bins
 		Bin** _head;
 		Bin* _data;
 
-	public:
 		HistogramMatrix() : num_nodes(0), bin_cnt(0), _head(nullptr), _data(nullptr) {}
 
 		HistogramMatrix(nodeidx_t nodes, bin_t bins)
