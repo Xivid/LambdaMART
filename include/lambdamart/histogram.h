@@ -287,15 +287,13 @@ namespace LambdaMART {
 
 	};
 
-    class HistogramMatrixTrans
+    struct HistogramMatrixTrans
     {
-    private:
         nodeidx_t num_nodes;
         bin_t bin_cnt;  // unified max num of bins
         Bin** _head;
         Bin* _data;
 
-    public:
         HistogramMatrixTrans() : num_nodes(0), bin_cnt(0), _head(nullptr), _data(nullptr) {}
 
         HistogramMatrixTrans(nodeidx_t nodes, bin_t bins)

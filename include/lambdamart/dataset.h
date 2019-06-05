@@ -31,7 +31,7 @@ namespace LambdaMART {
     class Feature {
         int bin_cnt;
     public:
-        vector<int> bin_index;
+        vector<bin_t> bin_index;
         vector<pair<featval_t, int>> samples;
         vector<int> sample_index;
         vector<featval_t> sample_data;
@@ -216,7 +216,7 @@ namespace LambdaMART {
                         exit(0);
                     }
 
-                    vector<int> bins;
+                    vector<bin_t> bins;
                     vector<featval_t> thresholds;
                     stringstream proc(tokens[1]);
                     while(proc.good()){

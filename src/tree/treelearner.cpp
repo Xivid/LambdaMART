@@ -76,11 +76,18 @@ void TreeLearner::find_best_splits() {
     for (fid = 0; fid < num_features - feature_rest; fid += num_feature_blocking) {
         LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
         histograms.clear(num_candidates * num_feature_blocking);
+        Bin* histograms_data = histograms.data();
+        nodeidx_t num_nodes = histograms.num_nodes;
 
         const Feature &feat0 = dataset->get_data()[fid];
         const Feature &feat1 = dataset->get_data()[fid+1];
         const Feature &feat2 = dataset->get_data()[fid+2];
         const Feature &feat3 = dataset->get_data()[fid+3];
+
+        const vector<bin_t> sample_to_bin0 = feat0.bin_index;
+        const vector<bin_t> sample_to_bin1 = feat1.bin_index;
+        const vector<bin_t> sample_to_bin2 = feat2.bin_index;
+        const vector<bin_t> sample_to_bin3 = feat3.bin_index;
 
         //TODO: unrolling
         cycles_count_start();
@@ -88,16 +95,30 @@ void TreeLearner::find_best_splits() {
             const int candidate = sample_to_candidate[sample_idx];
 
             if (candidate != -1) {
-                const bin_t bin0 = feat0.bin_index[sample_idx];
-                const bin_t bin1 = feat1.bin_index[sample_idx];
-                const bin_t bin2 = feat2.bin_index[sample_idx];
-                const bin_t bin3 = feat3.bin_index[sample_idx];
+                const bin_t bin0 = sample_to_bin0[sample_idx];
+                const bin_t bin1 = sample_to_bin1[sample_idx];
+                const bin_t bin2 = sample_to_bin2[sample_idx];
+                const bin_t bin3 = sample_to_bin3[sample_idx];
                 const gradient_t grad = gradients[sample_idx];
 
-                histograms[bin0][candidate].update(1.0, grad);
-                histograms[bin1][candidate+num_candidates].update(1.0, grad);
-                histograms[bin2][candidate+num_candidates*2].update(1.0, grad);
-                histograms[bin3][candidate+num_candidates*3].update(1.0, grad);
+                Bin* base = histograms_data + candidate;
+                float *p = (float*) (base + bin0 * num_nodes);
+                *p += 1.0;
+                *(p+1) += grad;
+                p = (float*) (base + bin1 * num_nodes + num_candidates);
+                *p += 1.0;
+                *(p+1) += grad;
+                p = (float*) (base + bin2 * num_nodes + num_candidates * 2);
+                *p += 1.0;
+                *(p+1) += grad;
+                p = (float*) (base + bin3 * num_nodes + num_candidates * 3);
+                *p += 1.0;
+                *(p+1) += grad;
+
+//                histograms[bin0][candidate].update(1.0, grad);
+//                histograms[bin1][candidate+num_candidates].update(1.0, grad);
+//                histograms[bin2][candidate+num_candidates*2].update(1.0, grad);
+//                histograms[bin3][candidate+num_candidates*3].update(1.0, grad);
             }
         }
         sum_cycles_update += cycles_count_stop();
@@ -117,14 +138,21 @@ void TreeLearner::find_best_splits() {
     for (; fid < num_features; ++fid) {
         LOG_TRACE("checking feature %lu", fid);
         histograms.clear(num_candidates);
+        Bin* histograms_data = histograms.data();
+        nodeidx_t num_nodes = histograms.num_nodes;
         const Feature &feat = dataset->get_data()[fid];
+        const vector<bin_t> sample_to_bin = feat.bin_index;
 
         //TODO: unrolling
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
-                const bin_t bin = feat.bin_index[sample_idx];
-                histograms[bin][candidate].update(1.0, gradients[sample_idx]);
+                const bin_t bin = sample_to_bin[sample_idx];
+                const float grad = gradients[sample_idx];
+                float *p = (float*) (histograms_data + bin * num_nodes + candidate);
+                *p += 1.0;
+                *(p+1) += grad;
+//                histograms[bin][candidate].update(1.0, grad);
             }
         }
 
