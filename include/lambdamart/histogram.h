@@ -171,8 +171,6 @@ namespace LambdaMART {
 
 		void init(nodeidx_t nodes, bin_t bins)
 		{
-            // TODO: use aligned malloc and free (different functions in macos/linux/windows)
-
             if (_data != nullptr)
                 //free(_data);
                 _mm_free(_data);
@@ -240,80 +238,79 @@ namespace LambdaMART {
                 Bin* bins2 = _head[node+2];
                 Bin* bins3 = _head[node+3];
 
-                __m128d rhs0 = _mm_load_pd((gradient_t*) (bins0+bin_cnt-1));
-                __m128d rhs1 = _mm_load_pd((gradient_t*) (bins1+bin_cnt-1));
-                __m128d rhs2 = _mm_load_pd((gradient_t*) (bins2+bin_cnt-1));
-                __m128d rhs3 = _mm_load_pd((gradient_t*) (bins3+bin_cnt-1));
+                //__m128d rhs0 = _mm_load_pd((gradient_t*) (bins0+bin_cnt-1));
+                //__m128d rhs1 = _mm_load_pd((gradient_t*) (bins1+bin_cnt-1));
+                //__m128d rhs2 = _mm_load_pd((gradient_t*) (bins2+bin_cnt-1));
+                //__m128d rhs3 = _mm_load_pd((gradient_t*) (bins3+bin_cnt-1));
 
-                __m128d lhs0;
-                __m128d lhs1;
-                __m128d lhs2;
-                __m128d lhs3;
+                //__m128d lhs0;
+                //__m128d lhs1;
+                //__m128d lhs2;
+                //__m128d lhs3;
 
                 for (bin_t bin = bin_cnt-2; bin > 0; --bin)
                 {
-                    lhs0 = _mm_load_pd((gradient_t*) (bins0+bin));
-                    lhs1 = _mm_load_pd((gradient_t*) (bins1+bin));
-                    lhs2 = _mm_load_pd((gradient_t*) (bins2+bin));
-                    lhs3 = _mm_load_pd((gradient_t*) (bins3+bin));
+                    //lhs0 = _mm_load_pd((gradient_t*) (bins0+bin));
+                    //lhs1 = _mm_load_pd((gradient_t*) (bins1+bin));
+                    //lhs2 = _mm_load_pd((gradient_t*) (bins2+bin));
+                    //lhs3 = _mm_load_pd((gradient_t*) (bins3+bin));
 
-                    //TODO try fma?
-                    lhs0 = _mm_add_pd(lhs0, rhs0);
-                    lhs1 = _mm_add_pd(lhs1, rhs1);
-                    lhs2 = _mm_add_pd(lhs2, rhs2);
-                    lhs3 = _mm_add_pd(lhs3, rhs3);
+                    //lhs0 = _mm_add_pd(lhs0, rhs0);
+                    //lhs1 = _mm_add_pd(lhs1, rhs1);
+                    //lhs2 = _mm_add_pd(lhs2, rhs2);
+                    //lhs3 = _mm_add_pd(lhs3, rhs3);
 
-                    _mm_store_pd((gradient_t*) (bins0+bin), lhs0);
-                    _mm_store_pd((gradient_t*) (bins1+bin), lhs1);
-                    _mm_store_pd((gradient_t*) (bins2+bin), lhs2);
-                    _mm_store_pd((gradient_t*) (bins3+bin), lhs3);
+                    //_mm_store_pd((gradient_t*) (bins0+bin), lhs0);
+                    //_mm_store_pd((gradient_t*) (bins1+bin), lhs1);
+                    //_mm_store_pd((gradient_t*) (bins2+bin), lhs2);
+                    //_mm_store_pd((gradient_t*) (bins3+bin), lhs3);
 
-                    rhs0 = lhs0;
-                    rhs1 = lhs1;
-                    rhs2 = lhs2;
-                    rhs3 = lhs3;
-                    //bins0[bin] += bins0[bin+1];
-                    //bins1[bin] += bins1[bin+1];
-                    //bins2[bin] += bins2[bin+1];
-                    //bins3[bin] += bins3[bin+1];
+                    //rhs0 = lhs0;
+                    //rhs1 = lhs1;
+                    //rhs2 = lhs2;
+                    //rhs3 = lhs3;
+                    bins0[bin] += bins0[bin+1];
+                    bins1[bin] += bins1[bin+1];
+                    bins2[bin] += bins2[bin+1];
+                    bins3[bin] += bins3[bin+1];
                 }
-                lhs0 = _mm_load_pd((gradient_t*) (bins0));
-                lhs1 = _mm_load_pd((gradient_t*) (bins1));
-                lhs2 = _mm_load_pd((gradient_t*) (bins2));
-                lhs3 = _mm_load_pd((gradient_t*) (bins3));
+                //lhs0 = _mm_load_pd((gradient_t*) (bins0));
+                //lhs1 = _mm_load_pd((gradient_t*) (bins1));
+                //lhs2 = _mm_load_pd((gradient_t*) (bins2));
+                //lhs3 = _mm_load_pd((gradient_t*) (bins3));
 
-                lhs0 = _mm_add_pd(lhs0, rhs0);
-                lhs1 = _mm_add_pd(lhs1, rhs1);
-                lhs2 = _mm_add_pd(lhs2, rhs2);
-                lhs3 = _mm_add_pd(lhs3, rhs3);
+                //lhs0 = _mm_add_pd(lhs0, rhs0);
+                //lhs1 = _mm_add_pd(lhs1, rhs1);
+                //lhs2 = _mm_add_pd(lhs2, rhs2);
+                //lhs3 = _mm_add_pd(lhs3, rhs3);
 
-                _mm_store_pd((gradient_t*) (bins0), lhs0);
-                _mm_store_pd((gradient_t*) (bins1), lhs1);
-                _mm_store_pd((gradient_t*) (bins2), lhs2);
-                _mm_store_pd((gradient_t*) (bins3), lhs3);
+                //_mm_store_pd((gradient_t*) (bins0), lhs0);
+                //_mm_store_pd((gradient_t*) (bins1), lhs1);
+                //_mm_store_pd((gradient_t*) (bins2), lhs2);
+                //_mm_store_pd((gradient_t*) (bins3), lhs3);
 
-                //bins0[0] += bins0[1];
-                //bins1[0] += bins1[1];
-                //bins2[0] += bins2[1];
-                //bins3[0] += bins3[1];
+                bins0[0] += bins0[1];
+                bins1[0] += bins1[1];
+                bins2[0] += bins2[1];
+                bins3[0] += bins3[1];
             }
             for (; node < num_candidates; ++node)
             {
                 Bin* bins = _head[node];
-                __m128d rhs = _mm_load_pd((gradient_t*) (bins+bin_cnt-1));
-                __m128d lhs;
+                //__m128d rhs = _mm_load_pd((gradient_t*) (bins+bin_cnt-1));
+                //__m128d lhs;
                 for (bin_t bin = bin_cnt-2; bin > 0; --bin)
                 {
-                    lhs = _mm_load_pd((gradient_t*) (bins+bin));
-                    lhs = _mm_add_pd(lhs, rhs);
-                    _mm_store_pd((gradient_t*) (bins+bin), lhs);
-                    rhs = lhs;
-                    //bins[bin] += bins[bin+1];
+                    //lhs = _mm_load_pd((gradient_t*) (bins+bin));
+                    //lhs = _mm_add_pd(lhs, rhs);
+                    //_mm_store_pd((gradient_t*) (bins+bin), lhs);
+                    //rhs = lhs;
+                    bins[bin] += bins[bin+1];
                 }
-                lhs = _mm_load_pd((gradient_t*) (bins));
-                lhs = _mm_add_pd(lhs, rhs);
-                _mm_store_pd((gradient_t*) (bins), lhs);
-                //bins[0] += bins[1];
+                //lhs = _mm_load_pd((gradient_t*) (bins));
+                //lhs = _mm_add_pd(lhs, rhs);
+                //_mm_store_pd((gradient_t*) (bins), lhs);
+                bins[0] += bins[1];
             }
 		}
 
@@ -356,7 +353,7 @@ namespace LambdaMART {
 			}
 
 			auto* bestSplit = new Split(fid, bestThreshold);
-			double splitGain = bestShiftedGain - totalGain;
+			score_t splitGain = bestShiftedGain - totalGain;
 
             LOG_TRACE("bestRightInfo: %s", bestRightInfo.toString().c_str());
             LOG_TRACE("bestShiftedGain: %lf", bestShiftedGain);

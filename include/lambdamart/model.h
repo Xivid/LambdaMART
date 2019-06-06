@@ -12,12 +12,12 @@ namespace LambdaMART {
         friend class Booster;
 
         std::vector<Tree*>  trees;
-        std::vector<double> tree_weights;
+        std::vector<float> tree_weights;
 
-        void add_tree(Tree* tree, double tree_weight) { trees.push_back(tree); tree_weights.push_back(tree_weight); }
+        void add_tree(Tree* tree, float tree_weight) { trees.push_back(tree); tree_weights.push_back(tree_weight); }
     public:
-        vector<double> predict(RawDataset* data, const string& output_path);
-        vector<double> predict(RawDataset* data);
+        vector<score_t> predict(RawDataset* data, const string& output_path);
+        vector<score_t> predict(RawDataset* data);
     };
 }
 #endif //LAMBDAMART_MODEL_H

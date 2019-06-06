@@ -155,7 +155,7 @@ namespace LambdaMART::Common {
     }
 
     template<typename T>
-    inline static double Pow(T base, int power) {
+    inline static float Pow(T base, int power) {
         if (power < 0) {
             return 1.0 / Pow(base, -power);
         } else if (power == 0) {
@@ -169,9 +169,9 @@ namespace LambdaMART::Common {
         }
     }
 
-    inline static const char* Atof(const char* p, double* out) {
+    inline static const char* Atof(const char* p, float* out) {
         int frac;
-        double sign, value, scale;
+        float sign, value, scale;
         *out = NAN;
         // Skip leading white space, if any.
         while (*p == ' ') {
@@ -195,7 +195,7 @@ namespace LambdaMART::Common {
 
             // Get digits after decimal point, if any.
             if (*p == '.') {
-                double right = 0.0;
+                float right = 0.0;
                 int nn = 0;
                 ++p;
                 while (*p >= '0' && *p <= '9') {
@@ -266,7 +266,7 @@ namespace LambdaMART::Common {
         return (*after == '\0');
     }
 
-    inline static bool AtofAndCheck(const char* p, double* out) {
+    inline static bool AtofAndCheck(const char* p, float* out) {
         const char* after = Atof(p, out);
         return (*after == '\0');
     }
@@ -350,7 +350,7 @@ return 10;
         Uint32ToStr(u, buffer);
     }
 
-    inline static void DoubleToStr(double value, char* buffer, size_t
+    inline static void DoubleToStr(float value, char* buffer, size_t
 #ifdef _MSC_VER
     buffer_len
 #endif
@@ -432,7 +432,7 @@ return 10;
         return str_buf.str();
     }
 
-    inline static std::string ArrayToString(const std::vector<double>& arr, size_t n) {
+    inline static std::string ArrayToString(const std::vector<float>& arr, size_t n) {
         if (arr.empty() || n == 0) {
             return std::string("");
         }
@@ -502,7 +502,7 @@ return 10;
     template<typename T>
     struct __StringToTHelperFast<T, true> {
         const char* operator()(const char*p, T* out) const {
-            double tmp = 0.0f;
+            float tmp = 0.0f;
             auto ret = Atof(p, &tmp);
             *out = static_cast<T>(tmp);
             return ret;
@@ -529,7 +529,7 @@ return 10;
             return std::string("");
         }
         std::stringstream str_buf;
-        str_buf << std::setprecision(std::numeric_limits<double>::digits10 + 2);
+        str_buf << std::setprecision(std::numeric_limits<float>::digits10 + 2);
         str_buf << strs[0];
         for (size_t i = 1; i < strs.size(); ++i) {
             str_buf << delimiter;
@@ -546,7 +546,7 @@ return 10;
         start = std::min(start, static_cast<size_t>(strs.size()) - 1);
         end = std::min(end, static_cast<size_t>(strs.size()));
         std::stringstream str_buf;
-        str_buf << std::setprecision(std::numeric_limits<double>::digits10 + 2);
+        str_buf << std::setprecision(std::numeric_limits<float>::digits10 + 2);
         str_buf << strs[start];
         for (size_t i = start + 1; i < end; ++i) {
             str_buf << delimiter;
@@ -570,34 +570,34 @@ return 10;
 * \brief Do inplace softmax transformaton on p_rec
 * \param p_rec The input/output vector of the values.
 */
-    inline static void Softmax(std::vector<double>* p_rec) {
-        std::vector<double> &rec = *p_rec;
-        double wmax = rec[0];
+    inline static void Softmax(std::vector<float>* p_rec) {
+        std::vector<float> &rec = *p_rec;
+        float wmax = rec[0];
         for (size_t i = 1; i < rec.size(); ++i) {
             wmax = std::max(rec[i], wmax);
         }
-        double wsum = 0.0f;
+        float wsum = 0.0f;
         for (size_t i = 0; i < rec.size(); ++i) {
             rec[i] = std::exp(rec[i] - wmax);
             wsum += rec[i];
         }
         for (size_t i = 0; i < rec.size(); ++i) {
-            rec[i] /= static_cast<double>(wsum);
+            rec[i] /= static_cast<float>(wsum);
         }
     }
 
-    inline static void Softmax(const double* input, double* output, int len) {
-        double wmax = input[0];
+    inline static void Softmax(const float* input, float* output, int len) {
+        float wmax = input[0];
         for (int i = 1; i < len; ++i) {
             wmax = std::max(input[i], wmax);
         }
-        double wsum = 0.0f;
+        float wsum = 0.0f;
         for (int i = 0; i < len; ++i) {
             output[i] = std::exp(input[i] - wmax);
             wsum += output[i];
         }
         for (int i = 0; i < len; ++i) {
-            output[i] /= static_cast<double>(wsum);
+            output[i] /= static_cast<float>(wsum);
         }
     }
 
@@ -783,12 +783,12 @@ return 10;
         return (bits[i1] >> i2) & 1;
     }
 
-    inline static bool CheckDoubleEqualOrdered(double a, double b) {
-        double upper = std::nextafter(a, INFINITY);
+    inline static bool CheckDoubleEqualOrdered(float a, float b) {
+        float upper = std::nextafter(a, INFINITY);
         return b <= upper;
     }
 
-    inline static double GetDoubleUpperBound(double a) {
+    inline static float GetDoubleUpperBound(float a) {
         return std::nextafter(a, INFINITY);;
     }
 
