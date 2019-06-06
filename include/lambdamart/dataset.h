@@ -23,19 +23,14 @@ using namespace std;
 
 namespace LambdaMART {
 
-    struct Binner{
-        // NOTE: Features are assumed to be arranged accordingly
-        vector<vector<double>> thresholds;
-    };
-
     class Feature {
         int bin_cnt;
     public:
         vector<int> bin_index;
-        vector<pair<double, int>> samples;
+        vector<pair<featval_t, int>> samples;
         vector<int> sample_index;
-        vector<double> sample_data;
-        vector<double> threshold;
+        vector<featval_t> sample_data;
+        vector<featval_t> threshold;
 
         explicit Feature(const uint8_t bin_cnt){
             this->threshold.resize(bin_cnt, -1);
@@ -51,7 +46,7 @@ namespace LambdaMART {
                 this->sample_index.emplace_back(sample.second);
             }
             // delete samples
-            vector<pair<double, int>>().swap(this->samples);
+            vector<pair<featval_t, int>>().swap(this->samples);
         }
 
          //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
@@ -65,34 +60,12 @@ namespace LambdaMART {
                  else {
                      curr_count = 0;
                      i--;
-                     threshold[bin_count] = i < n-1 ? (this->sample_data[i] + this->sample_data[i + 1]) / 2.0 : numeric_limits<double>::max();
+                     threshold[bin_count] = i < n-1 ? (this->sample_data[i] + this->sample_data[i + 1]) / 2.0 : numeric_limits<featval_t>::max();
                      bin_count++;
                  }
              }
              this->bin_cnt = bin_count+1;
          }
-
-        //overloaded bin for using predefined threshold values, using binner class and index of feature being binned.
-        void bin(int n, Binner *binner, int f) {
-            this->bin_index.resize(n, -1);
-            vector<double> thresholds = binner->thresholds[f];
-            int bin_count = 0;
-            for (int i = 0; i < n; i++) {
-                if(sample_data[i] <= thresholds[bin_count])
-                    bin_index[i] = bin_count;
-                else{
-                    bin_count++;
-                    i--;
-                }
-            }
-        }
-
-        vector<int> get_nonzero_bin_idx(){
-            vector<int> nnz_bin_index;
-            for(auto & i: this->sample_index)
-                nnz_bin_index.emplace_back(this->bin_index[i]);
-            return nnz_bin_index;
-        }
 
         int bin_count() const {
             return this->bin_cnt;
@@ -102,15 +75,14 @@ namespace LambdaMART {
     class Dataset {
         vector<Feature> data; // feature major; d rows, n columns
         int bin_size, bin_cnt, max_lbl;
-        Binner binner;
 
     protected:
-        void load_data_from_file(const char* path, vector<vector<pair<int, double>>>& data, vector<label_t> &rank, int& max_d){
+        void load_data_from_file(const char* path, vector<vector<pair<int, featval_t>>>& data, vector<label_t> &rank, int& max_d){
             ifstream infile(path);
             string line;
             if(infile.is_open()){
                 while(getline(infile, line)){
-                    vector<pair<int, double>> record;
+                    vector<pair<int, featval_t>> record;
                     istringstream row(line);
                     vector<string> tokens{istream_iterator<string>{row}, istream_iterator<string>{}};
                     for(auto & token: tokens){
@@ -122,7 +94,7 @@ namespace LambdaMART {
                             continue;
                         }
                         int index = stoi(token.substr(0, delimiter)) - 1;
-                        double val = stof(token.substr(delimiter+1, token.length()));
+                        featval_t val = stof(token.substr(delimiter+1, token.length()));
                         record.emplace_back(make_pair(index, val));
                         max_d = max(max_d, index+1);
                     }
@@ -164,16 +136,12 @@ namespace LambdaMART {
             this->d = INT_MIN;
         }
 
-        auto& get_data() const{
-            return data;
-        }
-
-        int max_label(){
-            return this->max_lbl;
+        auto& get_data(int i) const{
+            return data[i];
         }
 
         void load_dataset(const char* data_path, const char* query_path) {
-            vector<vector<pair<int, double>>> raw_data;
+            vector<vector<pair<int, featval_t>>> raw_data;
             load_data_from_file(data_path, raw_data, this->rank, this->d);
             this->n = raw_data.size();
             this->bin_size = (int)(n/bin_cnt);
@@ -189,12 +157,11 @@ namespace LambdaMART {
             }
 
             // delete raw_data
-            vector<vector<pair<int, double>>>().swap(raw_data);
+            vector<vector<pair<int, featval_t>>>().swap(raw_data);
 
             for(auto & feat: this->data) {
                 feat.sort();
                 feat.bin(this->bin_size, this->n);
-                this->binner.thresholds.emplace_back(feat.threshold);
             }
             Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
@@ -216,8 +183,7 @@ namespace LambdaMART {
                         exit(0);
                     }
 
-                    vector<int> bins;
-                    vector<double> thresholds;
+                    vector<int> bins; vector<featval_t> thresholds;
                     stringstream proc(tokens[1]);
                     while(proc.good()){
                         string bin;
@@ -287,11 +253,6 @@ namespace LambdaMART {
             return make_pair(this->n, this->d);
         }
 
-        // return binner
-        Binner* get_binner(){
-            return &(this->binner);
-        }
-
         // query boundaries (the first sample_id of each query)
         inline const sample_t* get_query_boundaries() const {
             return query_boundaries.data();
@@ -307,10 +268,6 @@ namespace LambdaMART {
 
         label_t* get_labels() {
             return rank.data();
-        }
-
-        int num_bins() const {
-            return this->bin_cnt;
         }
     };
 
@@ -338,7 +295,7 @@ namespace LambdaMART {
             Log::Info("Loaded dataset of size: %d samples x %d features", this->n, this->d);
         }
 
-        const vector<double>& get_sample_row(sample_t id) {
+        const vector<featval_t>& get_sample_row(sample_t id) {
             return data[id];
         }
     };

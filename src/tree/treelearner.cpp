@@ -1,7 +1,13 @@
 #include <lambdamart/treelearner.h>
 #include <numeric>
+#include <lambdamart/perf.h>
+#include <iostream>
+using namespace std;
 
 namespace LambdaMART {
+    int64_t sum_cycles_update = 0;
+    int64_t sum_cycles_cumulate = 0;
+    int64_t sum_cycles_gbs = 0;
 
 
 Tree* TreeLearner::build_new_tree()
@@ -23,7 +29,8 @@ Tree* TreeLearner::build_new_tree()
         find_best_splits();
         perform_split();
     }
-
+    Log::Info("update, cumulate, gbs, total cycles: %lld, %lld, %lld, %lld", sum_cycles_update,
+              sum_cycles_cumulate, sum_cycles_gbs, sum_cycles_update+sum_cycles_cumulate+sum_cycles_gbs);
     // mark remaining candidates as leaves
     while (!node_queue.empty()) {
         SplitCandidate* candidate = node_queue.top();
@@ -70,23 +77,178 @@ void TreeLearner::find_best_splits() {
 
     best_splits.clear();
     best_splits.resize(num_candidates);
-    for (feature_t fid = 0; fid < num_features; ++fid) {
-        LOG_TRACE("checking feature %lu", fid);
-        histograms.clear(num_candidates);
-        const Feature &feat = dataset->get_data()[fid];
+    LOG_TRACE("%lu", num_feature_blocking);
 
-        //TODO: unrolling
-        for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
+    feature_t fid;
+    const feature_t feature_rest = num_features % num_feature_blocking;
+
+    sample_t sample_idx;
+    const sample_t sample_rest = num_samples % num_sample_blocking;
+
+    for (fid = 0; fid < num_features - feature_rest; fid += num_feature_blocking) {
+        LOG_DEBUG("checking feature [%lu, %lu)", fid, fid+num_feature_blocking);
+        histograms.clear(num_candidates * num_feature_blocking);
+        const Feature &feat0 = dataset->get_data(fid);
+        const Feature &feat1 = dataset->get_data(fid+1);
+        const Feature &feat2 = dataset->get_data(fid+2);
+        const Feature &feat3 = dataset->get_data(fid+3);
+
+        cycles_count_start();
+        for (sample_idx = 0; sample_idx < num_samples - sample_rest; sample_idx += num_sample_blocking)
+        {
+            const int candidate0 = sample_to_candidate[sample_idx];
+            const int candidate1 = sample_to_candidate[sample_idx+1];
+            const int candidate2 = sample_to_candidate[sample_idx+2];
+            const int candidate3 = sample_to_candidate[sample_idx+3];
+
+            if (candidate0 != -1) {
+                const bin_t bin0 = feat0.bin_index[sample_idx];
+                const bin_t bin1 = feat1.bin_index[sample_idx];
+                const bin_t bin2 = feat2.bin_index[sample_idx];
+                const bin_t bin3 = feat3.bin_index[sample_idx];
+
+                const gradient_t grad = gradients[sample_idx];
+
+                histograms[candidate0*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate0*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate0*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate0*num_feature_blocking+3][bin3].update(1.0, grad);
+            }
+            if (candidate1 != -1) {
+                const bin_t bin0 = feat0.bin_index[sample_idx+1];
+                const bin_t bin1 = feat1.bin_index[sample_idx+1];
+                const bin_t bin2 = feat2.bin_index[sample_idx+1];
+                const bin_t bin3 = feat3.bin_index[sample_idx+1];
+
+                const gradient_t grad = gradients[sample_idx+1];
+
+                histograms[candidate1*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate1*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate1*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate1*num_feature_blocking+3][bin3].update(1.0, grad);
+            }
+            if (candidate2 != -1) {
+                const bin_t bin0 = feat0.bin_index[sample_idx+2];
+                const bin_t bin1 = feat1.bin_index[sample_idx+2];
+                const bin_t bin2 = feat2.bin_index[sample_idx+2];
+                const bin_t bin3 = feat3.bin_index[sample_idx+2];
+
+                const gradient_t grad = gradients[sample_idx+2];
+
+                histograms[candidate2*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate2*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate2*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate2*num_feature_blocking+3][bin3].update(1.0, grad);
+            }
+            if (candidate3 != -1) {
+                const bin_t bin0 = feat0.bin_index[sample_idx+3];
+                const bin_t bin1 = feat1.bin_index[sample_idx+3];
+                const bin_t bin2 = feat2.bin_index[sample_idx+3];
+                const bin_t bin3 = feat3.bin_index[sample_idx+3];
+
+                const gradient_t grad = gradients[sample_idx+3];
+
+                histograms[candidate3*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate3*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate3*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate3*num_feature_blocking+3][bin3].update(1.0, grad);
+            }
+        }
+        for (; sample_idx < num_samples; ++sample_idx)
+        {
+            const int candidate = sample_to_candidate[sample_idx];
+            if (candidate != -1) {
+                const bin_t bin0 = feat0.bin_index[sample_idx];
+                const bin_t bin1 = feat1.bin_index[sample_idx];
+                const bin_t bin2 = feat2.bin_index[sample_idx];
+                const bin_t bin3 = feat3.bin_index[sample_idx];
+
+                const gradient_t grad = gradients[sample_idx];
+
+                histograms[candidate*num_feature_blocking][bin0].update(1.0, grad);
+                histograms[candidate*num_feature_blocking+1][bin1].update(1.0, grad);
+                histograms[candidate*num_feature_blocking+2][bin2].update(1.0, grad);
+                histograms[candidate*num_feature_blocking+3][bin3].update(1.0, grad);
+            }
+        }
+        sum_cycles_update += cycles_count_stop();
+
+        cycles_count_start();
+        histograms.cumulate(num_candidates*num_feature_blocking);
+        sum_cycles_cumulate += cycles_count_stop();
+
+        for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
+
+            cycles_count_start();
+            auto local_best0 = histograms.get_best_split(candidate*num_feature_blocking, fid, feat0, node_info[candidate], min_data_in_leaf);
+            auto local_best1 = histograms.get_best_split(candidate*num_feature_blocking+1, fid+1, feat1, node_info[candidate], min_data_in_leaf);
+            auto local_best2 = histograms.get_best_split(candidate*num_feature_blocking+2, fid+2, feat2, node_info[candidate], min_data_in_leaf);
+            auto local_best3 = histograms.get_best_split(candidate*num_feature_blocking+3, fid+3, feat3, node_info[candidate], min_data_in_leaf);
+            sum_cycles_gbs += cycles_count_stop();
+
+            if (local_best0 >= best_splits[candidate]) {
+                best_splits[candidate] = local_best0;
+            }
+            if (local_best1 >= best_splits[candidate]) {
+                best_splits[candidate] = local_best1;
+            }
+            if (local_best2 >= best_splits[candidate]) {
+                best_splits[candidate] = local_best2;
+            }
+            if (local_best3 >= best_splits[candidate]) {
+                best_splits[candidate] = local_best3;
+            }
+        }
+    }
+
+    for (; fid < num_features; ++fid) {
+        LOG_DEBUG("checking feature %lu", fid);
+        histograms.clear(num_candidates);
+        const Feature &feat = dataset->get_data(fid);
+
+        cycles_count_start();
+
+        for (sample_idx = 0; sample_idx < num_samples - sample_rest; sample_idx += num_sample_blocking) {
+            const int candidate0 = sample_to_candidate[sample_idx];
+            const int candidate1 = sample_to_candidate[sample_idx+1];
+            const int candidate2 = sample_to_candidate[sample_idx+2];
+            const int candidate3 = sample_to_candidate[sample_idx+3];
+
+            if (candidate0 != -1) {
+                const bin_t bin = feat.bin_index[sample_idx];
+                histograms[candidate0][bin].update(1.0, gradients[sample_idx]);
+            }
+            if (candidate1 != -1) {
+                const bin_t bin = feat.bin_index[sample_idx+1];
+                histograms[candidate1][bin].update(1.0, gradients[sample_idx+1]);
+            }
+            if (candidate2 != -1) {
+                const bin_t bin = feat.bin_index[sample_idx+2];
+                histograms[candidate2][bin].update(1.0, gradients[sample_idx+2]);
+            }
+            if (candidate3 != -1) {
+                const bin_t bin = feat.bin_index[sample_idx+3];
+                histograms[candidate3][bin].update(1.0, gradients[sample_idx+3]);
+            }
+        }
+        for (; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
                 const bin_t bin = feat.bin_index[sample_idx];
                 histograms[candidate][bin].update(1.0, gradients[sample_idx]);
             }
         }
+        sum_cycles_update += cycles_count_stop();
+
+        cycles_count_start();
+        histograms.cumulate(num_candidates);
+        sum_cycles_cumulate += cycles_count_stop();
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
-            histograms.cumulate(candidate);
+            cycles_count_start();
             auto local_best = histograms.get_best_split(candidate, fid, feat, node_info[candidate], min_data_in_leaf);
+            sum_cycles_gbs += cycles_count_stop();
+
             if (local_best >= best_splits[candidate]) {
                 best_splits[candidate] = local_best;
             }
@@ -100,7 +262,7 @@ void TreeLearner::perform_split()
     //update node_to_output, sample_to_node
     //update cur_depth;
 
-    double min_gain_to_split = config->min_gain_to_split;
+    score_t min_gain_to_split = config->min_gain_to_split;
     vector<bool> do_split(num_candidates, false);
 
     // determine which nodes to really split
@@ -122,7 +284,7 @@ void TreeLearner::perform_split()
         const feature_t feature = best_splits[candidate].split->feature;
         const bin_t bin = best_splits[candidate].bin;
         // TODO: is there a way to optimize this 2-level random access?
-        if (dataset->get_data()[feature].bin_index[sample] <= bin) {
+        if (dataset->get_data(feature).bin_index[sample] <= bin) {
             sample_to_node[sample] <<= 1;  // move to left child
             best_splits[candidate].update_children_stats(gradients[sample] * gradients[sample], hessians[sample], 0., 0.);
         } else {

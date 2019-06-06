@@ -23,7 +23,8 @@ namespace LambdaMART {
         string ToString() const;
         inline bool GetString(const string& name, string* out);
         inline bool GetInt(const string& name, int* out);
-        inline bool GetDouble(const string& name, double* out);
+        inline bool GetDouble(const string& name, float* out);
+        inline bool GetFloat(const string& name, float* out);
         inline bool GetBool(const string& name, bool* out);
         inline bool GetIntVector(const string& name, vector<int>* out);
 
@@ -79,7 +80,7 @@ namespace LambdaMART {
         string train_data, train_query, train_label;
         string valid_data, valid_query;
         int num_iterations = 100;
-        double learning_rate = 0.1;
+        float learning_rate = 0.1;
 
 #pragma endregion
 
@@ -88,8 +89,8 @@ namespace LambdaMART {
         int max_depth = 9;
         int max_splits = 256;
         int min_data_in_leaf = 1;
-        double min_gain_to_split = 1e-6;
-        double min_impurity_to_split = 1e-6;
+        float min_gain_to_split = 1e-6;
+        float min_impurity_to_split = 1e-6;
 
 #pragma endregion
 
@@ -113,7 +114,7 @@ namespace LambdaMART {
 #pragma region Objective Parameters
 
         // desc = parameter for the sigmoid function
-        double sigmoid = 1.0;
+        float sigmoid = 1.0;
 
         // desc = optimizes `NDCG <https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG>`__ at this position
         // We assume that the number of sample in each query is at most 10000
@@ -131,6 +132,9 @@ namespace LambdaMART {
 
         // desc = evaluate training and validation ndcg every ``eval_interval`` iterations
         int eval_interval = 1;
+
+        const int num_feature_blocking = 4;
+        const int num_sample_blocking = 4;
 
 #pragma endregion
 
@@ -161,10 +165,10 @@ namespace LambdaMART {
         return false;
     }
 
-    inline bool Config::GetDouble(const std::string& name, double* out) {
+    inline bool Config::GetDouble(const std::string& name, float* out) {
         if (properties.count(name) > 0) {
             if (!Common::AtofAndCheck(properties.at(name).c_str(), out)) {
-                Log::Fatal("Parameter %s should be of type double, got \"%s\"",
+                Log::Fatal("Parameter %s should be of type float, got \"%s\"",
                            name.c_str(), properties.at(name).c_str());
             }
             return true;

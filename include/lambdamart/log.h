@@ -34,7 +34,7 @@ namespace LambdaMART {
   if ((pointer) == nullptr) Log::Fatal(#pointer " Can't be NULL at %s, line %d .\n", __FILE__,  __LINE__);
 #endif
 
-// #define DEBUG_OUTPUT
+#define DEBUG_OUTPUT_LEVEL 1
 
 #if DEBUG_OUTPUT_LEVEL >= 3
 #define LOG_TRACE(...) LambdaMART::Log::Trace(__VA_ARGS__)
@@ -114,7 +114,7 @@ namespace LambdaMART {
         static void Write(LogLevel level, long cur_time, const char* level_str, const char *format, va_list val) {
             if (level <= GetLevel()) {  // omit the message with low level
                 // write to STDOUT
-                printf("[%.3lfs] [%s] ", double(cur_time) / 1000, level_str);
+                printf("[%.3lfs] [%s] ", float(cur_time) / 1000, level_str);
                 vprintf(format, val);
                 printf("\n");
                 fflush(stdout);
