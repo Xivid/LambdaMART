@@ -1,5 +1,6 @@
 #include <lambdamart/treelearner.h>
 #include <numeric>
+#include <emmintrin.h>
 
 namespace LambdaMART {
 
@@ -86,8 +87,11 @@ void TreeLearner::find_best_splits() {
                 const double grad = gradients[sample_idx];
 
                 double *p = (double*) (histogram_data + candidate * bin_cnt + bin);
-                *p += 1.0;
-                *(p+1) += grad;
+//                *p += 1.0;
+//                *(p+1) += grad;
+                __m128d a = _mm_set_pd(grad, 1.0);
+                __m128d b = _mm_load_pd(p);  // this may throw an error if p is not aligned on 16-byte boundary, if so, use _mm_loadu_pd instead
+                _mm_store_pd(p, _mm_add_pd(a, b));
 //                 histograms[candidate][bin].update(1.0, gradients[sample_idx]);
             }
         }
