@@ -25,6 +25,8 @@ Model* Booster::train() {
         if (iter % config->eval_interval == 0)
             Log::Info("[%d]%s%s", iter, get_train_ndcg_string().c_str(), valid_dataset ? get_valid_ndcg_string().c_str() : "");
     }
+    Log::Info("update, cumulate, gbs, total cycles: %lld, %lld, %lld, %lld", treeLearner->sum_cycles_update,
+              treeLearner->sum_cycles_cumulate, treeLearner->sum_cycles_gbs, treeLearner->sum_cycles_update+treeLearner->sum_cycles_cumulate+treeLearner->sum_cycles_gbs);
 
     return model;
 }

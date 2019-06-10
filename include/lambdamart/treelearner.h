@@ -185,6 +185,10 @@ private:
     std::vector<candidateidx_t>         sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
     candidateidx_t                      num_candidates = 0;
     std::priority_queue<SplitCandidate*, std::vector<SplitCandidate*>, CmpCandidates> node_queue;
+    uint64_t sum_cycles_update = 0;
+    uint64_t sum_cycles_cumulate = 0;
+    uint64_t sum_cycles_gbs = 0;
+
 
     // tree building methods
     Tree*  build_new_tree();
