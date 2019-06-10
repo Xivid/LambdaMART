@@ -50,7 +50,7 @@ namespace LambdaMART {
         }
 
          //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
-         void bin(bin_t bin_size, int n) {
+         void bin(int bin_size, int n) {
              int curr_count = 0, bin_count = 0;
              bin_index.resize(n, -1);
 
