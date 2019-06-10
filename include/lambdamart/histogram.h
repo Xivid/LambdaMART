@@ -3,7 +3,7 @@
 
 #include <lambdamart/dataset.h>
 #include <immintrin.h>
-#include <emmintrin.h>
+#include <xmmintrin.h>
 #include <mm_malloc.h>
 
 #if defined(_MSC_VER)
@@ -29,7 +29,7 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-    struct ALIGNED(sizeof(gradient_t)*2) Bin
+    struct ALIGNED(sizeof(gradient_t)*4) Bin
 	//struct Bin
 	{
 		gradient_t sum_count, sum_gradients;
@@ -91,6 +91,13 @@ namespace LambdaMART {
 	{
 		lhs.sum_count -= rhs.sum_count;
 		lhs.sum_gradients -= rhs.sum_gradients;
+		return lhs;
+	}
+
+	inline Bin operator+(Bin lhs, const Bin& rhs)
+	{
+		lhs.sum_count += rhs.sum_count;
+		lhs.sum_gradients += rhs.sum_gradients;
 		return lhs;
 	}
 
@@ -236,79 +243,86 @@ namespace LambdaMART {
                 Bin* bins2 = _head[node+2];
                 Bin* bins3 = _head[node+3];
 
-                //__m128d rhs0 = _mm_load_pd((gradient_t*) (bins0+bin_cnt-1));
-                //__m128d rhs1 = _mm_load_pd((gradient_t*) (bins1+bin_cnt-1));
-                //__m128d rhs2 = _mm_load_pd((gradient_t*) (bins2+bin_cnt-1));
-                //__m128d rhs3 = _mm_load_pd((gradient_t*) (bins3+bin_cnt-1));
+                Bin bin0 = bins0[0];
+                Bin bin1 = bins1[0];
+                Bin bin2 = bins2[0];
+                Bin bin3 = bins3[0];
 
-                //__m128d lhs0;
-                //__m128d lhs1;
-                //__m128d lhs2;
-                //__m128d lhs3;
+                __m128 rhs0 = _mm_load_ps((gradient_t*) (bins0+bin_cnt-2));
+                __m128 rhs1 = _mm_load_ps((gradient_t*) (bins1+bin_cnt-2));
+                __m128 rhs2 = _mm_load_ps((gradient_t*) (bins2+bin_cnt-2));
+                __m128 rhs3 = _mm_load_ps((gradient_t*) (bins3+bin_cnt-2));
 
-                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                __m128 mhs0 = _mm_load_ps((gradient_t*) (bins0+bin_cnt-3));
+                __m128 mhs1 = _mm_load_ps((gradient_t*) (bins1+bin_cnt-3));
+                __m128 mhs2 = _mm_load_ps((gradient_t*) (bins2+bin_cnt-3));
+                __m128 mhs3 = _mm_load_ps((gradient_t*) (bins3+bin_cnt-3));
+
+                __m128 lhs0;
+                __m128 lhs1;
+                __m128 lhs2;
+                __m128 lhs3;
+
+                //bins0[bin_cnt-2] += bins0[bin_cnt-1];
+                //bins1[bin_cnt-2] += bins1[bin_cnt-1];
+                //bins2[bin_cnt-2] += bins2[bin_cnt-1];
+                //bins3[bin_cnt-2] += bins3[bin_cnt-1];
+
+                for (bin_t bin = bin_cnt-3; bin > 0; --bin)
                 {
-                    //lhs0 = _mm_load_pd((gradient_t*) (bins0+bin));
-                    //lhs1 = _mm_load_pd((gradient_t*) (bins1+bin));
-                    //lhs2 = _mm_load_pd((gradient_t*) (bins2+bin));
-                    //lhs3 = _mm_load_pd((gradient_t*) (bins3+bin));
+                    lhs0 = _mm_load_ps((gradient_t*) (bins0+bin-1));
+                    lhs1 = _mm_load_ps((gradient_t*) (bins1+bin-1));
+                    lhs2 = _mm_load_ps((gradient_t*) (bins2+bin-1));
+                    lhs3 = _mm_load_ps((gradient_t*) (bins3+bin-1));
 
-                    //lhs0 = _mm_add_pd(lhs0, rhs0);
-                    //lhs1 = _mm_add_pd(lhs1, rhs1);
-                    //lhs2 = _mm_add_pd(lhs2, rhs2);
-                    //lhs3 = _mm_add_pd(lhs3, rhs3);
+                    mhs0 = _mm_add_ps(mhs0, rhs0);
+                    mhs1 = _mm_add_ps(mhs1, rhs1);
+                    mhs2 = _mm_add_ps(mhs2, rhs2);
+                    mhs3 = _mm_add_ps(mhs3, rhs3);
 
-                    //_mm_store_pd((gradient_t*) (bins0+bin), lhs0);
-                    //_mm_store_pd((gradient_t*) (bins1+bin), lhs1);
-                    //_mm_store_pd((gradient_t*) (bins2+bin), lhs2);
-                    //_mm_store_pd((gradient_t*) (bins3+bin), lhs3);
+                    _mm_store_ps((gradient_t*) (bins0+bin), mhs0);
+                    _mm_store_ps((gradient_t*) (bins1+bin), mhs1);
+                    _mm_store_ps((gradient_t*) (bins2+bin), mhs2);
+                    _mm_store_ps((gradient_t*) (bins3+bin), mhs3);
 
-                    //rhs0 = lhs0;
-                    //rhs1 = lhs1;
-                    //rhs2 = lhs2;
-                    //rhs3 = lhs3;
-                    bins0[bin] += bins0[bin+1];
-                    bins1[bin] += bins1[bin+1];
-                    bins2[bin] += bins2[bin+1];
-                    bins3[bin] += bins3[bin+1];
+                    rhs0 = mhs0;
+                    rhs1 = mhs1;
+                    rhs2 = mhs2;
+                    rhs3 = mhs3;
+
+                    mhs0 = lhs0;
+                    mhs1 = lhs1;
+                    mhs2 = lhs2;
+                    mhs3 = lhs3;
+
+                    //bins0[bin] += bins0[bin+1];
+                    //bins1[bin] += bins1[bin+1];
+                    //bins2[bin] += bins2[bin+1];
+                    //bins3[bin] += bins3[bin+1];
                 }
-                //lhs0 = _mm_load_pd((gradient_t*) (bins0));
-                //lhs1 = _mm_load_pd((gradient_t*) (bins1));
-                //lhs2 = _mm_load_pd((gradient_t*) (bins2));
-                //lhs3 = _mm_load_pd((gradient_t*) (bins3));
-
-                //lhs0 = _mm_add_pd(lhs0, rhs0);
-                //lhs1 = _mm_add_pd(lhs1, rhs1);
-                //lhs2 = _mm_add_pd(lhs2, rhs2);
-                //lhs3 = _mm_add_pd(lhs3, rhs3);
-
-                //_mm_store_pd((gradient_t*) (bins0), lhs0);
-                //_mm_store_pd((gradient_t*) (bins1), lhs1);
-                //_mm_store_pd((gradient_t*) (bins2), lhs2);
-                //_mm_store_pd((gradient_t*) (bins3), lhs3);
-
-                bins0[0] += bins0[1];
-                bins1[0] += bins1[1];
-                bins2[0] += bins2[1];
-                bins3[0] += bins3[1];
+                bins0[0] = bin0 + bins0[1];
+                bins1[0] = bin1 + bins1[1];
+                bins2[0] = bin2 + bins2[1];
+                bins3[0] = bin3 + bins3[1];
             }
             for (; node < num_candidates; ++node)
             {
                 Bin* bins = _head[node];
-                //__m128d rhs = _mm_load_pd((gradient_t*) (bins+bin_cnt-1));
-                //__m128d lhs;
-                for (bin_t bin = bin_cnt-2; bin > 0; --bin)
+                Bin bin0 = bins[0];
+                __m128 rhs = _mm_load_ps((gradient_t*) (bins+bin_cnt-2));
+                __m128 mhs = _mm_load_ps((gradient_t*) (bins+bin_cnt-3));
+                __m128 lhs;
+                //bins[bin_cnt-2] += bins[bin_cnt-1];
+                for (bin_t bin = bin_cnt-3; bin > 0; --bin)
                 {
-                    //lhs = _mm_load_pd((gradient_t*) (bins+bin));
-                    //lhs = _mm_add_pd(lhs, rhs);
-                    //_mm_store_pd((gradient_t*) (bins+bin), lhs);
-                    //rhs = lhs;
-                    bins[bin] += bins[bin+1];
+                    lhs = _mm_load_ps((gradient_t*) (bins+bin-1));
+                    mhs = _mm_add_ps(mhs, rhs);
+                    _mm_store_ps((gradient_t*) (bins+bin), mhs);
+                    rhs = mhs;
+                    mhs = lhs;
+                    //bins[bin] += bins[bin+1];
                 }
-                //lhs = _mm_load_pd((gradient_t*) (bins));
-                //lhs = _mm_add_pd(lhs, rhs);
-                //_mm_store_pd((gradient_t*) (bins), lhs);
-                bins[0] += bins[1];
+                bins[0] = bin0 + bins[1];
             }
 		}
 
