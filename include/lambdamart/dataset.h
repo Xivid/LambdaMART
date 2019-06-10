@@ -24,15 +24,15 @@ using namespace std;
 namespace LambdaMART {
 
     class Feature {
-        int bin_cnt;
+        bin_t bin_cnt;
     public:
-        vector<int> bin_index;
+        vector<bin_t> bin_index;
         vector<pair<featval_t, int>> samples;
         vector<int> sample_index;
         vector<featval_t> sample_data;
         vector<featval_t> threshold;
 
-        explicit Feature(const uint8_t bin_cnt){
+        explicit Feature(const bin_t bin_cnt){
             this->threshold.resize(bin_cnt, -1);
             this->bin_cnt = 0;
         }
@@ -50,7 +50,7 @@ namespace LambdaMART {
         }
 
          //creates bins with sizes "bin_size" and also calculates threshold values that split the bins
-         void bin(int bin_size, int n) {
+         void bin(bin_t bin_size, int n) {
              int curr_count = 0, bin_count = 0;
              bin_index.resize(n, -1);
 
@@ -67,7 +67,7 @@ namespace LambdaMART {
              this->bin_cnt = bin_count+1;
          }
 
-        int bin_count() const {
+        bin_t bin_count() const {
             return this->bin_cnt;
         }
     };
@@ -183,7 +183,7 @@ namespace LambdaMART {
                         exit(0);
                     }
 
-                    vector<int> bins; vector<featval_t> thresholds;
+                    vector<bin_t> bins; vector<featval_t> thresholds;
                     stringstream proc(tokens[1]);
                     while(proc.good()){
                         string bin;
