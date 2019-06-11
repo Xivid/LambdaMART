@@ -2,58 +2,17 @@
 #define LAMBDAMART_HISTOGRAM_H
 
 #include <lambdamart/dataset.h>
+#include <immintrin.h>
+#include <emmintrin.h>
+#include <mm_malloc.h>
+
+#if defined(_MSC_VER)
+#define ALIGNED(x) __declspec(align(x))
+#else
+#define ALIGNED(x) __attribute__ ((aligned(x)))
+#endif
 
 namespace LambdaMART {
-
-    /*
-	class FeatureColumn
-	{
-	public:
-		feature_t fid = 0;
-
-		std::vector<sample_t> indices;
-		std::vector<bin_t> values;
-		sample_t used = 0;  // number of non-default elements
-		sample_t size = 0;  // total number of elements
-		bin_t default_val = 0;  // most occurred value in this array
-		std::vector<featval_t> splits; // thresholds
-
-		void setDefault(bin_t def)
-		{
-			default_val = def;
-		}
-
-		void setSize(sample_t datasize)
-		{
-			size = datasize;
-		}
-
-		void NonDefaultResize(size_t size)
-		{
-			indices.resize(0);
-			indices.reserve(size);
-			values.resize(0);
-			values.reserve(size);
-			used = 0;
-		}
-
-		void push_back(sample_t index, bin_t value)
-		{
-			indices.push_back(index);
-			values.push_back(value);
-			++used;
-		}
-
-		void toArray(std::vector<bin_t> &vec)
-		{
-			std::fill(vec.begin(), vec.end(), default_val);
-			for (size_t i = 0; i < used; ++i)
-			{
-				vec[indices[i]] = values[i];
-			}
-		}
-	};
-	*/
 
 	struct Split
 	{
@@ -70,8 +29,8 @@ namespace LambdaMART {
 	};
 
 	// aligned on 8-byte boundary
-//	struct __declspec(align(8)) Bin
-	struct Bin
+    struct ALIGNED(sizeof(gradient_t)*2) Bin
+	//struct Bin
 	{
 		gradient_t sum_count, sum_gradients;
 
@@ -85,14 +44,14 @@ namespace LambdaMART {
 
 		inline void clear() { sum_count = sum_gradients = 0.0f; }
 
-		inline void update(gradient_t count, gradient_t gradient)
-		{
-			//__m128 tmp = _mm_setzero_ps(), rhs = _mm_set_ps(0, 0, gradient, count);
-			//tmp = _mm_add_ps(_mm_loadl_pi(tmp, (__m64 const *) this), rhs);
-			//_mm_storel_pi((__m64 *) this, tmp);
-			sum_count += count;
-			sum_gradients += gradient;
-		}
+//		inline void update(gradient_t count, gradient_t gradient)
+//		{
+//			//__m128 tmp = _mm_setzero_ps(), rhs = _mm_set_ps(0, 0, gradient, count);
+//			//tmp = _mm_add_ps(_mm_loadl_pi(tmp, (__m64 const *) this), rhs);
+//			//_mm_storel_pi((__m64 *) this, tmp);
+//			sum_count += count;
+//			sum_gradients += gradient;
+//		}
 
 		inline gradient_t getLeafSplitGain() const
 		{
@@ -191,247 +150,13 @@ namespace LambdaMART {
         }
 	};
 
-	struct Histogram
+	struct HistogramMatrix
 	{
-		bin_t bin_cnt;
-		std::vector<Bin> bins;
-
-		Histogram() = default;
-
-		Histogram(bin_t numbins) : bin_cnt(numbins)
-		{
-			bins.resize(numbins);
-		}
-
-		Histogram(const Bin* hist, bin_t numbins) : bin_cnt(numbins)
-		{
-			bins.assign(hist, hist + numbins);
-		}
-
-		inline void update(bin_t bin, gradient_t count, gradient_t gradient)
-		{
-			bins[bin].update(count, gradient);
-		}
-
-		void cumulate()
-		{
-			if (bin_cnt <= 1)
-			{
-				return;
-			}
-
-			// cumulate from right to left
-			for (bin_t bin = bin_cnt -2; bin >= 0; --bin)
-			{
-				bins[bin] += bins[bin+1];
-			}
-		}
-
-		//TODO: defaultBin - part of optimization
-		//void cumulate(const Bin& info, bin_t defaultBin)
-		//{
-		//	if (bin_cnt <= 1)
-		//	{
-		//		return;
-		//	}
-
-		//	// cumulate from right to left
-		//	for (bin_t bin = bin_cnt - 2; bin > defaultBin; --bin)
-		//	{
-		//		bins[bin] += bins[bin + 1];
-		//	}
-
-		//	if (defaultBin != 0)
-		//	{
-		//		// put statistics of bin #1 ~ default in bin #0 ~ #(default - 1) temporarily
-		//		// bins[0].val = _mm_sub_pd(info.val, bins[0].val);
-		//		bins[0] ^= info;
-		//		for (bin_t bin = 1; bin < defaultBin; ++bin)
-		//		{
-		//			bin_t binLeft = bin - 1;
-		//			// bins[bin].val = _mm_sub_pd(bins[binLeft].val, bins[bin].val);
-		//			bins[bin] ^= bins[binLeft];
-		//		}
-
-		//		// shift right to the correct place
-		//		for (bin_t bin = defaultBin; bin > 0; --bin)
-		//		{
-		//			bin_t binLeft = bin - 1;
-		//			bins[bin] = bins[binLeft];
-		//		}
-		//	}
-
-		//	bins[0] = info;
-		//}
-
-		inline void GetFromDifference(const Histogram& parent, const Histogram& sibling)
-		{
-			const std::vector<Bin>& pbins = parent.bins;
-			const std::vector<Bin>& sbins = sibling.bins;
-
-			for (int i = 0; i < bin_cnt; ++i)
-			{
-				bins[i] = pbins[i] - sbins[i];
-			}
-
-			//unrolling
-			//int remaining = bin_cnt % 4;
-			//for (i = 0; i < bin_cnt - remaining; i += 4)
-			//{
-			//	bins[i] = pbins[i] - sbins[i];
-			//	bins[i + 1] = pbins[i + 1] - sbins[i + 1];
-			//	bins[i + 2] = pbins[i + 2] - sbins[i + 2];
-			//	bins[i + 3] = pbins[i + 3] - sbins[i + 3];
-			//}
-			//for (; i < bin_cnt; ++i)
-			//{
-			//	bins[i] = pbins[i] - sbins[i];
-			//}
-		}
-
-		SplitInfo BestSplit(const feature_t& fid,
-						    Feature& feat,
-						    const NodeStats* nodeInfo,
-						    sample_t minInstancesPerNode = 1)
-		{
-			score_t totalGain = nodeInfo->getLeafSplitGain();
-			NodeStats bestRightInfo;
-			score_t bestShiftedGain = 0.0l;
-			featval_t bestThreshold = 0.0l;
-			bin_t bestThresholdBin = 0;
-			size_t temp_threshold_size = feat.threshold.size();
-
-			for (bin_t i = 1; i < temp_threshold_size; ++i)
-			{
-				bin_t threshLeft = i;
-				NodeStats gt(bins[threshLeft]), lte(bins[0] - bins[threshLeft]);
-				bin_t th = i - 1;
-
-				if (lte.sum_count >= minInstancesPerNode && gt.sum_count >= minInstancesPerNode)
-				{
-					score_t currentShiftedGain = lte.getLeafSplitGain() + gt.getLeafSplitGain();
-
-					if (currentShiftedGain > bestShiftedGain)
-					{
-						bestRightInfo = gt;
-						bestShiftedGain = currentShiftedGain;
-						bestThreshold = feat.threshold[th];
-						bestThresholdBin = th;
-					}
-				}
-			}
-
-			Split* bestSplit = new Split(fid, bestThreshold);
-			score_t splitGain = bestShiftedGain - totalGain;
-			NodeStats bestLeftInfo(*nodeInfo - bestRightInfo);
-
-			return SplitInfo(bestSplit, bestThresholdBin, splitGain, new NodeStats(*nodeInfo - bestRightInfo), new NodeStats(bestRightInfo));
-		}
-	};
-
-	//TODO: HistogramCacheByNode - part of optimization
-	/*!
-	* HistogramCacheByNode (size of pool < max number of nodes in tree)
-	*/
-	/*struct HistogramCacheByNode
-	{
-		int used_slots;
-		std::vector<Histogram> pool;
-		std::vector<int> NodeIDToSlot, SlotToNodeID;
-
-		HistogramCacheByNode() : used_slots(0)
-		{
-			// in default, max 1024 nodes (10 levels of depth), 64 bins per histogram
-			NodeIDToSlot.clear();
-			NodeIDToSlot.resize(1024, -1);
-			SlotToNodeID.clear();
-			SlotToNodeID.resize(1024, -1);
-			pool.clear();
-			pool.reserve(1024);
-		}
-
-		HistogramCacheByNode(int maxnodes) : used_slots(0)
-		{
-			NodeIDToSlot.clear();
-			NodeIDToSlot.resize(maxnodes, -1);
-			SlotToNodeID.clear();
-			SlotToNodeID.resize(maxnodes, -1);
-			pool.clear();
-			pool.reserve(maxnodes);
-		}
-
-		void init(int maxnodes = 1024)
-		{
-			used_slots = 0;
-			NodeIDToSlot.clear();
-			NodeIDToSlot.resize(maxnodes, -1);
-			SlotToNodeID.clear();
-			SlotToNodeID.resize(maxnodes, -1);
-			pool.clear();
-			pool.reserve(maxnodes);
-		}
-
-		~HistogramCacheByNode()
-		{
-			NodeIDToSlot.resize(0);
-			NodeIDToSlot.shrink_to_fit();
-			SlotToNodeID.resize(0);
-			SlotToNodeID.shrink_to_fit();
-			pool.resize(0);
-			pool.shrink_to_fit();
-		}
-
-		void put(nodeidx_t nodeID, const Histogram& hist)
-		{
-			NodeIDToSlot[nodeID] = used_slots;
-			SlotToNodeID[used_slots] = nodeID;
-			pool.push_back(hist);
-			++used_slots;
-		}
-
-		void put(nodbin_cntnodeID, bin_t numBins, const Bin* hist)
-		{
-			NodeIDToSlot[nodeID] = used_slots;
-			SlotToNodeID[used_slots] = nodeID;
-			pool.push_back(Histogram(hist, numBins));
-			++used_slots;
-		}
-
-		bool exist(nodeidx_t nodeID)
-		{
-			return (NodeIDToSlot[nodeID] >= 0);
-		}
-
-		const Histogram& get(nodeidx_t nodeID)
-		{
-			//ERROR_HANDLING_ASSERT_EX(NodeIDToSlot[nodeID] >= 0, "Accessing non-existent histogram pool item (node %u)!", nodeID);
-			return pool[NodeIDToSlot[nodeID]];
-		}
-
-		void remove(nodeidx_t myID)
-		{
-			// put the last node's histogram into this node's slot
-			int mySlot = NodeIDToSlot[myID];
-			nodeidx_t nodeAtEnd = SlotToNodeID[used_slots - 1];
-
-			NodeIDToSlot[nodeAtEnd] = mySlot;
-			SlotToNodeID[mySlot] = nodeAtEnd;
-
-			pool[mySlot] = pool.back();
-			pool.pop_back();
-			--used_slots;
-		}
-	}; */
-
-	class HistogramMatrix
-	{
-	private:
 		nodeidx_t num_nodes;
 		bin_t bin_cnt;  // unified max num of bins
 		Bin** _head;
 		Bin* _data;
 
-	public:
 		HistogramMatrix() : num_nodes(0), bin_cnt(0), _head(nullptr), _data(nullptr) {}
 
 		HistogramMatrix(nodeidx_t nodes, bin_t bins)
@@ -446,19 +171,20 @@ namespace LambdaMART {
 		{
             // TODO: use aligned malloc and free (different functions in macos/linux/windows)
 
-			if (_data != nullptr)
-				free(_data);
-				//_aligned_free(_data);
-			if (_head != nullptr)
-				free(_head);
-				//_aligned_free(_head);
+            if (_data != nullptr)
+                //free(_data);
+                _mm_free(_data);
+            //_aligned_free(_data);
+            if (_head != nullptr)
+                //free(_head);
+                _mm_free(_head);
 
 			num_nodes = nodes;
 			bin_cnt = bins;
-			_head = (Bin**)malloc(sizeof(Bin*) * nodes);
-			_data = (Bin*)malloc(sizeof(Bin) * nodes * bins);
-			//_head = (Bin**)_aligned_malloc(sizeof(Bin*) * nodes, sizeof(Bin*));
-			//_data = (Bin*)_aligned_malloc(sizeof(Bin) * nodes * bins, 8);
+			//_head = (Bin**)malloc(sizeof(Bin*) * nodes);
+			//_data = (Bin*)malloc(sizeof(Bin) * nodes * bins);
+			_head = (Bin**)_mm_malloc(sizeof(Bin*) * nodes, sizeof(Bin*));
+			_data = (Bin*)_mm_malloc(sizeof(Bin) * nodes * bins, sizeof(Bin));
 			for (nodeidx_t i = 0; i < nodes; ++i)
 			{
 				_head[i] = _data + i * bins;
@@ -467,10 +193,10 @@ namespace LambdaMART {
 
 		~HistogramMatrix()
 		{
-			free(_data);
-			free(_head);
-			//_aligned_free(_data);
-			//_aligned_free(_head);
+			//free(_data);
+			//free(_head);
+			_mm_free(_data);
+			_mm_free(_head);
 		}
 
 
@@ -512,124 +238,87 @@ namespace LambdaMART {
                 Bin* bins2 = _head[node+2];
                 Bin* bins3 = _head[node+3];
 
+                __m128d rhs0 = _mm_load_pd((gradient_t*) (bins0+bin_cnt-1));
+                __m128d rhs1 = _mm_load_pd((gradient_t*) (bins1+bin_cnt-1));
+                __m128d rhs2 = _mm_load_pd((gradient_t*) (bins2+bin_cnt-1));
+                __m128d rhs3 = _mm_load_pd((gradient_t*) (bins3+bin_cnt-1));
+
+                __m128d lhs0;
+                __m128d lhs1;
+                __m128d lhs2;
+                __m128d lhs3;
+
                 for (bin_t bin = bin_cnt-2; bin > 0; --bin)
                 {
-                    bins0[bin] += bins0[bin+1];
-                    bins1[bin] += bins1[bin+1];
-                    bins2[bin] += bins2[bin+1];
-                    bins3[bin] += bins3[bin+1];
+
+                    lhs0 = _mm_load_pd((gradient_t*) (bins0+bin));
+                    lhs1 = _mm_load_pd((gradient_t*) (bins1+bin));
+                    lhs2 = _mm_load_pd((gradient_t*) (bins2+bin));
+                    lhs3 = _mm_load_pd((gradient_t*) (bins3+bin));
+
+                    //TODO try fma?
+                    lhs0 = _mm_add_pd(lhs0, rhs0);
+                    lhs1 = _mm_add_pd(lhs1, rhs1);
+                    lhs2 = _mm_add_pd(lhs2, rhs2);
+                    lhs3 = _mm_add_pd(lhs3, rhs3);
+
+                    _mm_store_pd((gradient_t*) (bins0+bin), lhs0);
+                    _mm_store_pd((gradient_t*) (bins1+bin), lhs1);
+                    _mm_store_pd((gradient_t*) (bins2+bin), lhs2);
+                    _mm_store_pd((gradient_t*) (bins3+bin), lhs3);
+
+                    rhs0 = lhs0;
+                    rhs1 = lhs1;
+                    rhs2 = lhs2;
+                    rhs3 = lhs3;
+                    //bins0[bin] += bins0[bin+1];
+                    //bins1[bin] += bins1[bin+1];
+                    //bins2[bin] += bins2[bin+1];
+                    //bins3[bin] += bins3[bin+1];
 
                     __builtin_prefetch(&bins0[bin-8], 0, 1);
                     __builtin_prefetch(&bins1[bin-8], 0, 1);
                     __builtin_prefetch(&bins2[bin-8], 0, 1);
                     __builtin_prefetch(&bins3[bin-8], 0, 1);
                 }
-                bins0[0] += bins0[1];
-                bins1[0] += bins1[1];
-                bins2[0] += bins2[1];
-                bins3[0] += bins3[1];
+                lhs0 = _mm_load_pd((gradient_t*) (bins0));
+                lhs1 = _mm_load_pd((gradient_t*) (bins1));
+                lhs2 = _mm_load_pd((gradient_t*) (bins2));
+                lhs3 = _mm_load_pd((gradient_t*) (bins3));
+
+                lhs0 = _mm_add_pd(lhs0, rhs0);
+                lhs1 = _mm_add_pd(lhs1, rhs1);
+                lhs2 = _mm_add_pd(lhs2, rhs2);
+                lhs3 = _mm_add_pd(lhs3, rhs3);
+
+                _mm_store_pd((gradient_t*) (bins0), lhs0);
+                _mm_store_pd((gradient_t*) (bins1), lhs1);
+                _mm_store_pd((gradient_t*) (bins2), lhs2);
+                _mm_store_pd((gradient_t*) (bins3), lhs3);
+
+                //bins0[0] += bins0[1];
+                //bins1[0] += bins1[1];
+                //bins2[0] += bins2[1];
+                //bins3[0] += bins3[1];
             }
             for (; node < num_candidates; ++node)
             {
                 Bin* bins = _head[node];
+                __m128d rhs = _mm_load_pd((gradient_t*) (bins+bin_cnt-1));
+                __m128d lhs;
                 for (bin_t bin = bin_cnt-2; bin > 0; --bin)
                 {
-                    bins[bin] += bins[bin+1];
+                    lhs = _mm_load_pd((gradient_t*) (bins+bin));
+                    lhs = _mm_add_pd(lhs, rhs);
+                    _mm_store_pd((gradient_t*) (bins+bin), lhs);
+                    rhs = lhs;
+                    //bins[bin] += bins[bin+1];
                 }
-                bins[0] += bins[1];
+                lhs = _mm_load_pd((gradient_t*) (bins));
+                lhs = _mm_add_pd(lhs, rhs);
+                _mm_store_pd((gradient_t*) (bins), lhs);
+                //bins[0] += bins[1];
             }
-		}
-		//TODO: defaultBin - part of optimization
-		//inline void cumulate(nodeidx_t node, const NodeStats* info, bin_t defaultBin)
-		//{
-		//	// TODO: loop unrolling
-
-		//	if (bin_cnt <= 1)
-		//	{
-		//		return;
-		//	}
-
-		//	Bin* bins = _head[node];
-		//	const Bin total = *info;
-
-		//	// cumulate from right to left
-		//	for (bin_t bin = bin_cnt - 2; bin > defaultBin; --bin)
-		//	{
-		//		bin_t binRight = bin + 1;
-		//		bins[bin] += bins[binRight];
-		//	}
-
-		//	if (defaultBin != 0)
-		//	{
-		//		// put statistics of bin #1 ~ default in bin #0 ~ #(default - 1) temporarily
-		//		bins[0] ^= total;
-		//		for (bin_t bin = 1; bin < defaultBin; ++bin)
-		//		{
-		//			bin_t binLeft = bin - 1;
-		//			bins[bin] ^= bins[binLeft];
-		//		}
-
-		//		// shift right to the correct place
-		//		for (bin_t bin = defaultBin; bin > 0; --bin)
-		//		{
-		//			bin_t binLeft = bin - 1;
-		//			bins[bin] = bins[binLeft];
-		//		}
-		//	}
-
-		//	bins[0] = total;
-		//}
-
-		inline void GetFromDifference(nodeidx_t node, const Histogram& parent_hist, Bin* sibling)
-		{
-			Bin* bins = _head[node];
-			const std::vector<Bin>& pbins = parent_hist.bins;
-
-			for (int i = 0; i < bin_cnt; ++i)
-			{
-				bins[i] = pbins[i] - sibling[i];
-			}
-
-			//TODO: unrolling
-			//int remaining = bin_cnt % 4;
-			//for (i = 0; i < bin_cnt - remaining; i += 4)
-			//{
-			//	bins[i] = pbins[i] - sibling[i];
-			//	bins[i + 1] = pbins[i + 1] - sibling[i + 1];
-			//	bins[i + 2] = pbins[i + 2] - sibling[i + 2];
-			//	bins[i + 3] = pbins[i + 3] - sibling[i + 3];
-			//}
-			//for (; i < bin_cnt; ++i)
-			//{
-			//	bins[i] = pbins[i] - sibling[i];
-			//}
-		}
-
-		inline void GetFromDifference(nodeidx_t node, bin_t bin_cnt, const Histogram& parent_hist, const Histogram& sibling_hist)
-		{
-			auto bins = _head[node];
-			const std::vector<Bin>& pbins = parent_hist.bins;
-			const std::vector<Bin>& sbins = sibling_hist.bins;
-
-			int i;
-			for (i = 0; i < bin_cnt; ++i)
-			{
-				bins[i] = pbins[i] - sbins[i];
-			}
-
-			//TODO: unrolling
-			//int remaining = bin_cnt % 4;
-			//for (i = 0; i < bin_cnt - remaining; i += 4)
-			//{
-			//	bins[i] = pbins[i] - sibling[i];
-			//	bins[i + 1] = pbins[i + 1] - sibling[i + 1];
-			//	bins[i + 2] = pbins[i + 2] - sibling[i + 2];
-			//	bins[i + 3] = pbins[i + 3] - sibling[i + 3];
-			//}
-			//for (; i < bin_cnt; ++i)
-			//{
-			//	bins[i] = pbins[i] - sibling[i];
-			//}
 		}
 
 		SplitInfo get_best_split(nodeidx_t node, feature_t fid,

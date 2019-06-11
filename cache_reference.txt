@@ -1,0 +1,145 @@
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tests/perf2/mslr.20.conf
+[0.001s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[29.110s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[29.110s] [Info] No validation dataset
+[29.110s] [Info] Start training...
+[29.131s] [Info] num_feature_blocking: 2, num_sample_blocking: 2
+[47.553s] [Info] [10]	train-ndcg@1:0.474025	train-ndcg@3:0.443047	train-ndcg@5:0.443073	train-ndcg@10:0.458289
+[47.553s] [Info] update, cumulate, gbs, total cycles: 37233705274, 134689627, 277974783, 37646369684
+[47.553s] [Info] Training finished.
+[47.553s] [Info] No Eval.
+
+ Performance counter stats for 'system wide':
+
+   124,899,815,228      L1-dcache-loads                                               (50.00%)
+     3,673,891,519      L1-dcache-load-misses     #    2.94% of all L1-dcache hits    (66.67%)
+       364,271,089      LLC-loads                                                     (66.67%)
+       127,463,395      LLC-load-misses           #   34.99% of all LL-cache hits     (66.67%)
+       539,421,622      LLC-stores                                                    (33.33%)
+       235,317,854      LLC-store-misses                                              (33.33%)
+   <not supported>      LLC-prefetch-misses
+
+      47.642570532 seconds time elapsed
+
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tests/perf2/mslr.20.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[29.184s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[29.184s] [Info] No validation dataset
+[29.184s] [Info] Start training...
+[29.205s] [Info] num_feature_blocking: 2, num_sample_blocking: 2
+[47.736s] [Info] [10]	train-ndcg@1:0.474025	train-ndcg@3:0.443047	train-ndcg@5:0.443073	train-ndcg@10:0.458289
+[47.736s] [Info] update, cumulate, gbs, total cycles: 37455220687, 141815210, 278910855, 37875946752
+[47.736s] [Info] Training finished.
+[47.736s] [Info] No Eval.
+
+ Performance counter stats for 'system wide':
+
+   126,065,913,767      L1-dcache-loads                                               (49.99%)
+     3,744,177,921      L1-dcache-load-misses     #    2.97% of all L1-dcache hits    (66.66%)
+       426,645,513      LLC-loads                                                     (66.67%)
+       146,397,650      LLC-load-misses           #   34.31% of all LL-cache hits     (66.68%)
+       569,754,382      LLC-stores                                                    (33.33%)
+       241,439,729      LLC-store-misses                                              (33.33%)
+   <not supported>      LLC-prefetch-misses
+
+      47.825601500 seconds time elapsed
+
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tests/perf2/mslr.20.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[29.209s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[29.209s] [Info] No validation dataset
+[29.209s] [Info] Start training...
+[29.230s] [Info] num_feature_blocking: 4, num_sample_blocking: 2
+[48.252s] [Info] [10]   train-ndcg@1:0.474025   train-ndcg@3:0.443047   train-ndcg@5:0.443073   train-ndcg@10:0.458289
+[48.252s] [Info] update, cumulate, gbs, total cycles: 38555067565, 154461175, 282143869, 38991672609
+[48.252s] [Info] Training finished.
+[48.252s] [Info] No Eval.
+
+ Performance counter stats for 'system wide':
+
+   132,380,549,819      L1-dcache-loads                                               (50.00%)
+     3,355,196,381      L1-dcache-load-misses     #    2.53% of all L1-dcache hits    (66.67%)
+       419,931,013      LLC-loads                                                     (66.67%)
+       127,729,050      LLC-load-misses           #   30.42% of all LL-cache hits     (66.67%)
+       572,271,624      LLC-stores                                                    (33.33%)
+       263,077,507      LLC-store-misses                                              (33.33%)
+   <not supported>      LLC-prefetch-misses
+
+      48.341176443 seconds time elapsed
+
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tests/perf2/mslr.20.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[29.339s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[29.339s] [Info] No validation dataset
+[29.339s] [Info] Start training...
+[29.359s] [Info] num_feature_blocking: 4, num_sample_blocking: 2
+[48.308s] [Info] [10]   train-ndcg@1:0.474025   train-ndcg@3:0.443047   train-ndcg@5:0.443073   train-ndcg@10:0.458289
+[48.308s] [Info] update, cumulate, gbs, total cycles: 38314016683, 153495904, 281198758, 38748711345
+[48.308s] [Info] Training finished.
+[48.308s] [Info] No Eval.
+
+ Performance counter stats for 'system wide':
+
+   130,701,483,588      L1-dcache-loads                                               (49.99%)
+     3,469,485,267      L1-dcache-load-misses     #    2.65% of all L1-dcache hits    (66.66%)
+       430,655,625      LLC-loads                                                     (66.67%)
+       136,830,654      LLC-load-misses           #   31.77% of all LL-cache hits     (66.68%)
+       574,716,930      LLC-stores                                                    (33.33%)
+       268,158,725      LLC-store-misses                                              (33.32%)
+   <not supported>      LLC-prefetch-misses
+
+      48.397538592 seconds time elapsed
+
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tests/perf2/mslr.20.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[29.146s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[29.146s] [Info] No validation dataset
+[29.146s] [Info] Start training...
+[29.167s] [Info] num_feature_blocking: 2, num_sample_blocking: 4
+[48.826s] [Info] [10]   train-ndcg@1:0.474025   train-ndcg@3:0.443047   train-ndcg@5:0.443073   train-ndcg@10:0.458289
+[48.826s] [Info] update, cumulate, gbs, total cycles: 40671489356, 133683347, 276327518, 41081500221
+[48.826s] [Info] Training finished.
+[48.826s] [Info] No Eval.
+
+ Performance counter stats for 'system wide':
+
+   134,852,977,702      L1-dcache-loads                                               (50.00%)
+     3,647,814,968      L1-dcache-load-misses     #    2.71% of all L1-dcache hits    (66.67%)
+       380,363,958      LLC-loads                                                     (66.67%)
+       129,631,968      LLC-load-misses           #   34.08% of all LL-cache hits     (66.67%)
+       527,367,850      LLC-stores                                                    (33.33%)
+       232,668,306      LLC-store-misses                                              (33.33%)
+   <not supported>      LLC-prefetch-misses
+
+      48.915702080 seconds time elapsed
+
+LambdaMART 0.1
+[0.000s] [Info] Using configuration file tests/perf2/mslr.20.conf
+[0.000s] [Info] Loading training dataset data/MSLR-WEB30K/20.train and query boundaries data/MSLR-WEB30K/20.train.query
+[29.261s] [Info] Loaded dataset of size: 1049142 samples x 136 features
+[29.261s] [Info] No validation dataset
+[29.261s] [Info] Start training...
+[29.282s] [Info] num_feature_blocking: 2, num_sample_blocking: 4
+[48.951s] [Info] [10]   train-ndcg@1:0.474025   train-ndcg@3:0.443047   train-ndcg@5:0.443073   train-ndcg@10:0.458289
+[48.951s] [Info] update, cumulate, gbs, total cycles: 40686256948, 133880451, 275938529, 41096075928
+[48.951s] [Info] Training finished.
+[48.951s] [Info] No Eval.
+
+ Performance counter stats for 'system wide':
+
+   141,622,613,327      L1-dcache-loads                                               (49.99%)
+     3,707,368,150      L1-dcache-load-misses     #    2.62% of all L1-dcache hits    (66.67%)
+       375,651,706      LLC-loads                                                     (66.67%)
+       129,559,521      LLC-load-misses           #   34.49% of all LL-cache hits     (66.67%)
+       553,535,857      LLC-stores                                                    (33.33%)
+       243,035,040      LLC-store-misses                                              (33.33%)
+   <not supported>      LLC-prefetch-misses
+
+      49.040405843 seconds time elapsed
+
+
