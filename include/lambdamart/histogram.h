@@ -518,6 +518,11 @@ namespace LambdaMART {
                     bins1[bin] += bins1[bin+1];
                     bins2[bin] += bins2[bin+1];
                     bins3[bin] += bins3[bin+1];
+
+                    __builtin_prefetch(&bins0[bin-8], 0, 1);
+                    __builtin_prefetch(&bins1[bin-8], 0, 1);
+                    __builtin_prefetch(&bins2[bin-8], 0, 1);
+                    __builtin_prefetch(&bins3[bin-8], 0, 1);
                 }
                 bins0[0] += bins0[1];
                 bins1[0] += bins1[1];
