@@ -5,21 +5,38 @@ Course Project for How To Write Fast Numerical Code, ETH Spring 2019
 ## Repository Structure
 
 ```bash
-├── data 				# scripts to download data
-├── include/			# header files
-├── src/				# source code
-├── docs/				# project-related documents generated along the course.
+├── data/				      # scripts to download data
+├── docs/				      # project-related documents generated along the course.
 │	├── Report.pdf
 │	└── Presentation.pdf
-├── main.cpp			# starts the program
+├── include/			    # header files
+├── src/				      # source code
+├── tests/				    # configuration files for experiments
+├── CMakeLists.txt
+├── main.cpp			    # starts the program
 └── README.md
 ```
-## Building the Source Code
+## Building the source code
 
 ```bash
 mkdir build && cd build
 cmake .. && make
 ln -s ../data .
+ln -s ../tests .
+cd ..
+```
+
+#### Download datasets
+```bash
+cd data/
+chmod +x download.sh && sh download.sh
+cd ..
+```
+
+#### Executing the binary
+```bash
+cd build/
+./lambdamart tests/mslr.14.conf
 ```
 
 ## Implementation branches
@@ -86,4 +103,5 @@ for feat_block in features:
 
 #####  `sparse_bins`
 - Algorithmic improvement.
-- Reduces dataset to dense representation.
+- Changes dataset to dense representation.
+- Makes algorithmic changes to deal with new format.
