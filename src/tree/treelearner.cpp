@@ -1,8 +1,13 @@
 #include <lambdamart/treelearner.h>
 #include <numeric>
+#include <lambdamart/perf.h>
 
 namespace LambdaMART {
 
+
+    int64_t sum_cycles_update = 0;
+    int64_t sum_cycles_cumulate = 0;
+    int64_t sum_cycles_gbs = 0;
 
 Tree* TreeLearner::build_new_tree()
 {
@@ -24,6 +29,8 @@ Tree* TreeLearner::build_new_tree()
         perform_split();
     }
 
+    Log::Info("update, cumulate, gbs, total cycles: %lld, %lld, %lld, %lld", sum_cycles_update,
+              sum_cycles_cumulate, sum_cycles_gbs, sum_cycles_update+sum_cycles_cumulate+sum_cycles_gbs);
     // mark remaining candidates as leaves
     while (!node_queue.empty()) {
         SplitCandidate* candidate = node_queue.top();
@@ -76,6 +83,7 @@ void TreeLearner::find_best_splits() {
         const Feature &feat = dataset->get_data()[fid];
 
         //TODO: unrolling
+        cycles_count_start();
         for (sample_t sample_idx = 0; sample_idx < num_samples; ++sample_idx) {
             const int candidate = sample_to_candidate[sample_idx];
             if (candidate != -1) {
@@ -83,10 +91,16 @@ void TreeLearner::find_best_splits() {
                 histograms[candidate][bin].update(1.0, gradients[sample_idx]);
             }
         }
+        sum_cycles_update += cycles_count_stop();
 
         for (nodeidx_t candidate = 0; candidate < num_candidates; ++candidate) {
+            cycles_count_start();
             histograms.cumulate(candidate);
+            sum_cycles_cumulate += cycles_count_stop();
+
+            cycles_count_start();
             auto local_best = histograms.get_best_split(candidate, fid, feat, node_info[candidate], min_data_in_leaf);
+            sum_cycles_gbs += cycles_count_stop();
             if (local_best >= best_splits[candidate]) {
                 best_splits[candidate] = local_best;
             }
