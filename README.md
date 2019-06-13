@@ -5,14 +5,14 @@ Course Project for How To Write Fast Numerical Code, ETH Spring 2019
 ## Repository Structure
 
 ```bash
-├── data 							# scripts to download data
-├── include/                    	# header files
-├── src/                     		# source code
-├── docs/							# project-related documents generated along the course.
+├── data 				# scripts to download data
+├── include/			# header files
+├── src/				# source code
+├── docs/				# project-related documents generated along the course.
 │	├── Report.pdf
 │	└── Presentation.pdf
-├── main.cpp
-└── README.md 						# starts the program
+├── main.cpp			# starts the program
+└── README.md
 ```
 ## Building the Source Code
 
