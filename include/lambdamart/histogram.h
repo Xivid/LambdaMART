@@ -271,15 +271,6 @@ namespace LambdaMART {
                     rhs1 = lhs1;
                     rhs2 = lhs2;
                     rhs3 = lhs3;
-                    //bins0[bin] += bins0[bin+1];
-                    //bins1[bin] += bins1[bin+1];
-                    //bins2[bin] += bins2[bin+1];
-                    //bins3[bin] += bins3[bin+1];
-
-                    __builtin_prefetch(&bins0[bin-8], 0, 1);
-                    __builtin_prefetch(&bins1[bin-8], 0, 1);
-                    __builtin_prefetch(&bins2[bin-8], 0, 1);
-                    __builtin_prefetch(&bins3[bin-8], 0, 1);
                 }
                 lhs0 = _mm_load_pd((gradient_t*) (bins0));
                 lhs1 = _mm_load_pd((gradient_t*) (bins1));
@@ -296,10 +287,6 @@ namespace LambdaMART {
                 _mm_store_pd((gradient_t*) (bins2), lhs2);
                 _mm_store_pd((gradient_t*) (bins3), lhs3);
 
-                //bins0[0] += bins0[1];
-                //bins1[0] += bins1[1];
-                //bins2[0] += bins2[1];
-                //bins3[0] += bins3[1];
             }
             for (; node < num_candidates; ++node)
             {
