@@ -29,7 +29,7 @@ void demo(Config* config) {
     Log::Info("Training finished.");
 
     Log::Info("Predicting with validation dataset and saving output to %s", config->output_result.c_str());
-    vector<double> predictions = model->predict(X_valid, config->output_result);
+    vector<score_t> predictions = model->predict(X_valid, config->output_result);
 }
 
 int main(int argc, char** argv) {

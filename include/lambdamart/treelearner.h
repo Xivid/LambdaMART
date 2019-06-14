@@ -122,16 +122,18 @@ class TreeLearner {
 
 public:
     TreeLearner() = delete;
-    TreeLearner(const Dataset* _dataset, const double* _gradients, const double* _hessians, const Config* _config) :
+    TreeLearner(const Dataset* _dataset, const gradient_t* _gradients, const gradient_t* _hessians, const Config* _config) :
         dataset(_dataset), gradients(_gradients), hessians(_hessians), config(_config)
     {
         tie(num_samples, num_features) = dataset->shape();
+        num_feature_blocking = config->num_feature_blocking;
+        num_sample_blocking = config->num_sample_blocking;
         max_splits = config->max_splits;
         min_data_in_leaf = config->min_data_in_leaf;
         node_to_output.resize(1<<(config->max_depth));
         sample_to_node.resize(num_samples, 0);
         node_to_candidate.resize(1<<(config->max_depth));
-        histograms.init(config->max_splits, config->max_bin);
+        histograms.init(config->max_splits*config->num_feature_blocking, config->max_bin);
     }
 
 private:
@@ -162,24 +164,26 @@ private:
     // as input
     const Config*             config;
     const Dataset*            dataset;
-    const double*             gradients;
-    const double*             hessians;
+    const gradient_t*             gradients;
+    const gradient_t*             hessians;
 
     // as working set
     sample_t                            num_samples;
     feature_t                           num_features;
+    feature_t                           num_feature_blocking;
+    sample_t                            num_sample_blocking;
     HistogramMatrix                     histograms;
     uint32_t                            cur_depth = 0;
     std::vector<SplitInfo>              best_splits;
     size_t                              max_splits;
     sample_t                            min_data_in_leaf;
-    std::vector<double>                 node_to_output;
-    std::vector<unsigned int>           sample_to_node;
+    std::vector<score_t>                node_to_output;
+    std::vector<nodeidx_t>              sample_to_node;
     std::vector<SplitCandidate*>        split_candidates;
     std::vector<NodeStats*>             node_info;
-    std::vector<int>                    node_to_candidate;
-    std::vector<int>                    sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
-    nodeidx_t                           num_candidates = 0;
+    std::vector<candidateidx_t>         node_to_candidate;
+    std::vector<candidateidx_t>         sample_to_candidate;  // -1: this sample doesn't exist in any candidate node
+    candidateidx_t                      num_candidates = 0;
     std::priority_queue<SplitCandidate*, std::vector<SplitCandidate*>, CmpCandidates> node_queue;
 
     // tree building methods
@@ -187,7 +191,7 @@ private:
     bool   select_split_candidates();
     void   find_best_splits();
     void   perform_split();
-    double get_sample_score(sample_t sid) { return node_to_output[sample_to_node[sid]]; };
+    score_t get_sample_score(sample_t sid) { return node_to_output[sample_to_node[sid]]; };
 };
 
 }
