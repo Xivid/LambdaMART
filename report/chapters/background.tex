@@ -1,0 +1,78 @@
+In this section, we will formally define the learning to rank problem and the LambdaMART algorithm we implemented. It is a GBDT algorithm combined with the LambdaRank objective. We will further describe the \texttt{find\_best\_split()} function, which is the most expensive part of the algorithm,
+and provide a cost analysis for it.
+
+\mypar{Learning to Rank}
+The Learning to Rank problem for Information Retrieval \cite{ltr2009} is defined as follows: the input is a real matrix $X_{M \times k}$, representing $M$ samples and $n$ queries, each query $i$ consists of $m_i$ samples $x^{(i)}_j (1\le j \le m_i)$ with $k$ features, and the relevance judgements vector $y^{(i)}$ which indicates the relevance of each sample to the query. In a typical information retrieval application, the sample with higher relevance should be ranked closer to the top. The output is a model H, when given a query of $m$ (possibly unseen) samples ${x_1, x_2, ..., x_m}$, outputs the relevance judgements vector $h$, where $h_i$ indicates the relevance of $x_i$ to this query.
+
+A popular machine learning algorithm for learning the ranking model is LambdaMART, which is listed below as Algorithm~\ref{alg:lambdamart}. This algorithm trains a GBDT model according to the LambdaRank objective, and achieves high accuracy.
+%\cite[page 5]{xgboost2016}.
+
+\begin{algorithm}[ht]
+ \SetAlgoLined
+ \SetKwInOut{Input}{Input}
+ \SetKwInOut{Output}{Output}
+ \Input{Dataset \textit{X} of \textit{M} samples and \textit{D} features, query boundaries \textit{Q}, number of trees \textit{N}}
+ %, X\in\R^{\sum_{i=1}^{n}{m_i} \times k}}
+ \Output{Trained tree ensembles \textit{model}}
+ currentScores = \{0\}\;
+ \For{iter = 1:N}{
+  gradients = LambdaRank(currentScores, Q)\;
+  tree = BuildDecisionTree(gradients)\;
+  model[iter] = tree\;
+  currentScores += tree.predict(X)\;
+ }
+ \caption{LambdaMART}
+ \label{alg:lambdamart}
+\end{algorithm}
+
+\mypar{\findbestsplit}
+The most time-consuming part in Algorithm~\ref{alg:lambdamart} is decision tree building, which begins with a root node that contains all data samples. It then splits the nodes level by level at specific split points (i.e. (feature, threshold value) pairs) of the highest split gain until the tree depth reaches a pre-set threshold. When the threshold is met, all samples are partitioned into different leaves. Finding the best split point for all nodes of the same level involves scanning over all features and all samples, consuming more than 80\% of the total running time. Thus, we set our optimization focus on \findbestsplit, and the detailed steps are described in Algorithm \ref{alg:split}.
+
+\begin{algorithm}[ht]
+ \SetAlgoLined
+ \SetKwInOut{Input}{Input}
+ \SetKwInOut{Output}{Output}
+ \Input{Dataset \textit{X}, current gradients \textit{gradients}, mapping from sampleID to treeNodeID \textit{sampleToNode}}
+ \Output{Best split feature and threshold of each node \textit{bestSplits}}
+ \For{feature = 1:num\_features}{
+    histogram.setAllZero()\;
+    \textit{// step 1. \texttt{update()}}\\
+    \For{sample = 1:num\_samples}{
+        grad = gradients[sample]\; \label{alg:split-grad}
+        node = sampleToNode[sample]\; \label{alg:split-node}
+        bin = X[feature][sample]\;
+        histogram[node][bin].sum\_count += 1\;
+        histogram[node][bin].sum\_grad += grad\;
+    }
+    \textit{// step 2. \texttt{cumulate()}}\\
+    \For{node = 1:num\_nodes}{
+        \For{bin = num\_bins-2:0:-1}{
+            histogram[node][bin] += histogram[node][bin+1]\;
+        }
+        %histogram[node].cumulate()\;
+    }
+    \textit{// step 3. \texttt{get\_best\_split()}}\\
+    \For{node = 1:num\_nodes}{
+        bestSplits[node] = histogram[node].get\_best\_split()\;
+    }
+ }
+ \caption{\texttt{find\_best\_split()}}
+ \label{alg:split}
+\end{algorithm}
+
+To accelerate dataset scanning and to reduce memory usage, we employ a common dataset pre-processing procedure. Instead of storing raw feature values, the floating point values are discretized by partitioning all values of each feature as uniformly as possible into 256 bins  so that they fit into 8-bit unsigned integers. The best-split-finding process is then simplified to constructing a histogram of 256 bins for each feature and each node, where each bin holds the aggregated statistics of all samples that fall in it, and the best split threshold, which is the binning threshold that gives the highest split gain:
+\begin{equation*}
+\text{splitGain} = \frac{(\sum_\text{left bins}\text{gradients})^2}{\sum_\text{left bins}\text{counts}}+\frac{(\sum_\text{right bins}\text{gradients})^2}{\sum_\text{right bins}\text{counts}}
+\end{equation*}
+
+Therefore, Algorithm \ref{alg:split} consists of three steps: 
+\begin{itemize}[noitemsep, leftmargin=*]
+    \item \update: constructs the histograms of gradients for candidate nodes.
+    \item \cumulate: pre-computes the suffix-sum of gradients and counts within each histogram. 
+    \item \getbestsplit: calculates for every histogram the split gain using each bin as the split point, and returns the split point with the highest gain.
+\end{itemize}
+
+\mypar{Cost Analysis}
+The complexity of our program depends on several factors, including the sample size, the feature size, the number of depth and the number of iterations. To simplify our analysis, we fix the number of depth and iterations, leaving our program dependent only on the sample size and feature size. For our cost analysis, we consider only the \texttt{find\_best\_splits()} function. If counting only the floating point arithmetic in our program, for each run of \texttt{find\_best\_splits()}, the cost is $\#features$ $*$ $(2$ $*$ $\#samples$ $+$ $\#candidates$ $*$ $($ $2$ $*$ $\#bins$ $+$ $8$ $*$ $\#bins$ $+$ $5))$, where cost of \update is $2 * \#features * \#samples$, cost of \cumulate is $2 * \#features * \#candidates * \#bins$, and cost of \getbestsplit is the remaining.
+
+When the sample size is small, the runtime cost is dominated by the costs of \texttt{cumulate} and \getbestsplit; when the sample size is large, the cost is dominated by \update calls.
