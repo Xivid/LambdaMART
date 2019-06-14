@@ -2,6 +2,8 @@
 #include <numeric>
 #include <lambdamart/perf.h>
 #include <iostream>
+#include <immintrin.h>
+#include <xmmintrin.h>
 using namespace std;
 
 namespace LambdaMART {
@@ -29,7 +31,7 @@ Tree* TreeLearner::build_new_tree()
         if(!select_split_candidates()) break;  // no more nodes to split -> break
         sample_count = 0;
         find_best_splits();
-        Log::Info("cur_depth, sample count, num cand: %d, %lld, %lld", cur_depth, sample_count, num_candidates);
+//        Log::Info("cur_depth, sample count, num cand: %d, %lld, %lld", cur_depth, sample_count, num_candidates);
         perform_split();
     }
 //    Log::Info("update, cumulate, gbs, total cycles: %lld, %lld, %lld, %lld", sum_cycles_update,
@@ -113,7 +115,7 @@ void TreeLearner::find_best_splits() {
             const int candidate3 = sample_to_candidate[sample_idx+3];
 
             if (candidate0 != -1) {
-                if (fid == 0) sample_count++;
+//                if (fid == 0) sample_count++;
                 const bin_t bin0 = sample_to_bin0[sample_idx];
                 const bin_t bin1 = sample_to_bin1[sample_idx];
                 const bin_t bin2 = sample_to_bin2[sample_idx];
@@ -123,6 +125,24 @@ void TreeLearner::find_best_splits() {
 
                 Bin* base = histograms_data + candidate0 * num_feature_blocking * bin_cnt;
 
+//                gradient_t *p = (gradient_t*) (base + bin0);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt + bin1);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 2 + bin2);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 3 + bin3);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
+
                 gradient_t *p = (gradient_t*) (base + bin0);
                 *p += 1.0; *(p+1) += grad;
                 p = (gradient_t*) (base + bin_cnt + bin1);
@@ -131,13 +151,14 @@ void TreeLearner::find_best_splits() {
                 *p += 1.0; *(p+1) += grad;
                 p = (gradient_t*) (base + bin_cnt * 3 + bin3);
                 *p += 1.0; *(p+1) += grad;
+
                 //histograms[candidate0*num_feature_blocking][bin0].update(1.0, grad);
                 //histograms[candidate0*num_feature_blocking+1][bin1].update(1.0, grad);
                 //histograms[candidate0*num_feature_blocking+2][bin2].update(1.0, grad);
                 //histograms[candidate0*num_feature_blocking+3][bin3].update(1.0, grad);
             }
             if (candidate1 != -1) {
-                if (fid == 0) sample_count++;
+//                if (fid == 0) sample_count++;
                 const bin_t bin0 = sample_to_bin0[sample_idx+1];
                 const bin_t bin1 = sample_to_bin1[sample_idx+1];
                 const bin_t bin2 = sample_to_bin2[sample_idx+1];
@@ -146,6 +167,24 @@ void TreeLearner::find_best_splits() {
                 const gradient_t grad = gradients[sample_idx+1];
 
                 Bin* base = histograms_data + candidate1 * num_feature_blocking * bin_cnt;
+
+//                gradient_t *p = (gradient_t*) (base + bin0);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt + bin1);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 2 + bin2);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 3 + bin3);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
 
                 gradient_t *p = (gradient_t*) (base + bin0);
                 *p += 1.0; *(p+1) += grad;
@@ -162,7 +201,7 @@ void TreeLearner::find_best_splits() {
                 //histograms[candidate1*num_feature_blocking+3][bin3].update(1.0, grad);
             }
             if (candidate2 != -1) {
-                if (fid == 0) sample_count++;
+//                if (fid == 0) sample_count++;
                 const bin_t bin0 = sample_to_bin0[sample_idx+2];
                 const bin_t bin1 = sample_to_bin1[sample_idx+2];
                 const bin_t bin2 = sample_to_bin2[sample_idx+2];
@@ -171,6 +210,24 @@ void TreeLearner::find_best_splits() {
                 const gradient_t grad = gradients[sample_idx+2];
 
                 Bin* base = histograms_data + candidate2 * num_feature_blocking * bin_cnt;
+
+//                gradient_t *p = (gradient_t*) (base + bin0);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt + bin1);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 2 + bin2);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 3 + bin3);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
 
                 gradient_t *p = (gradient_t*) (base + bin0);
                 *p += 1.0; *(p+1) += grad;
@@ -187,7 +244,7 @@ void TreeLearner::find_best_splits() {
                 //histograms[candidate2*num_feature_blocking+3][bin3].update(1.0, grad);
             }
             if (candidate3 != -1) {
-                if (fid == 0) sample_count++;
+//                if (fid == 0) sample_count++;
                 const bin_t bin0 = sample_to_bin0[sample_idx+3];
                 const bin_t bin1 = sample_to_bin1[sample_idx+3];
                 const bin_t bin2 = sample_to_bin2[sample_idx+3];
@@ -196,6 +253,24 @@ void TreeLearner::find_best_splits() {
                 const gradient_t grad = gradients[sample_idx+3];
 
                 Bin* base = histograms_data + candidate3 * num_feature_blocking * bin_cnt;
+
+//                gradient_t *p = (gradient_t*) (base + bin0);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt + bin1);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 2 + bin2);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 3 + bin3);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
 
                 gradient_t *p = (gradient_t*) (base + bin0);
                 *p += 1.0; *(p+1) += grad;
@@ -225,6 +300,25 @@ void TreeLearner::find_best_splits() {
                 const gradient_t grad = gradients[sample_idx];
 
                 Bin* base = histograms_data + candidate * num_feature_blocking * bin_cnt;
+
+//                gradient_t *p = (gradient_t*) (base + bin0);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt + bin1);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 2 + bin2);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+//                p = (gradient_t*) (base + bin_cnt * 3 + bin3);
+//                a = _mm_set_ps(0.0f, 0.0f, grad, 1.0);
+//                b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
+
 
                 gradient_t *p = (gradient_t*) (base + bin0);
                 *p += 1.0; *(p+1) += grad;
@@ -289,32 +383,52 @@ void TreeLearner::find_best_splits() {
                 if (fid == 0) sample_count++;
                 const bin_t bin = sample_to_bin[sample_idx];
                 gradient_t *p = (gradient_t*) (histograms_data + candidate0 * bin_cnt + bin);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, gradients[sample_idx], 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
+
                 *p += 1.0;
                 *(p+1) += gradients[sample_idx];
+
                 //histograms[candidate0][bin].update(1.0, gradients[sample_idx]);
             }
             if (candidate1 != -1) {
                 if (fid == 0) sample_count++;
                 const bin_t bin = sample_to_bin[sample_idx+1];
                 gradient_t *p = (gradient_t*) (histograms_data + candidate1 * bin_cnt + bin);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, gradients[sample_idx], 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
                 *p += 1.0;
                 *(p+1) += gradients[sample_idx];
                 //histograms[candidate1][bin].update(1.0, gradients[sample_idx+1]);
             }
             if (candidate2 != -1) {
-                if (fid == 0) sample_count++;
+//                if (fid == 0) sample_count++;
                 const bin_t bin = sample_to_bin[sample_idx+2];
                 gradient_t *p = (gradient_t*) (histograms_data + candidate2 * bin_cnt + bin);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, gradients[sample_idx], 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
                 *p += 1.0;
                 *(p+1) += gradients[sample_idx];
+
                 //histograms[candidate2][bin].update(1.0, gradients[sample_idx+2]);
             }
             if (candidate3 != -1) {
-                if (fid == 0) sample_count++;
+//                if (fid == 0) sample_count++;
                 const bin_t bin = sample_to_bin[sample_idx+3];
                 gradient_t *p = (gradient_t*) (histograms_data + candidate3 * bin_cnt + bin);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, gradients[sample_idx], 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
                 *p += 1.0;
                 *(p+1) += gradients[sample_idx];
+
                 //histograms[candidate3][bin].update(1.0, gradients[sample_idx+3]);
             }
         }
@@ -324,8 +438,13 @@ void TreeLearner::find_best_splits() {
                 if (fid == 0) sample_count++;
                 const bin_t bin = sample_to_bin[sample_idx];
                 gradient_t *p = (gradient_t*) (histograms_data + candidate * bin_cnt + bin);
+//                __m128 a = _mm_set_ps(0.0f, 0.0f, gradients[sample_idx], 1.0);
+//                __m128 b = _mm_load_ps(p);
+//                _mm_store_ps(p, _mm_add_ps(a, b));
+
                 *p += 1.0;
                 *(p+1) += gradients[sample_idx];
+
                 //histograms[candidate][bin].update(1.0, gradients[sample_idx]);
             }
         }
