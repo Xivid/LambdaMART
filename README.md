@@ -97,7 +97,7 @@ for feat_block in features:
 - Replace double by float.
 - Change intrinsics accordingly.
 
-#####  `feature_blocking_cumulator_float`
+#####  `feature_blocking_cumulator_float_no_avx`
 - Similar`feature_blocking_cumulator_no_avx`.
 - Replace double by float.
 
