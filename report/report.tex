@@ -1,0 +1,149 @@
+% IEEE standard conference template; to be used with:
+%   spconf.sty  - LaTeX style file, and
+%   IEEEbib.bst - IEEE bibliography style file.
+% --------------------------------------------------------------------------
+
+\documentclass[letterpaper]{article}
+\usepackage{spconf,amsmath,amssymb,graphicx}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+\usepackage{enumitem}
+
+% Example definitions.
+% --------------------
+% nice symbols for real and complex numbers
+\newcommand{\R}[0]{\mathbb{R}}
+\newcommand{\C}[0]{\mathbb{C}}
+
+% bold paragraph titles
+\newcommand{\mypar}[1]{{\bf #1.}}
+\newcommand{\bbO}[1]{\ensuremath{\mathcal{O}(#1)}}
+\newcommand{\findbestsplit}{\texttt{find\_best\_split()}}
+\newcommand{\update}{\texttt{update()}}
+\newcommand{\cumulate}{\texttt{cumulate()}}
+\newcommand{\getbestsplit}{\texttt{get\_best\_split()}}
+% Title.
+% ------
+\title{Gradient Boosting Decision Tree for Learning to Rank}
+%
+% Single address.
+% ---------------
+\name{FastCode Group 8} 
+\address{Department of Computer Science\\ ETH Z\"urich\\Z\"urich, Switzerland}
+
+% For example:
+% ------------
+%\address{School\\
+%		 Department\\
+%		 Address}
+%
+% Two addresses (uncomment and modify for two-address case).
+% ----------------------------------------------------------
+%\twoauthors
+%  {A. Author-one, B. Author-two\sthanks{Thanks to XYZ agency for funding.}}
+%		 {School A-B\\
+%		 Department A-B\\
+%		 Address A-B}
+%  {C. Author-three, D. Author-four\sthanks{The fourth author performed the work
+%		 while at ...}}
+%		 {School C-D\\
+%		 Department C-D\\
+%		 Address C-D}
+%
+
+\begin{document}
+%\ninept
+%
+\maketitle
+%
+
+\begin{abstract}
+Gradient boosting decision tree (GBDT) is a popular machine learning algorithm for the learning to rank problems. There are many open source GBDT libraries that focus on optimizing parallel and distributed training performance, however, the single-core performance remains low and not studied sufficiently. In this work, we provide an in-depth analysis on the single-core performance of GBDT, and propose a series of optimization methods that improve the performance of single-core GBDT for learning to rank.
+%[\mypar{TO UPDATE}Describe in concise words what you do, why you do it (not necessarily
+%in this order), and the main result.  The abstract has to be
+%self-contained and readable for a person in the general area. You
+%should write the abstract last.]
+
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+\input{chapters/introduction.tex}
+
+\section{Background}\label{sec:background}
+\input{chapters/background.tex}
+
+\section{Proposed Method}\label{sec:yourmethod}
+\input{chapters/methods.tex}
+
+\section{Experimental Results}\label{sec:exp}
+\input{chapters/experiments.tex}
+
+\section{Conclusions}
+\input{chapters/conclusions.tex}
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\bibliographystyle{IEEEbib}
+\bibliography{bibl_conf}
+
+\clearpage
+%\newpage
+%\section*{Further comments [TO REMOVE]}
+
+%Here we provide some further tips.
+
+%\mypar{Further general guidelines}
+
+%\begin{itemize}
+%\item For short papers, to save space, I use paragraph titles instead of
+%subsections, as shown in the introduction.
+
+%\item It is generally a good idea to break sections into such smaller
+%units for readability and since it helps you to (visually) structure the story.
+
+%\item The above section titles should be adapted to more precisely
+%reflect what you do.
+
+%\item Each section should be started with a very
+%short summary of what the reader can expect in this section. Nothing
+%more awkward as when the story starts and one does not know what the
+%direction is or the goal.
+
+%\item Make sure you define every acronym you use, no matter how
+%convinced you are the reader knows it.
+
+%\item Always spell-check before you submit (to me in this case).
+
+%\item Be picky. When writing a paper you should always strive for very
+%high quality. Many people may read it and the quality makes a big difference.
+%In this class, the quality is part of the grade.
+
+%\item Books helping you to write better: {Higham:98} and {Strunk:00}.
+
+%\item Conversion to pdf (latex users only): 
+
+%dvips -o conference.ps -t letter -Ppdf -G0 conference.dvi
+
+%and then
+
+%ps2pdf conference.ps
+%\end{itemize}
+
+%\mypar{Graphics} For plots that are not images {\em never} generate (even as intermediate step)
+%jpeg, gif, bmp, tif. Use eps, which means encapsulate postscript, os pdf. This way it is
+%scalable since it is a vector graphic description of your graph. E.g.,
+%from Matlab, you can export to eps or pdf.
+
+%Here is an example of how to get a plot into latex
+%(Fig.~\ref{fftperf}). Note that the text should not be any smaller than shown.
+
+%\begin{figure}\centering
+%  \includegraphics[scale=0.33]{dft-performance.eps}
+%  \caption{Performance of four single precision implementations of the
+%  discrete Fourier transform. The operations count is roughly the
+%  same. {\em The labels in this plot are too small.}\label{fftperf}}
+%\end{figure}
+
+\end{document}
+

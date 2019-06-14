@@ -1,0 +1,18 @@
+%\mypar{Motivation}
+For many years, gradient boosting decision trees (GBDT, or multiple additive regression trees, MART) has been the primary method for machine learning problems for its highly customizable optimization objective, excellent model accuracy, and relatively low cost for training and inference.
+Many real systems train GBDT with different objectives for various use cases -- for example, fraud detection systems use binary classification objective to detect spams, web ad providers use regression objective to predict click-through rates, search engines use learning to rank objective to rank search results. 
+GBDT is in essence an algorithm that optimizes a pre-defined objective function by iteratively constructing a new decision tree that points to the direction of negative gradient based on the results all previous trees. Thus, the ensemble of many trees would achieve a high accuracy.
+
+Learning to rank\cite{ltr2009} is a supervised learning task that trains the following ranking function: given a query of several samples, the function returns the relevance of each sample to the query. It has a wide variety of applications, including document retrieval, definition search, collaborative filtering, etc. There are a number of algorithms that solve the learning to rank problem, and LambdaMART\cite{lambdamart2010}, a GBDT-based algorithm, is one of the most popular choice. LambdaMART employs GBDT to optimize a delicately designed objective, LambdaRank\cite{lambdamart2010}, and it has been a great success in terms of accuracy. However, it suffers from long GBDT training time when datasets are too large. Therefore, we aim to build a fast GBDT implementation that performs learning to rank tasks. Since the GBDT training process and its underlying objective functions are often decoupled in implementation, our goal can be generalized to building a fast gradient boosting decision tree library.
+
+%\mypar{Related Work}
+There have been many libraries that provide fast GBDT implementation by utilizing parallel and distributed computing while achieving high accuracy. XGBoost\cite{xgboost2016}, the most popular gradient boosting library, is currently the industry standard in both speed and accuracy. Yandex Research recently published CatBoost\cite{catboost2018}, a specialized library to perform gradient boosting with categorical features. Similarly, Microsoft Research's LightGBM\cite{lightgbm2017} is another GBDT library that makes use of several optimizations - mainly algorithmic improvements - to achieve faster speed.
+
+While these libraries achieve impressive running time, it is important to note that none of the existing literature studies the performance (flops/cycle) of these libraries. In fact, the single-core performance of these libraries remain low, because flops per cycle is hard to optimize due to the complex computing and memory access patterns. 
+
+In our work, we aim to investigate the performance bottleneck of the program and to provide a fast single-core implementation of GBDT. In doing so, we provide a thorough analysis of performance and the various factors that make gradient boosting a highly challenging task from a performance perspective. Thus, the goal of our project is three-fold:
+\begin{itemize}[noitemsep, leftmargin=*]
+    \item To perform an in-depth performance study of the training of gradient boosting decision trees,
+    \item To optimize flops per cycle performance,
+    \item To deliver an implementation faster than existing libraries in terms of running time.
+\end{itemize}
